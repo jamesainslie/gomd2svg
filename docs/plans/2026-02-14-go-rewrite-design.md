@@ -15,7 +15,7 @@
 ## 1. Project Structure
 
 ```
-github.com/yaklabco/mermaid-go/
+github.com/jamesainslie/mermaid-go/
 ├── cmd/mmdr/              # CLI binary
 │   └── main.go
 ├── mermaid.go             # Public API: Render(), Parse(), Layout(), RenderSVG()
