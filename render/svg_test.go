@@ -63,6 +63,25 @@ func TestRenderSVGContainsEdge(t *testing.T) {
 	}
 }
 
+func TestRenderDefsHasAllMarkers(t *testing.T) {
+	th := theme.Modern()
+	var b svgBuilder
+	renderDefs(&b, th)
+	svg := b.String()
+
+	markers := []string{
+		"arrowhead", "arrowhead-start",
+		"marker-closed-triangle", "marker-closed-triangle-start",
+		"marker-filled-diamond", "marker-filled-diamond-start",
+		"marker-open-diamond", "marker-open-diamond-start",
+	}
+	for _, id := range markers {
+		if !strings.Contains(svg, `id="`+id+`"`) {
+			t.Errorf("missing marker definition: %s", id)
+		}
+	}
+}
+
 func TestRenderSVGHasViewBox(t *testing.T) {
 	l := simpleLayout()
 	th := theme.Modern()

@@ -116,3 +116,125 @@ func TestGoldenFlowchartShapes(t *testing.T) {
 		t.Errorf("expected at least 4 edge paths, got %d", strings.Count(svg, "edgePath"))
 	}
 }
+
+func TestRenderClassDiagram(t *testing.T) {
+	input := `classDiagram
+    class Animal {
+        +String name
+        +isMammal() bool
+    }
+    class Dog {
+        +String breed
+    }
+    Animal <|-- Dog`
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render() error: %v", err)
+	}
+	if !strings.Contains(svg, "<svg") {
+		t.Error("missing <svg")
+	}
+	for _, label := range []string{"Animal", "Dog", "name", "breed"} {
+		if !strings.Contains(svg, label) {
+			t.Errorf("missing label %q", label)
+		}
+	}
+}
+
+func TestRenderStateDiagram(t *testing.T) {
+	input := `stateDiagram-v2
+    [*] --> Still
+    Still --> Moving
+    Moving --> Crash
+    Crash --> [*]`
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render() error: %v", err)
+	}
+	if !strings.Contains(svg, "<svg") {
+		t.Error("missing <svg")
+	}
+	for _, label := range []string{"Still", "Moving", "Crash"} {
+		if !strings.Contains(svg, label) {
+			t.Errorf("missing label %q", label)
+		}
+	}
+}
+
+func TestRenderERDiagram(t *testing.T) {
+	input := `erDiagram
+    CUSTOMER ||--o{ ORDER : places
+    ORDER ||--|{ LINE-ITEM : contains`
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render() error: %v", err)
+	}
+	if !strings.Contains(svg, "<svg") {
+		t.Error("missing <svg")
+	}
+	for _, label := range []string{"CUSTOMER", "ORDER", "LINE-ITEM"} {
+		if !strings.Contains(svg, label) {
+			t.Errorf("missing label %q", label)
+		}
+	}
+}
+
+func TestGoldenClassRelationships(t *testing.T) {
+	input := `classDiagram
+    Animal <|-- Dog : extends
+    Car *-- Engine
+    Library o-- Book
+    Student --> Course
+    Class1 ..> Class2
+    Interface1 ..|> Impl1`
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render() error: %v", err)
+	}
+	if strings.Count(svg, "edgePath") < 6 {
+		t.Errorf("expected at least 6 edge paths, got %d", strings.Count(svg, "edgePath"))
+	}
+}
+
+func TestGoldenStateComposite(t *testing.T) {
+	input := `stateDiagram-v2
+    [*] --> First
+    state First {
+        [*] --> Second
+        Second --> [*]
+    }
+    First --> Third
+    Third --> [*]`
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render() error: %v", err)
+	}
+	if !strings.Contains(svg, "First") {
+		t.Error("missing composite state 'First'")
+	}
+	if !strings.Contains(svg, "Second") {
+		t.Error("missing inner state 'Second'")
+	}
+}
+
+func TestGoldenERAttributes(t *testing.T) {
+	input := `erDiagram
+    CUSTOMER {
+        string name
+        int custNumber PK
+    }
+    ORDER {
+        int orderNumber PK
+    }
+    CUSTOMER ||--o{ ORDER : places`
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render() error: %v", err)
+	}
+	if !strings.Contains(svg, "PK") {
+		t.Error("missing PK annotation")
+	}
+	if !strings.Contains(svg, "places") {
+		t.Error("missing relationship label 'places'")
+	}
+}

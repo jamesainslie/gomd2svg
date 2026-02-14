@@ -18,6 +18,12 @@ func Parse(input string) (*ParseOutput, error) {
 	switch kind {
 	case ir.Flowchart:
 		return parseFlowchart(input)
+	case ir.Class:
+		return parseClass(input)
+	case ir.State:
+		return parseState(input)
+	case ir.Er:
+		return parseER(input)
 	default:
 		return parseFlowchart(input)
 	}

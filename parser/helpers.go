@@ -132,7 +132,7 @@ func splitStatements(line string) []string {
 	return parts
 }
 
-// maskBracketContent replaces characters inside [], (), {}, "", '' with spaces
+// maskBracketContent replaces characters inside [], (), {}, "", ” with spaces
 // while preserving byte positions. This prevents edge-detection regexes from
 // matching dashes inside labels.
 func maskBracketContent(line string) string {
@@ -463,11 +463,12 @@ func parseEdgeMeta(arrow string) edgeMeta {
 
 	runes := []rune(trimmed)
 	if len(runes) > 0 {
-		if runes[0] == 'o' {
+		switch runes[0] {
+		case 'o':
 			dec := ir.DecCircle
 			startDecoration = &dec
 			runes = runes[1:]
-		} else if runes[0] == 'x' {
+		case 'x':
 			dec := ir.DecCross
 			startDecoration = &dec
 			runes = runes[1:]
@@ -475,12 +476,12 @@ func parseEdgeMeta(arrow string) edgeMeta {
 	}
 
 	if len(runes) > 0 {
-		last := runes[len(runes)-1]
-		if last == 'o' {
+		switch last := runes[len(runes)-1]; last {
+		case 'o':
 			dec := ir.DecCircle
 			endDecoration = &dec
 			runes = runes[:len(runes)-1]
-		} else if last == 'x' {
+		case 'x':
 			dec := ir.DecCross
 			endDecoration = &dec
 			runes = runes[:len(runes)-1]

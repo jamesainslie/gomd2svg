@@ -68,4 +68,3 @@ func RenderWithTiming(input string, opts Options) (*Result, error) {
 		RenderUs: renderUs,
 	}, nil
 }
-

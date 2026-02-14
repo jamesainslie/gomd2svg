@@ -38,14 +38,16 @@ func routeEdges(
 		}
 
 		result = append(result, &EdgeLayout{
-			From:        e.From,
-			To:          e.To,
-			Label:       label,
-			Points:      points,
-			LabelAnchor: labelAnchor,
-			Style:       e.Style,
-			ArrowStart:  e.ArrowStart,
-			ArrowEnd:    e.ArrowEnd,
+			From:           e.From,
+			To:             e.To,
+			Label:          label,
+			Points:         points,
+			LabelAnchor:    labelAnchor,
+			Style:          e.Style,
+			ArrowStart:     e.ArrowStart,
+			ArrowEnd:       e.ArrowEnd,
+			ArrowStartKind: e.ArrowStartKind,
+			ArrowEndKind:   e.ArrowEndKind,
 		})
 	}
 

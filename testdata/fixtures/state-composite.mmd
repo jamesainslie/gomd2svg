@@ -1,0 +1,8 @@
+stateDiagram-v2
+    [*] --> First
+    state First {
+        [*] --> Second
+        Second --> [*]
+    }
+    First --> Third
+    Third --> [*]

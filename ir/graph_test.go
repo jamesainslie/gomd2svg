@@ -71,3 +71,21 @@ func TestEnsureNodeOrder(t *testing.T) {
 		t.Errorf("C order = %d after re-ensure, want 0", g.NodeOrder["C"])
 	}
 }
+
+func TestEdgeArrowheadValues(t *testing.T) {
+	heads := []EdgeArrowhead{
+		OpenTriangle,
+		ClassDependency,
+		ClosedTriangle,
+		FilledDiamond,
+		OpenDiamond,
+		Lollipop,
+	}
+	seen := make(map[EdgeArrowhead]bool)
+	for _, h := range heads {
+		if seen[h] {
+			t.Errorf("duplicate arrowhead value: %d", h)
+		}
+		seen[h] = true
+	}
+}

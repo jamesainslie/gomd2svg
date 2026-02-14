@@ -40,6 +40,12 @@ func RenderSVG(l *layout.Layout, th *theme.Theme, cfg *config.Layout) string {
 	switch l.Diagram.(type) {
 	case layout.GraphData:
 		renderGraph(&b, l, th, cfg)
+	case layout.ClassData:
+		renderClass(&b, l, th, cfg)
+	case layout.ERData:
+		renderER(&b, l, th, cfg)
+	case layout.StateData:
+		renderState(&b, l, th, cfg)
 	default:
 		// For other diagram types, still render graph as a fallback.
 		renderGraph(&b, l, th, cfg)
@@ -71,6 +77,36 @@ func renderDefs(b *svgBuilder, th *theme.Theme) {
 		"stroke", th.LineColor,
 		"stroke-width", "1",
 	)
+	b.closeTag("marker")
+
+	// Closed triangle (inheritance/realization) — forward
+	b.raw(`<marker id="marker-closed-triangle" viewBox="0 0 20 20" refX="18" refY="10" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto">`)
+	b.selfClose("path", "d", "M 0 0 L 20 10 L 0 20 z", "fill", th.Background, "stroke", th.LineColor, "stroke-width", "1")
+	b.closeTag("marker")
+
+	// Closed triangle — reverse
+	b.raw(`<marker id="marker-closed-triangle-start" viewBox="0 0 20 20" refX="2" refY="10" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto">`)
+	b.selfClose("path", "d", "M 20 0 L 0 10 L 20 20 z", "fill", th.Background, "stroke", th.LineColor, "stroke-width", "1")
+	b.closeTag("marker")
+
+	// Filled diamond (composition) — forward
+	b.raw(`<marker id="marker-filled-diamond" viewBox="0 0 20 20" refX="18" refY="10" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto">`)
+	b.selfClose("path", "d", "M 0 10 L 10 0 L 20 10 L 10 20 z", "fill", th.LineColor, "stroke", th.LineColor, "stroke-width", "1")
+	b.closeTag("marker")
+
+	// Filled diamond — reverse
+	b.raw(`<marker id="marker-filled-diamond-start" viewBox="0 0 20 20" refX="2" refY="10" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto">`)
+	b.selfClose("path", "d", "M 0 10 L 10 0 L 20 10 L 10 20 z", "fill", th.LineColor, "stroke", th.LineColor, "stroke-width", "1")
+	b.closeTag("marker")
+
+	// Open diamond (aggregation) — forward
+	b.raw(`<marker id="marker-open-diamond" viewBox="0 0 20 20" refX="18" refY="10" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto">`)
+	b.selfClose("path", "d", "M 0 10 L 10 0 L 20 10 L 10 20 z", "fill", th.Background, "stroke", th.LineColor, "stroke-width", "1")
+	b.closeTag("marker")
+
+	// Open diamond — reverse
+	b.raw(`<marker id="marker-open-diamond-start" viewBox="0 0 20 20" refX="2" refY="10" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto">`)
+	b.selfClose("path", "d", "M 0 10 L 10 0 L 20 10 L 10 20 z", "fill", th.Background, "stroke", th.LineColor, "stroke-width", "1")
 	b.closeTag("marker")
 
 	b.closeTag("defs")

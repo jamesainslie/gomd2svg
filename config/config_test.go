@@ -14,3 +14,16 @@ func TestDefaultLayout(t *testing.T) {
 		t.Error("LabelLineHeight should be > 0")
 	}
 }
+
+func TestDefaultLayoutHasClassConfig(t *testing.T) {
+	cfg := DefaultLayout()
+	if cfg.Class.CompartmentPadX <= 0 {
+		t.Error("Class.CompartmentPadX should be > 0")
+	}
+	if cfg.State.CompositePadding <= 0 {
+		t.Error("State.CompositePadding should be > 0")
+	}
+	if cfg.ER.AttributeRowHeight <= 0 {
+		t.Error("ER.AttributeRowHeight should be > 0")
+	}
+}

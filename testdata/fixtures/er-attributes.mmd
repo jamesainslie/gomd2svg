@@ -1,0 +1,11 @@
+erDiagram
+    CUSTOMER {
+        string name
+        int custNumber PK
+        string sector
+    }
+    ORDER {
+        int orderNumber PK
+        string deliveryAddress
+    }
+    CUSTOMER ||--o{ ORDER : places

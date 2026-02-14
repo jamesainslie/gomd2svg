@@ -24,3 +24,16 @@ func TestMermaidDefault(t *testing.T) {
 		t.Errorf("PrimaryColor = %q, want #ECECFF", th.PrimaryColor)
 	}
 }
+
+func TestModernThemeHasClassColors(t *testing.T) {
+	th := Modern()
+	if th.ClassHeaderBg == "" {
+		t.Error("ClassHeaderBg empty")
+	}
+	if th.StateFill == "" {
+		t.Error("StateFill empty")
+	}
+	if th.EntityHeaderBg == "" {
+		t.Error("EntityHeaderBg empty")
+	}
+}

@@ -8,6 +8,9 @@ type Layout struct {
 	PreferredAspectRatio *float32
 	Flowchart            FlowchartConfig
 	Padding              PaddingConfig
+	Class                ClassConfig
+	State                StateConfig
+	ER                   ERConfig
 }
 
 // FlowchartConfig holds flowchart-specific layout options.
@@ -20,6 +23,29 @@ type FlowchartConfig struct {
 type PaddingConfig struct {
 	NodeHorizontal float32
 	NodeVertical   float32
+}
+
+// ClassConfig holds class diagram layout options.
+type ClassConfig struct {
+	CompartmentPadX float32
+	CompartmentPadY float32
+	MemberFontSize  float32
+}
+
+// StateConfig holds state diagram layout options.
+type StateConfig struct {
+	CompositePadding   float32
+	RegionSeparatorPad float32
+	StartEndRadius     float32
+	ForkBarWidth       float32
+	ForkBarHeight      float32
+}
+
+// ERConfig holds ER diagram layout options.
+type ERConfig struct {
+	AttributeRowHeight float32
+	ColumnPadding      float32
+	HeaderPadding      float32
 }
 
 // DefaultLayout returns a Layout with default values for diagram rendering.
@@ -35,6 +61,23 @@ func DefaultLayout() *Layout {
 		Padding: PaddingConfig{
 			NodeHorizontal: 15,
 			NodeVertical:   10,
+		},
+		Class: ClassConfig{
+			CompartmentPadX: 12,
+			CompartmentPadY: 6,
+			MemberFontSize:  12,
+		},
+		State: StateConfig{
+			CompositePadding:   20,
+			RegionSeparatorPad: 10,
+			StartEndRadius:     8,
+			ForkBarWidth:       80,
+			ForkBarHeight:      6,
+		},
+		ER: ERConfig{
+			AttributeRowHeight: 22,
+			ColumnPadding:      10,
+			HeaderPadding:      8,
 		},
 	}
 }

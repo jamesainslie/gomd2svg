@@ -1,0 +1,12 @@
+classDiagram
+    class Animal {
+        +String name
+        +int age
+        +isMammal() bool
+        +mate()
+    }
+    class Dog {
+        +String breed
+        +bark() void
+    }
+    Animal <|-- Dog

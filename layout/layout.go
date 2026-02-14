@@ -13,47 +13,55 @@ func ComputeLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
 	switch g.Kind {
 	case ir.Flowchart:
 		return computeGraphLayout(g, th, cfg)
+	case ir.Class:
+		return computeClassLayout(g, th, cfg)
+	case ir.Er:
+		return computeERLayout(g, th, cfg)
+	case ir.State:
+		return computeStateLayout(g, th, cfg)
 	default:
 		// For unsupported diagram kinds, return a minimal layout.
 		return computeGraphLayout(g, th, cfg)
 	}
 }
 
+// sugiyamaResult holds the outputs of the shared Sugiyama pipeline.
+type sugiyamaResult struct {
+	Edges  []*EdgeLayout
+	Width  float32
+	Height float32
+}
+
+// runSugiyama runs the shared ranking, ordering, positioning, routing, and
+// bounding box pipeline steps.
+func runSugiyama(g *ir.Graph, nodes map[string]*NodeLayout, cfg *config.Layout) sugiyamaResult {
+	nodeIDs := sortedNodeIDs(g.Nodes, g.NodeOrder)
+	ranks := computeRanks(nodeIDs, g.Edges, g.NodeOrder)
+	layers := orderRankNodes(ranks, g.Edges, cfg.Flowchart.OrderPasses)
+	positionNodes(layers, nodes, g.Direction, cfg)
+	edges := routeEdges(g.Edges, nodes, g.Direction)
+	width, height := computeBoundingBox(nodes)
+	return sugiyamaResult{Edges: edges, Width: width, Height: height}
+}
+
 // computeGraphLayout runs the full Sugiyama-style layout pipeline:
 // 1. Size nodes based on text metrics
-// 2. Compute rank assignments via topological sort
-// 3. Order nodes within ranks to minimize crossings
-// 4. Assign X, Y coordinates
-// 5. Route edges with simple L-shaped polylines
-// 6. Compute the bounding box
+// 2. Run Sugiyama ranking, ordering, positioning, routing, and bounding box
 func computeGraphLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
 	measurer := textmetrics.New()
 
 	// Step 1: Size all nodes.
 	nodes := sizeNodes(g.Nodes, measurer, th, cfg)
 
-	// Step 2: Compute ranks using topological ordering.
-	nodeIDs := sortedNodeIDs(g.Nodes, g.NodeOrder)
-	ranks := computeRanks(nodeIDs, g.Edges, g.NodeOrder)
-
-	// Step 3: Order nodes within each rank (crossing minimization).
-	layers := orderRankNodes(ranks, g.Edges, cfg.Flowchart.OrderPasses)
-
-	// Step 4: Assign X, Y positions.
-	positionNodes(layers, nodes, g.Direction, cfg)
-
-	// Step 5: Route edges.
-	edges := routeEdges(g.Edges, nodes, g.Direction)
-
-	// Step 6: Compute bounding box.
-	width, height := computeBoundingBox(nodes)
+	// Step 2: Run Sugiyama pipeline.
+	r := runSugiyama(g, nodes, cfg)
 
 	return &Layout{
 		Kind:    g.Kind,
 		Nodes:   nodes,
-		Edges:   edges,
-		Width:   width,
-		Height:  height,
+		Edges:   r.Edges,
+		Width:   r.Width,
+		Height:  r.Height,
 		Diagram: GraphData{},
 	}
 }
