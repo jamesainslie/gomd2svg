@@ -61,3 +61,58 @@ func TestRenderContainsNodeLabels(t *testing.T) {
 		t.Error("missing label 'End'")
 	}
 }
+
+func TestGoldenFlowchartSimple(t *testing.T) {
+	input := "flowchart LR; A-->B-->C"
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render() error: %v", err)
+	}
+	if !strings.Contains(svg, "viewBox") {
+		t.Error("missing viewBox")
+	}
+	if strings.Count(svg, "<rect") < 3 {
+		t.Errorf("expected at least 3 rects (nodes), got %d", strings.Count(svg, "<rect"))
+	}
+	if strings.Count(svg, "edgePath") < 2 {
+		t.Errorf("expected at least 2 edge paths, got %d", strings.Count(svg, "edgePath"))
+	}
+	for _, label := range []string{"A", "B", "C"} {
+		if !strings.Contains(svg, ">"+label+"<") {
+			t.Errorf("missing node label %q in SVG", label)
+		}
+	}
+}
+
+func TestGoldenFlowchartLabels(t *testing.T) {
+	input := "flowchart TD\n    A[Start] --> B{Decision}\n    B -->|Yes| C[OK]\n    B -->|No| D[Cancel]"
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render() error: %v", err)
+	}
+	for _, label := range []string{"Start", "Decision", "OK", "Cancel"} {
+		if !strings.Contains(svg, label) {
+			t.Errorf("missing label %q in SVG", label)
+		}
+	}
+	if strings.Count(svg, "edgePath") < 3 {
+		t.Errorf("expected at least 3 edge paths, got %d", strings.Count(svg, "edgePath"))
+	}
+}
+
+func TestGoldenFlowchartShapes(t *testing.T) {
+	input := "flowchart LR\n    A[Rectangle] --> B(Rounded)\n    B --> C([Stadium])\n    C --> D{Diamond}\n    D --> E((Circle))"
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render() error: %v", err)
+	}
+	// Should have nodes for all 5
+	for _, label := range []string{"Rectangle", "Rounded", "Stadium", "Diamond", "Circle"} {
+		if !strings.Contains(svg, label) {
+			t.Errorf("missing label %q in SVG", label)
+		}
+	}
+	if strings.Count(svg, "edgePath") < 4 {
+		t.Errorf("expected at least 4 edge paths, got %d", strings.Count(svg, "edgePath"))
+	}
+}
