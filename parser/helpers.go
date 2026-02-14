@@ -132,7 +132,7 @@ func splitStatements(line string) []string {
 	return parts
 }
 
-// maskBracketContent replaces characters inside [], (), {}, "", '' with spaces
+// maskBracketContent replaces characters inside [], (), {}, "", ” with spaces
 // while preserving byte positions. This prevents edge-detection regexes from
 // matching dashes inside labels.
 func maskBracketContent(line string) string {
