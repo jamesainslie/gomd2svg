@@ -28,3 +28,7 @@ Thumbs.db
 # Build
 /bin/
 /dist/
+
+# Beads issue tracking
+.beads/
+AGENTS.md
