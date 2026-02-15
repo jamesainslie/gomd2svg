@@ -50,6 +50,8 @@ func RenderSVG(l *layout.Layout, th *theme.Theme, cfg *config.Layout) string {
 		renderSequence(&b, l, th, cfg)
 	case layout.KanbanData:
 		renderKanban(&b, l, th, cfg)
+	case layout.PacketData:
+		renderPacket(&b, l, th, cfg)
 	default:
 		// For other diagram types, still render graph as a fallback.
 		renderGraph(&b, l, th, cfg)
