@@ -357,3 +357,68 @@ func TestRenderPacketBitCount(t *testing.T) {
 		t.Error("expected field label 'Checksum'")
 	}
 }
+
+func TestRenderPieFixture(t *testing.T) {
+	input := readFixture(t, "pie-basic.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if !strings.Contains(svg, "<svg") {
+		t.Error("expected SVG output")
+	}
+	if !strings.Contains(svg, "Dogs") {
+		t.Error("missing Dogs label")
+	}
+	if !strings.Contains(svg, "<path") {
+		t.Error("missing arc path")
+	}
+}
+
+func TestRenderPieShowDataFixture(t *testing.T) {
+	input := readFixture(t, "pie-showdata.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if !strings.Contains(svg, "Calcium") {
+		t.Error("missing Calcium label")
+	}
+	if !strings.Contains(svg, "43") {
+		t.Error("missing value display with showData")
+	}
+}
+
+func TestRenderQuadrantFixture(t *testing.T) {
+	input := readFixture(t, "quadrant-campaigns.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if !strings.Contains(svg, "<svg") {
+		t.Error("expected SVG output")
+	}
+	if !strings.Contains(svg, "Campaign A") {
+		t.Error("missing Campaign A")
+	}
+	if !strings.Contains(svg, "<circle") {
+		t.Error("missing data point circles")
+	}
+	if !strings.Contains(svg, "We should expand") {
+		t.Error("missing quadrant label")
+	}
+}
+
+func TestRenderQuadrantMinimalFixture(t *testing.T) {
+	input := readFixture(t, "quadrant-minimal.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if !strings.Contains(svg, "Point A") {
+		t.Error("missing Point A")
+	}
+	if !strings.Contains(svg, "Point B") {
+		t.Error("missing Point B")
+	}
+}
