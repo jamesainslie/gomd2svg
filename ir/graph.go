@@ -74,6 +74,20 @@ type Graph struct {
 
 	// Packet diagram fields
 	Fields []*PacketField
+
+	// Pie diagram fields
+	PieSlices   []*PieSlice
+	PieTitle    string
+	PieShowData bool
+
+	// Quadrant diagram fields
+	QuadrantPoints []*QuadrantPoint
+	QuadrantTitle  string
+	QuadrantLabels [4]string // q1=top-right, q2=top-left, q3=bottom-left, q4=bottom-right
+	XAxisLeft      string
+	XAxisRight     string
+	YAxisBottom    string
+	YAxisTop       string
 }
 
 func NewGraph() *Graph {
