@@ -50,6 +50,12 @@ func Parse(input string) (*ParseOutput, error) {
 		return parseSankey(input)
 	case ir.Treemap:
 		return parseTreemap(input)
+	case ir.Requirement:
+		return parseRequirement(input)
+	case ir.Block:
+		return parseBlock(input)
+	case ir.C4:
+		return parseC4(input)
 	default:
 		return parseFlowchart(input)
 	}
