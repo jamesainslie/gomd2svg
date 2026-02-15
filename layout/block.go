@@ -18,7 +18,7 @@ func computeBlockLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layou
 
 	// Decide layout strategy
 	if g.BlockColumns > 0 {
-		return blockGridLayout(g, nodes, blockInfos, th, cfg)
+		return blockGridLayout(g, nodes, blockInfos, cfg)
 	}
 	if len(g.Edges) > 0 {
 		r := runSugiyama(g, nodes, cfg)
@@ -31,10 +31,10 @@ func computeBlockLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layou
 			Diagram: BlockData{Columns: 0, BlockInfos: blockInfos},
 		}
 	}
-	return blockGridLayout(g, nodes, blockInfos, th, cfg)
+	return blockGridLayout(g, nodes, blockInfos, cfg)
 }
 
-func blockGridLayout(g *ir.Graph, nodes map[string]*NodeLayout, blockInfos map[string]BlockInfo, th *theme.Theme, cfg *config.Layout) *Layout {
+func blockGridLayout(g *ir.Graph, nodes map[string]*NodeLayout, blockInfos map[string]BlockInfo, cfg *config.Layout) *Layout {
 	cols := g.BlockColumns
 	if cols <= 0 {
 		cols = 1

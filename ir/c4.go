@@ -89,7 +89,13 @@ func (e C4ElementType) String() string {
 
 // IsExternal returns true if the element type represents an external entity.
 func (e C4ElementType) IsExternal() bool {
-	return e >= C4ExternalPerson
+	switch e {
+	case C4ExternalPerson, C4ExternalSystem, C4ExternalSystemDb, C4ExternalSystemQueue,
+		C4ExternalContainer, C4ExternalContainerDb, C4ExternalContainerQueue, C4ExternalComponent:
+		return true
+	default:
+		return false
+	}
 }
 
 // IsPerson returns true if the element type is a person (internal or external).
