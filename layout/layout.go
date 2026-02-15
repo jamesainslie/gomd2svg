@@ -35,6 +35,10 @@ func ComputeLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
 		return computeGanttLayout(g, th, cfg)
 	case ir.GitGraph:
 		return computeGitGraphLayout(g, th, cfg)
+	case ir.XYChart:
+		return computeXYChartLayout(g, th, cfg)
+	case ir.Radar:
+		return computeRadarLayout(g, th, cfg)
 	default:
 		// For unsupported diagram kinds, return a minimal layout.
 		return computeGraphLayout(g, th, cfg)
