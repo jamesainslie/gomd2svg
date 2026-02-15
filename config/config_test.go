@@ -179,3 +179,56 @@ func TestDefaultLayoutC4Config(t *testing.T) {
 		t.Error("PersonWidth should be positive")
 	}
 }
+
+func TestDefaultLayoutJourneyConfig(t *testing.T) {
+	cfg := DefaultLayout()
+	if cfg.Journey.TaskWidth != 120 {
+		t.Errorf("Journey.TaskWidth = %v, want 120", cfg.Journey.TaskWidth)
+	}
+	if cfg.Journey.TaskHeight != 50 {
+		t.Errorf("Journey.TaskHeight = %v, want 50", cfg.Journey.TaskHeight)
+	}
+	if cfg.Journey.TaskSpacing != 20 {
+		t.Errorf("Journey.TaskSpacing = %v, want 20", cfg.Journey.TaskSpacing)
+	}
+	if cfg.Journey.TrackHeight != 200 {
+		t.Errorf("Journey.TrackHeight = %v, want 200", cfg.Journey.TrackHeight)
+	}
+	if cfg.Journey.SectionGap != 10 {
+		t.Errorf("Journey.SectionGap = %v, want 10", cfg.Journey.SectionGap)
+	}
+	if cfg.Journey.PaddingX != 30 {
+		t.Errorf("Journey.PaddingX = %v, want 30", cfg.Journey.PaddingX)
+	}
+	if cfg.Journey.PaddingY != 40 {
+		t.Errorf("Journey.PaddingY = %v, want 40", cfg.Journey.PaddingY)
+	}
+}
+
+func TestDefaultLayoutArchitectureConfig(t *testing.T) {
+	cfg := DefaultLayout()
+	if cfg.Architecture.ServiceWidth != 120 {
+		t.Errorf("Architecture.ServiceWidth = %v, want 120", cfg.Architecture.ServiceWidth)
+	}
+	if cfg.Architecture.ServiceHeight != 80 {
+		t.Errorf("Architecture.ServiceHeight = %v, want 80", cfg.Architecture.ServiceHeight)
+	}
+	if cfg.Architecture.GroupPadding != 30 {
+		t.Errorf("Architecture.GroupPadding = %v, want 30", cfg.Architecture.GroupPadding)
+	}
+	if cfg.Architecture.JunctionSize != 10 {
+		t.Errorf("Architecture.JunctionSize = %v, want 10", cfg.Architecture.JunctionSize)
+	}
+	if cfg.Architecture.ColumnGap != 60 {
+		t.Errorf("Architecture.ColumnGap = %v, want 60", cfg.Architecture.ColumnGap)
+	}
+	if cfg.Architecture.RowGap != 60 {
+		t.Errorf("Architecture.RowGap = %v, want 60", cfg.Architecture.RowGap)
+	}
+	if cfg.Architecture.PaddingX != 30 {
+		t.Errorf("Architecture.PaddingX = %v, want 30", cfg.Architecture.PaddingX)
+	}
+	if cfg.Architecture.PaddingY != 30 {
+		t.Errorf("Architecture.PaddingY = %v, want 30", cfg.Architecture.PaddingY)
+	}
+}

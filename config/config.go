@@ -27,6 +27,8 @@ type Layout struct {
 	Requirement          RequirementConfig
 	Block                BlockConfig
 	C4                   C4Config
+	Journey              JourneyConfig
+	Architecture         ArchitectureConfig
 }
 
 // FlowchartConfig holds flowchart-specific layout options.
@@ -228,6 +230,29 @@ type C4Config struct {
 	PaddingY        float32
 }
 
+// JourneyConfig holds journey diagram layout options.
+type JourneyConfig struct {
+	TaskWidth   float32
+	TaskHeight  float32
+	TaskSpacing float32
+	TrackHeight float32
+	SectionGap  float32
+	PaddingX    float32
+	PaddingY    float32
+}
+
+// ArchitectureConfig holds architecture diagram layout options.
+type ArchitectureConfig struct {
+	ServiceWidth  float32
+	ServiceHeight float32
+	GroupPadding  float32
+	JunctionSize  float32
+	ColumnGap     float32
+	RowGap        float32
+	PaddingX      float32
+	PaddingY      float32
+}
+
 // DefaultLayout returns a Layout with default values for diagram rendering.
 func DefaultLayout() *Layout {
 	return &Layout{
@@ -390,6 +415,25 @@ func DefaultLayout() *Layout {
 			BoundaryPadding: 20,
 			PaddingX:        20,
 			PaddingY:        20,
+		},
+		Journey: JourneyConfig{
+			TaskWidth:   120,
+			TaskHeight:  50,
+			TaskSpacing: 20,
+			TrackHeight: 200,
+			SectionGap:  10,
+			PaddingX:    30,
+			PaddingY:    40,
+		},
+		Architecture: ArchitectureConfig{
+			ServiceWidth:  120,
+			ServiceHeight: 80,
+			GroupPadding:  30,
+			JunctionSize:  10,
+			ColumnGap:     60,
+			RowGap:        60,
+			PaddingX:      30,
+			PaddingY:      30,
 		},
 	}
 }
