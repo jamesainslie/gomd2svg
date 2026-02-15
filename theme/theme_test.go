@@ -63,3 +63,36 @@ func TestModernQuadrantFills(t *testing.T) {
 		t.Error("QuadrantPointFill is empty")
 	}
 }
+
+func TestModernTimelineColors(t *testing.T) {
+	th := Modern()
+	if len(th.TimelineSectionColors) < 4 {
+		t.Errorf("TimelineSectionColors = %d, want >= 4", len(th.TimelineSectionColors))
+	}
+	if th.TimelineEventFill == "" {
+		t.Error("TimelineEventFill is empty")
+	}
+}
+
+func TestModernGanttColors(t *testing.T) {
+	th := Modern()
+	if th.GanttTaskFill == "" {
+		t.Error("GanttTaskFill is empty")
+	}
+	if th.GanttCritFill == "" {
+		t.Error("GanttCritFill is empty")
+	}
+	if len(th.GanttSectionColors) < 4 {
+		t.Errorf("GanttSectionColors = %d, want >= 4", len(th.GanttSectionColors))
+	}
+}
+
+func TestModernGitGraphColors(t *testing.T) {
+	th := Modern()
+	if len(th.GitBranchColors) < 8 {
+		t.Errorf("GitBranchColors = %d, want >= 8", len(th.GitBranchColors))
+	}
+	if th.GitCommitFill == "" {
+		t.Error("GitCommitFill is empty")
+	}
+}

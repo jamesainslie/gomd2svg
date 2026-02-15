@@ -74,6 +74,31 @@ type Theme struct {
 	EntityHeaderBg string
 	EntityBodyBg   string
 	EntityBorder   string
+
+	// Timeline diagram colors
+	TimelineSectionColors []string
+	TimelineEventFill     string
+	TimelineEventBorder   string
+
+	// Gantt diagram colors
+	GanttTaskFill         string
+	GanttTaskBorder       string
+	GanttCritFill         string
+	GanttCritBorder       string
+	GanttDoneFill         string
+	GanttActiveFill       string
+	GanttMilestoneFill    string
+	GanttGridColor        string
+	GanttTodayMarkerColor string
+	GanttSectionColors    []string
+
+	// GitGraph diagram colors
+	GitBranchColors  []string
+	GitCommitFill    string
+	GitCommitStroke  string
+	GitTagFill       string
+	GitTagBorder     string
+	GitHighlightFill string
 }
 
 // Modern returns a theme with a clean, modern color palette using the Inter font.
@@ -153,6 +178,31 @@ func Modern() *Theme {
 		EntityHeaderBg: "#4C78A8",
 		EntityBodyBg:   "#F0F4F8",
 		EntityBorder:   "#3B6492",
+
+		TimelineSectionColors: []string{"#E8EFF5", "#F0E8F0", "#E8F5E8", "#FFF8E1"},
+		TimelineEventFill:     "#4C78A8",
+		TimelineEventBorder:   "#3B6492",
+
+		GanttTaskFill:         "#4C78A8",
+		GanttTaskBorder:       "#3B6492",
+		GanttCritFill:         "#E45756",
+		GanttCritBorder:       "#CC3333",
+		GanttDoneFill:         "#B0C4DE",
+		GanttActiveFill:       "#72B7B2",
+		GanttMilestoneFill:    "#F58518",
+		GanttGridColor:        "#E0E0E0",
+		GanttTodayMarkerColor: "#E45756",
+		GanttSectionColors:    []string{"#F0F4F8", "#FFF8E1", "#F0E8F0", "#E8F5E8"},
+
+		GitBranchColors: []string{
+			"#4C78A8", "#E45756", "#54A24B", "#F58518",
+			"#72B7B2", "#B279A2", "#EECA3B", "#FF9DA6",
+		},
+		GitCommitFill:    "#333344",
+		GitCommitStroke:  "#333344",
+		GitTagFill:       "#EECA3B",
+		GitTagBorder:     "#C9A820",
+		GitHighlightFill: "#F58518",
 	}
 }
 
@@ -233,5 +283,30 @@ func MermaidDefault() *Theme {
 		EntityHeaderBg: "#ECECFF",
 		EntityBodyBg:   "#FFFFFF",
 		EntityBorder:   "#9370DB",
+
+		TimelineSectionColors: []string{"#ffffde", "#f0ece8", "#e8f0e8", "#ece8f0"},
+		TimelineEventFill:     "#ECECFF",
+		TimelineEventBorder:   "#9370DB",
+
+		GanttTaskFill:         "#8a90dd",
+		GanttTaskBorder:       "#534fbc",
+		GanttCritFill:         "#ff8888",
+		GanttCritBorder:       "#ff0000",
+		GanttDoneFill:         "#d3d3d3",
+		GanttActiveFill:       "#8a90dd",
+		GanttMilestoneFill:    "#E76F51",
+		GanttGridColor:        "#ddd",
+		GanttTodayMarkerColor: "#d42",
+		GanttSectionColors:    []string{"#ffffde", "#ffffff", "#ffffde", "#ffffff"},
+
+		GitBranchColors: []string{
+			"#9370DB", "#ff0000", "#00cc00", "#F58518",
+			"#48A9A6", "#E76F51", "#D08AC0", "#F7B7A3",
+		},
+		GitCommitFill:    "#333",
+		GitCommitStroke:  "#333",
+		GitTagFill:       "#ffffde",
+		GitTagBorder:     "#aaaa33",
+		GitHighlightFill: "#ff0000",
 	}
 }

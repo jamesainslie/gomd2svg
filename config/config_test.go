@@ -69,3 +69,36 @@ func TestDefaultLayoutQuadrantConfig(t *testing.T) {
 		t.Errorf("Quadrant.PointRadius = %f, want 5", cfg.Quadrant.PointRadius)
 	}
 }
+
+func TestDefaultLayoutTimelineConfig(t *testing.T) {
+	cfg := DefaultLayout()
+	if cfg.Timeline.PeriodWidth != 150 {
+		t.Errorf("Timeline.PeriodWidth = %f, want 150", cfg.Timeline.PeriodWidth)
+	}
+	if cfg.Timeline.EventHeight != 30 {
+		t.Errorf("Timeline.EventHeight = %f, want 30", cfg.Timeline.EventHeight)
+	}
+}
+
+func TestDefaultLayoutGanttConfig(t *testing.T) {
+	cfg := DefaultLayout()
+	if cfg.Gantt.BarHeight != 20 {
+		t.Errorf("Gantt.BarHeight = %f, want 20", cfg.Gantt.BarHeight)
+	}
+	if cfg.Gantt.SidePadding != 75 {
+		t.Errorf("Gantt.SidePadding = %f, want 75", cfg.Gantt.SidePadding)
+	}
+}
+
+func TestDefaultLayoutGitGraphConfig(t *testing.T) {
+	cfg := DefaultLayout()
+	if cfg.GitGraph.CommitRadius != 8 {
+		t.Errorf("GitGraph.CommitRadius = %f, want 8", cfg.GitGraph.CommitRadius)
+	}
+	if cfg.GitGraph.CommitSpacing != 60 {
+		t.Errorf("GitGraph.CommitSpacing = %f, want 60", cfg.GitGraph.CommitSpacing)
+	}
+	if cfg.GitGraph.BranchSpacing != 40 {
+		t.Errorf("GitGraph.BranchSpacing = %f, want 40", cfg.GitGraph.BranchSpacing)
+	}
+}

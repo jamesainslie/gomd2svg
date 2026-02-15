@@ -16,6 +16,9 @@ type Layout struct {
 	Packet               PacketConfig
 	Pie                  PieConfig
 	Quadrant             QuadrantConfig
+	Timeline             TimelineConfig
+	Gantt                GanttConfig
+	GitGraph             GitGraphConfig
 }
 
 // FlowchartConfig holds flowchart-specific layout options.
@@ -103,6 +106,37 @@ type QuadrantConfig struct {
 	AxisLabelFontSize     float32
 }
 
+// TimelineConfig holds timeline diagram layout options.
+type TimelineConfig struct {
+	PeriodWidth    float32
+	EventHeight    float32
+	SectionPadding float32
+	PaddingX       float32
+	PaddingY       float32
+}
+
+// GanttConfig holds Gantt chart layout options.
+type GanttConfig struct {
+	BarHeight            float32
+	BarGap               float32
+	TopPadding           float32
+	SidePadding          float32
+	GridLineStartPadding float32
+	FontSize             float32
+	SectionFontSize      float32
+	NumberSectionStyles  int
+}
+
+// GitGraphConfig holds GitGraph diagram layout options.
+type GitGraphConfig struct {
+	CommitRadius  float32
+	CommitSpacing float32
+	BranchSpacing float32
+	PaddingX      float32
+	PaddingY      float32
+	TagFontSize   float32
+}
+
 // DefaultLayout returns a Layout with default values for diagram rendering.
 func DefaultLayout() *Layout {
 	return &Layout{
@@ -173,6 +207,31 @@ func DefaultLayout() *Layout {
 			PaddingY:              40,
 			QuadrantLabelFontSize: 14,
 			AxisLabelFontSize:     12,
+		},
+		Timeline: TimelineConfig{
+			PeriodWidth:    150,
+			EventHeight:    30,
+			SectionPadding: 10,
+			PaddingX:       20,
+			PaddingY:       20,
+		},
+		Gantt: GanttConfig{
+			BarHeight:            20,
+			BarGap:               4,
+			TopPadding:           50,
+			SidePadding:          75,
+			GridLineStartPadding: 35,
+			FontSize:             11,
+			SectionFontSize:      11,
+			NumberSectionStyles:  4,
+		},
+		GitGraph: GitGraphConfig{
+			CommitRadius:  8,
+			CommitSpacing: 60,
+			BranchSpacing: 40,
+			PaddingX:      30,
+			PaddingY:      30,
+			TagFontSize:   11,
 		},
 	}
 }
