@@ -12,6 +12,8 @@ type Layout struct {
 	State                StateConfig
 	ER                   ERConfig
 	Sequence             SequenceConfig
+	Kanban               KanbanConfig
+	Packet               PacketConfig
 }
 
 // FlowchartConfig holds flowchart-specific layout options.
@@ -61,6 +63,24 @@ type SequenceConfig struct {
 	SelfMessageWidth   float32
 }
 
+// KanbanConfig holds Kanban diagram layout options.
+type KanbanConfig struct {
+	Padding      float32
+	SectionWidth float32
+	CardSpacing  float32
+	HeaderHeight float32
+}
+
+// PacketConfig holds Packet diagram layout options.
+type PacketConfig struct {
+	RowHeight  float32
+	BitWidth   float32
+	BitsPerRow int
+	ShowBits   bool
+	PaddingX   float32
+	PaddingY   float32
+}
+
 // DefaultLayout returns a Layout with default values for diagram rendering.
 func DefaultLayout() *Layout {
 	return &Layout{
@@ -101,6 +121,20 @@ func DefaultLayout() *Layout {
 			FramePadding:       10,
 			HeaderHeight:       40,
 			SelfMessageWidth:   40,
+		},
+		Kanban: KanbanConfig{
+			Padding:      8,
+			SectionWidth: 200,
+			CardSpacing:  8,
+			HeaderHeight: 36,
+		},
+		Packet: PacketConfig{
+			RowHeight:  32,
+			BitWidth:   32,
+			BitsPerRow: 32,
+			ShowBits:   true,
+			PaddingX:   5,
+			PaddingY:   5,
 		},
 	}
 }
