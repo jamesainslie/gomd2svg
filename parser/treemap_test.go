@@ -113,12 +113,12 @@ func TestParseTreemapClass(t *testing.T) {
 
 func TestParseTreemapNodeLine(t *testing.T) {
 	tests := []struct {
-		name     string
-		line     string
-		wantLbl  string
-		wantVal  float64
-		wantHas  bool
-		wantCls  string
+		name    string
+		line    string
+		wantLbl string
+		wantVal float64
+		wantHas bool
+		wantCls string
 	}{
 		{"quoted with value", `"Sales": 100`, "Sales", 100, true, ""},
 		{"quoted no value", `"Marketing"`, "Marketing", 0, false, ""},

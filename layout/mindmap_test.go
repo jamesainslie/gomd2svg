@@ -204,9 +204,8 @@ func TestMindmapLayoutPositiveCoordinates(t *testing.T) {
 		if top < 0 {
 			t.Errorf("%s top edge = %v (negative)", path, top)
 		}
-		for i, child := range n.Children {
+		for _, child := range n.Children {
 			checkPositive(child, path+"/"+child.Label)
-			_ = i
 		}
 	}
 	checkPositive(md.Root, "root")

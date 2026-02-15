@@ -113,6 +113,75 @@ func TestComputeLayoutDiamondShape(t *testing.T) {
 	}
 }
 
+func TestComputeLayoutNonNegativeCoordinates(t *testing.T) {
+	// All Sugiyama-based layouts must produce non-negative coordinates so that
+	// the SVG viewBox "0 0 W H" doesn't clip content.
+	tests := []struct {
+		name      string
+		direction ir.Direction
+		nodeCount int
+	}{
+		{"LR-2", ir.LeftRight, 2},
+		{"TD-2", ir.TopDown, 2},
+		{"LR-5", ir.LeftRight, 5},
+		{"TD-5", ir.TopDown, 5},
+		{"BT-3", ir.BottomTop, 3},
+		{"RL-3", ir.RightLeft, 3},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := ir.NewGraph()
+			g.Kind = ir.Flowchart
+			g.Direction = tt.direction
+
+			// Create a chain: A->B->C->...
+			ids := make([]string, tt.nodeCount)
+			for i := range ids {
+				ids[i] = string(rune('A' + i))
+				g.EnsureNode(ids[i], nil, nil)
+			}
+			for i := 0; i < len(ids)-1; i++ {
+				g.Edges = append(g.Edges, edge(ids[i], ids[i+1]))
+			}
+
+			th := theme.Modern()
+			cfg := config.DefaultLayout()
+			l := ComputeLayout(g, th, cfg)
+
+			// Every node must have non-negative bounding box.
+			for id, n := range l.Nodes {
+				left := n.X - n.Width/2
+				top := n.Y - n.Height/2
+				if left < 0 {
+					t.Errorf("node %s left edge = %f, want >= 0", id, left)
+				}
+				if top < 0 {
+					t.Errorf("node %s top edge = %f, want >= 0", id, top)
+				}
+			}
+
+			// Every edge point and label anchor must be non-negative.
+			for i, e := range l.Edges {
+				for j, pt := range e.Points {
+					if pt[0] < 0 {
+						t.Errorf("edge %d point %d X = %f, want >= 0", i, j, pt[0])
+					}
+					if pt[1] < 0 {
+						t.Errorf("edge %d point %d Y = %f, want >= 0", i, j, pt[1])
+					}
+				}
+				if e.LabelAnchor[0] < 0 {
+					t.Errorf("edge %d LabelAnchor X = %f, want >= 0", i, e.LabelAnchor[0])
+				}
+				if e.LabelAnchor[1] < 0 {
+					t.Errorf("edge %d LabelAnchor Y = %f, want >= 0", i, e.LabelAnchor[1])
+				}
+			}
+		})
+	}
+}
+
 func TestComputeLayoutEmptyGraph(t *testing.T) {
 	g := ir.NewGraph()
 	g.Kind = ir.Flowchart
