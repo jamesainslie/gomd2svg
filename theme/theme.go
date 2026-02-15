@@ -134,6 +134,23 @@ type Theme struct {
 	BlockColors     []string
 	BlockNodeBorder string
 
+	// Journey diagram colors
+	JourneySectionColors []string
+	JourneyTaskFill      string
+	JourneyTaskBorder    string
+	JourneyTaskText      string
+	JourneyScoreColors   [5]string // score 1-5 indicator colors (red to green)
+
+	// Architecture diagram colors
+	ArchServiceFill   string
+	ArchServiceBorder string
+	ArchServiceText   string
+	ArchGroupFill     string
+	ArchGroupBorder   string
+	ArchGroupText     string
+	ArchEdgeColor     string
+	ArchJunctionFill  string
+
 	// C4 diagram colors
 	C4PersonColor    string
 	C4SystemColor    string
@@ -292,6 +309,21 @@ func Modern() *Theme {
 		},
 		BlockNodeBorder: "#3B6492",
 
+		JourneySectionColors: []string{"#E8F5E9", "#E3F2FD", "#FFF3E0", "#F3E5F5", "#E0F7FA"},
+		JourneyTaskFill:      "#FFFFFF",
+		JourneyTaskBorder:    "#90A4AE",
+		JourneyTaskText:      "#263238",
+		JourneyScoreColors:   [5]string{"#F44336", "#FF9800", "#FFC107", "#8BC34A", "#4CAF50"},
+
+		ArchServiceFill:   "#E3F2FD",
+		ArchServiceBorder: "#1565C0",
+		ArchServiceText:   "#0D47A1",
+		ArchGroupFill:     "#F5F5F5",
+		ArchGroupBorder:   "#BDBDBD",
+		ArchGroupText:     "#424242",
+		ArchEdgeColor:     "#546E7A",
+		ArchJunctionFill:  "#546E7A",
+
 		C4PersonColor:    "#08427B",
 		C4SystemColor:    "#1168BD",
 		C4ContainerColor: "#438DD5",
@@ -449,6 +481,21 @@ func MermaidDefault() *Theme {
 			"#48A9A6", "#D08AC0", "#E4E36A", "#F7B7A3",
 		},
 		BlockNodeBorder: "#9370DB",
+
+		JourneySectionColors: []string{"#f4f4de", "#dde4ff", "#ffe6cc", "#e8d5f5", "#d5f5e3"},
+		JourneyTaskFill:      "#fff",
+		JourneyTaskBorder:    "#999",
+		JourneyTaskText:      "#333",
+		JourneyScoreColors:   [5]string{"#d32f2f", "#e65100", "#fbc02d", "#689f38", "#388e3c"},
+
+		ArchServiceFill:   "#cde4ff",
+		ArchServiceBorder: "#326ce5",
+		ArchServiceText:   "#1a237e",
+		ArchGroupFill:     "#ececff",
+		ArchGroupBorder:   "#9370db",
+		ArchGroupText:     "#333",
+		ArchEdgeColor:     "#666",
+		ArchJunctionFill:  "#666",
 
 		C4PersonColor:    "#08427B",
 		C4SystemColor:    "#1168BD",

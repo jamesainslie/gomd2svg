@@ -148,6 +148,17 @@ type Graph struct {
 	C4Elements   []*C4Element
 	C4Boundaries []*C4Boundary
 	C4Rels       []*C4Rel
+
+	// Journey diagram fields
+	JourneyTitle    string
+	JourneyTasks    []*JourneyTask
+	JourneySections []*JourneySection
+
+	// Architecture diagram fields
+	ArchServices  []*ArchService
+	ArchGroups    []*ArchGroup
+	ArchJunctions []*ArchJunction
+	ArchEdges     []*ArchEdge
 }
 
 func NewGraph() *Graph {

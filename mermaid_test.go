@@ -790,3 +790,65 @@ func TestRenderC4ContainerFixture(t *testing.T) {
 		t.Error("missing database label")
 	}
 }
+
+func TestRenderJourneyBasicFixture(t *testing.T) {
+	input := readFixture(t, "journey-basic.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if !strings.Contains(svg, "<svg") {
+		t.Error("expected SVG output")
+	}
+	if !strings.Contains(svg, "My Working Day") {
+		t.Error("missing title")
+	}
+	if !strings.Contains(svg, "Make tea") {
+		t.Error("missing task label")
+	}
+}
+
+func TestRenderJourneyMultiactorFixture(t *testing.T) {
+	input := readFixture(t, "journey-multiactor.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if !strings.Contains(svg, "Shopping Trip") {
+		t.Error("missing title")
+	}
+	if !strings.Contains(svg, "Enter store") {
+		t.Error("missing task label")
+	}
+}
+
+func TestRenderArchitectureBasicFixture(t *testing.T) {
+	input := readFixture(t, "architecture-basic.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if !strings.Contains(svg, "<svg") {
+		t.Error("expected SVG output")
+	}
+	if !strings.Contains(svg, "Database") {
+		t.Error("missing service label")
+	}
+	if !strings.Contains(svg, "Server") {
+		t.Error("missing service label")
+	}
+}
+
+func TestRenderArchitectureGroupsFixture(t *testing.T) {
+	input := readFixture(t, "architecture-groups.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if !strings.Contains(svg, "API") {
+		t.Error("missing group label")
+	}
+	if !strings.Contains(svg, "Database") {
+		t.Error("missing service label")
+	}
+}

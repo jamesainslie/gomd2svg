@@ -38,6 +38,8 @@ func Parse(input string) (*ParseOutput, error) {
 		return parseTimeline(input)
 	case ir.Gantt:
 		return parseGantt(input)
+	case ir.Journey:
+		return parseJourney(input)
 	case ir.GitGraph:
 		return parseGitGraph(input)
 	case ir.XYChart:
@@ -56,6 +58,8 @@ func Parse(input string) (*ParseOutput, error) {
 		return parseBlock(input)
 	case ir.C4:
 		return parseC4(input)
+	case ir.Architecture:
+		return parseArchitecture(input)
 	default:
 		return parseFlowchart(input)
 	}

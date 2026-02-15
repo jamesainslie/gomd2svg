@@ -176,3 +176,83 @@ func TestModernC4Colors(t *testing.T) {
 		t.Error("C4SystemColor empty")
 	}
 }
+
+func TestModernJourneyColors(t *testing.T) {
+	th := Modern()
+	if len(th.JourneySectionColors) == 0 {
+		t.Error("JourneySectionColors is empty")
+	}
+	if th.JourneyTaskFill == "" {
+		t.Error("JourneyTaskFill is empty")
+	}
+	if th.JourneyTaskBorder == "" {
+		t.Error("JourneyTaskBorder is empty")
+	}
+	if th.JourneyTaskText == "" {
+		t.Error("JourneyTaskText is empty")
+	}
+	for i, c := range th.JourneyScoreColors {
+		if c == "" {
+			t.Errorf("JourneyScoreColors[%d] is empty", i)
+		}
+	}
+}
+
+func TestModernArchitectureColors(t *testing.T) {
+	th := Modern()
+	if th.ArchServiceFill == "" {
+		t.Error("ArchServiceFill is empty")
+	}
+	if th.ArchServiceBorder == "" {
+		t.Error("ArchServiceBorder is empty")
+	}
+	if th.ArchServiceText == "" {
+		t.Error("ArchServiceText is empty")
+	}
+	if th.ArchGroupFill == "" {
+		t.Error("ArchGroupFill is empty")
+	}
+	if th.ArchGroupBorder == "" {
+		t.Error("ArchGroupBorder is empty")
+	}
+	if th.ArchGroupText == "" {
+		t.Error("ArchGroupText is empty")
+	}
+	if th.ArchEdgeColor == "" {
+		t.Error("ArchEdgeColor is empty")
+	}
+	if th.ArchJunctionFill == "" {
+		t.Error("ArchJunctionFill is empty")
+	}
+}
+
+func TestMermaidDefaultJourneyColors(t *testing.T) {
+	th := MermaidDefault()
+	if len(th.JourneySectionColors) == 0 {
+		t.Error("JourneySectionColors is empty")
+	}
+	if th.JourneyTaskFill == "" {
+		t.Error("JourneyTaskFill is empty")
+	}
+	for i, c := range th.JourneyScoreColors {
+		if c == "" {
+			t.Errorf("JourneyScoreColors[%d] is empty", i)
+		}
+	}
+}
+
+func TestMermaidDefaultArchitectureColors(t *testing.T) {
+	th := MermaidDefault()
+	if th.ArchServiceFill == "" {
+		t.Error("ArchServiceFill is empty")
+	}
+	if th.ArchGroupFill == "" {
+		t.Error("ArchGroupFill is empty")
+	}
+	if th.ArchEdgeColor == "" {
+		t.Error("ArchEdgeColor is empty")
+	}
+	if th.ArchJunctionFill == "" {
+		t.Error("ArchJunctionFill is empty")
+	}
+}
