@@ -68,6 +68,12 @@ type Graph struct {
 	Events       []*SeqEvent
 	Boxes        []*SeqBox
 	Autonumber   bool
+
+	// Kanban diagram fields
+	Columns []*KanbanColumn
+
+	// Packet diagram fields
+	Fields []*PacketField
 }
 
 func NewGraph() *Graph {

@@ -21,6 +21,10 @@ func ComputeLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
 		return computeStateLayout(g, th, cfg)
 	case ir.Sequence:
 		return computeSequenceLayout(g, th, cfg)
+	case ir.Kanban:
+		return computeKanbanLayout(g, th, cfg)
+	case ir.Packet:
+		return computePacketLayout(g, th, cfg)
 	default:
 		// For unsupported diagram kinds, return a minimal layout.
 		return computeGraphLayout(g, th, cfg)

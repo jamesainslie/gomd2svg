@@ -304,3 +304,56 @@ func TestGoldenSequenceFull(t *testing.T) {
 		t.Error("SVG should contain note text")
 	}
 }
+
+func TestRenderKanbanDiagram(t *testing.T) {
+	input := readFixture(t, "kanban-basic.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if !strings.Contains(svg, "<svg") {
+		t.Error("expected SVG output")
+	}
+	if !strings.Contains(svg, "Todo") {
+		t.Error("expected column label 'Todo'")
+	}
+	if !strings.Contains(svg, "Write tests") {
+		t.Error("expected card label 'Write tests'")
+	}
+}
+
+func TestRenderKanbanMetadata(t *testing.T) {
+	input := readFixture(t, "kanban-metadata.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if !strings.Contains(svg, "Fix login bug") {
+		t.Error("expected card label")
+	}
+}
+
+func TestRenderPacketDiagram(t *testing.T) {
+	input := readFixture(t, "packet-tcp.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if !strings.Contains(svg, "<svg") {
+		t.Error("expected SVG output")
+	}
+	if !strings.Contains(svg, "Source Port") {
+		t.Error("expected field label 'Source Port'")
+	}
+}
+
+func TestRenderPacketBitCount(t *testing.T) {
+	input := readFixture(t, "packet-bitcount.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if !strings.Contains(svg, "Checksum") {
+		t.Error("expected field label 'Checksum'")
+	}
+}

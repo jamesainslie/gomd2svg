@@ -3,7 +3,9 @@
 // positioned nodes, routed edges, and a bounding box.
 package layout
 
-import "github.com/jamesainslie/mermaid-go/ir"
+import (
+	"github.com/jamesainslie/mermaid-go/ir"
+)
 
 // Layout holds the fully computed positions and dimensions for a diagram.
 type Layout struct {
@@ -195,4 +197,58 @@ type SeqBoxLayout struct {
 	Y      float32
 	Width  float32
 	Height float32
+}
+
+// KanbanData holds Kanban-diagram-specific layout data.
+type KanbanData struct {
+	Columns []KanbanColumnLayout
+}
+
+func (KanbanData) diagramData() {}
+
+// KanbanColumnLayout holds the position of a Kanban column.
+type KanbanColumnLayout struct {
+	ID     string
+	Label  TextBlock
+	X, Y   float32
+	Width  float32
+	Height float32
+	Cards  []KanbanCardLayout
+}
+
+// KanbanCardLayout holds the position of a single Kanban card.
+type KanbanCardLayout struct {
+	ID       string
+	Label    TextBlock
+	Priority ir.KanbanPriority
+	X, Y     float32
+	Width    float32
+	Height   float32
+	Metadata map[string]string
+}
+
+// PacketData holds Packet-diagram-specific layout data.
+type PacketData struct {
+	Rows       []PacketRowLayout
+	BitsPerRow int
+	ShowBits   bool
+}
+
+func (PacketData) diagramData() {}
+
+// PacketRowLayout holds the position of a row of packet fields.
+type PacketRowLayout struct {
+	Y      float32
+	Height float32
+	Fields []PacketFieldLayout
+}
+
+// PacketFieldLayout holds the position of a single packet field cell.
+type PacketFieldLayout struct {
+	Label    TextBlock
+	X, Y     float32
+	Width    float32
+	Height   float32
+	StartBit int
+	EndBit   int
 }

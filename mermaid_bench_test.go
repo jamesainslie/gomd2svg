@@ -117,3 +117,25 @@ func BenchmarkRenderSequenceComplex(b *testing.B) {
 		}
 	}
 }
+
+func BenchmarkRenderKanban(b *testing.B) {
+	input := readBenchFixture(b, "kanban-basic.mmd")
+	b.ReportAllocs()
+	for b.Loop() {
+		_, err := Render(input)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkRenderPacket(b *testing.B) {
+	input := readBenchFixture(b, "packet-tcp.mmd")
+	b.ReportAllocs()
+	for b.Loop() {
+		_, err := Render(input)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
