@@ -26,6 +26,8 @@ func Parse(input string) (*ParseOutput, error) {
 		return parseER(input)
 	case ir.Sequence:
 		return parseSequence(input)
+	case ir.Kanban:
+		return parseKanban(input)
 	default:
 		return parseFlowchart(input)
 	}
