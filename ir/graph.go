@@ -123,6 +123,16 @@ type Graph struct {
 	RadarTicks         int
 	RadarMax           float64
 	RadarMin           float64
+
+	// Sankey diagram fields
+	SankeyLinks []*SankeyLink
+
+	// Mindmap diagram fields
+	MindmapRoot *MindmapNode
+
+	// Treemap diagram fields
+	TreemapRoot  *TreemapNode
+	TreemapTitle string
 }
 
 func NewGraph() *Graph {
