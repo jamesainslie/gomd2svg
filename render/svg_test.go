@@ -74,6 +74,7 @@ func TestRenderDefsHasAllMarkers(t *testing.T) {
 		"marker-closed-triangle", "marker-closed-triangle-start",
 		"marker-filled-diamond", "marker-filled-diamond-start",
 		"marker-open-diamond", "marker-open-diamond-start",
+		"marker-open-arrow", "marker-cross",
 	}
 	for _, id := range markers {
 		if !strings.Contains(svg, `id="`+id+`"`) {

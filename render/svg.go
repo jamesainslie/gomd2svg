@@ -109,5 +109,15 @@ func renderDefs(b *svgBuilder, th *theme.Theme) {
 	b.selfClose("path", "d", "M 0 10 L 10 0 L 20 10 L 10 20 z", "fill", th.Background, "stroke", th.LineColor, "stroke-width", "1")
 	b.closeTag("marker")
 
+	// Open arrowhead (async messages) — forward
+	b.raw(`<marker id="marker-open-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto">`)
+	b.selfClose("path", "d", "M 0 0 L 10 5 L 0 10", "fill", "none", "stroke", th.LineColor, "stroke-width", "1.5")
+	b.closeTag("marker")
+
+	// Cross end (termination messages) — forward
+	b.raw(`<marker id="marker-cross" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto">`)
+	b.selfClose("path", "d", "M 2 2 L 8 8 M 8 2 L 2 8", "fill", "none", "stroke", th.LineColor, "stroke-width", "1.5")
+	b.closeTag("marker")
+
 	b.closeTag("defs")
 }
