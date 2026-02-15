@@ -1,0 +1,6 @@
+architecture-beta
+  service db(database)[Database]
+  service server(server)[Server]
+  service web(cloud)[WebApp]
+  db:R -- L:server
+  server:R --> L:web
