@@ -125,6 +125,23 @@ type Theme struct {
 	TreemapColors    []string
 	TreemapBorder    string
 	TreemapTextColor string
+
+	// Requirement diagram colors
+	RequirementFill   string
+	RequirementBorder string
+
+	// Block diagram colors
+	BlockColors     []string
+	BlockNodeBorder string
+
+	// C4 diagram colors
+	C4PersonColor    string
+	C4SystemColor    string
+	C4ContainerColor string
+	C4ComponentColor string
+	C4ExternalColor  string
+	C4BoundaryColor  string
+	C4TextColor      string
 }
 
 // Modern returns a theme with a clean, modern color palette using the Inter font.
@@ -265,6 +282,23 @@ func Modern() *Theme {
 		},
 		TreemapBorder:    "#3B6492",
 		TreemapTextColor: "#FFFFFF",
+
+		RequirementFill:   "#F0F4F8",
+		RequirementBorder: "#3B6492",
+
+		BlockColors: []string{
+			"#4C78A8", "#72B7B2", "#EECA3B", "#F58518",
+			"#E45756", "#54A24B", "#B279A2", "#FF9DA6",
+		},
+		BlockNodeBorder: "#3B6492",
+
+		C4PersonColor:    "#08427B",
+		C4SystemColor:    "#1168BD",
+		C4ContainerColor: "#438DD5",
+		C4ComponentColor: "#85BBF0",
+		C4ExternalColor:  "#999999",
+		C4BoundaryColor:  "#444444",
+		C4TextColor:      "#FFFFFF",
 	}
 }
 
@@ -406,5 +440,22 @@ func MermaidDefault() *Theme {
 		},
 		TreemapBorder:    "#9370DB",
 		TreemapTextColor: "#333",
+
+		RequirementFill:   "#ECECFF",
+		RequirementBorder: "#9370DB",
+
+		BlockColors: []string{
+			"#9370DB", "#E76F51", "#7FB069", "#F4A261",
+			"#48A9A6", "#D08AC0", "#E4E36A", "#F7B7A3",
+		},
+		BlockNodeBorder: "#9370DB",
+
+		C4PersonColor:    "#08427B",
+		C4SystemColor:    "#1168BD",
+		C4ContainerColor: "#438DD5",
+		C4ComponentColor: "#85BBF0",
+		C4ExternalColor:  "#999999",
+		C4BoundaryColor:  "#444444",
+		C4TextColor:      "#FFFFFF",
 	}
 }

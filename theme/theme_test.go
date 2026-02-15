@@ -152,3 +152,27 @@ func TestModernRadarColors(t *testing.T) {
 		t.Error("Modern theme RadarGraticuleColor is empty")
 	}
 }
+
+func TestModernRequirementColors(t *testing.T) {
+	th := Modern()
+	if th.RequirementFill == "" {
+		t.Error("RequirementFill empty")
+	}
+}
+
+func TestModernBlockColors(t *testing.T) {
+	th := Modern()
+	if len(th.BlockColors) == 0 {
+		t.Error("BlockColors empty")
+	}
+}
+
+func TestModernC4Colors(t *testing.T) {
+	th := Modern()
+	if th.C4PersonColor == "" {
+		t.Error("C4PersonColor empty")
+	}
+	if th.C4SystemColor == "" {
+		t.Error("C4SystemColor empty")
+	}
+}

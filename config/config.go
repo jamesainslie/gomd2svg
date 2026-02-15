@@ -24,6 +24,9 @@ type Layout struct {
 	Mindmap              MindmapConfig
 	Sankey               SankeyConfig
 	Treemap              TreemapConfig
+	Requirement          RequirementConfig
+	Block                BlockConfig
+	C4                   C4Config
 }
 
 // FlowchartConfig holds flowchart-specific layout options.
@@ -196,6 +199,35 @@ type TreemapConfig struct {
 	ValueFontSize float32
 }
 
+// RequirementConfig holds requirement diagram layout options.
+type RequirementConfig struct {
+	NodeMinWidth     float32
+	NodePadding      float32
+	MetadataFontSize float32
+	PaddingX         float32
+	PaddingY         float32
+}
+
+// BlockConfig holds block diagram layout options.
+type BlockConfig struct {
+	ColumnGap   float32
+	RowGap      float32
+	NodePadding float32
+	PaddingX    float32
+	PaddingY    float32
+}
+
+// C4Config holds C4 diagram layout options.
+type C4Config struct {
+	PersonWidth     float32
+	PersonHeight    float32
+	SystemWidth     float32
+	SystemHeight    float32
+	BoundaryPadding float32
+	PaddingX        float32
+	PaddingY        float32
+}
+
 // DefaultLayout returns a Layout with default values for diagram rendering.
 func DefaultLayout() *Layout {
 	return &Layout{
@@ -335,6 +367,29 @@ func DefaultLayout() *Layout {
 			PaddingY:      10,
 			LabelFontSize: 12,
 			ValueFontSize: 10,
+		},
+		Requirement: RequirementConfig{
+			NodeMinWidth:     180,
+			NodePadding:      12,
+			MetadataFontSize: 11,
+			PaddingX:         10,
+			PaddingY:         10,
+		},
+		Block: BlockConfig{
+			ColumnGap:   20,
+			RowGap:      20,
+			NodePadding: 12,
+			PaddingX:    20,
+			PaddingY:    20,
+		},
+		C4: C4Config{
+			PersonWidth:     160,
+			PersonHeight:    180,
+			SystemWidth:     200,
+			SystemHeight:    120,
+			BoundaryPadding: 20,
+			PaddingX:        20,
+			PaddingY:        20,
 		},
 	}
 }
