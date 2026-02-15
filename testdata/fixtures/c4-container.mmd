@@ -1,0 +1,8 @@
+C4Container
+Person(user, "User", "End user")
+Container(web, "Web App", "React", "Frontend SPA")
+Container(api, "API", "Go", "REST API")
+ContainerDb(db, "Database", "PostgreSQL", "Stores data")
+Rel(user, web, "Uses", "HTTPS")
+Rel(web, api, "Calls", "JSON/HTTPS")
+Rel(api, db, "Reads/Writes", "SQL")
