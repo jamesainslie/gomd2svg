@@ -133,6 +133,21 @@ type Graph struct {
 	// Treemap diagram fields
 	TreemapRoot  *TreemapNode
 	TreemapTitle string
+
+	// Requirement diagram fields
+	Requirements     []*RequirementDef
+	ReqElements      []*ElementDef
+	ReqRelationships []*RequirementRel
+
+	// Block diagram fields
+	Blocks       []*BlockDef
+	BlockColumns int
+
+	// C4 diagram fields
+	C4SubKind    C4Kind
+	C4Elements   []*C4Element
+	C4Boundaries []*C4Boundary
+	C4Rels       []*C4Rel
 }
 
 func NewGraph() *Graph {

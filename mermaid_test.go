@@ -697,3 +697,96 @@ func TestRenderTreemapNestedFixture(t *testing.T) {
 		t.Error("missing nested leaf label")
 	}
 }
+
+func TestRenderRequirementBasicFixture(t *testing.T) {
+	input := readFixture(t, "requirement-basic.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if !strings.Contains(svg, "<svg") {
+		t.Error("expected SVG output")
+	}
+	if !strings.Contains(svg, "test_req") {
+		t.Error("missing requirement name")
+	}
+	if !strings.Contains(svg, "test_entity") {
+		t.Error("missing element name")
+	}
+}
+
+func TestRenderRequirementMultipleFixture(t *testing.T) {
+	input := readFixture(t, "requirement-multiple.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if !strings.Contains(svg, "FR-001") {
+		t.Error("missing requirement ID FR-001")
+	}
+	if !strings.Contains(svg, "auth_module") {
+		t.Error("missing element auth_module")
+	}
+}
+
+func TestRenderBlockGridFixture(t *testing.T) {
+	input := readFixture(t, "block-grid.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if !strings.Contains(svg, "<svg") {
+		t.Error("expected SVG output")
+	}
+	if !strings.Contains(svg, "BlockA") {
+		t.Error("missing block label")
+	}
+	if !strings.Contains(svg, "<rect") {
+		t.Error("missing block rectangles")
+	}
+}
+
+func TestRenderBlockEdgesFixture(t *testing.T) {
+	input := readFixture(t, "block-edges.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if !strings.Contains(svg, "Frontend") {
+		t.Error("missing Frontend label")
+	}
+	if !strings.Contains(svg, "Backend") {
+		t.Error("missing Backend label")
+	}
+}
+
+func TestRenderC4ContextFixture(t *testing.T) {
+	input := readFixture(t, "c4-context.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if !strings.Contains(svg, "<svg") {
+		t.Error("expected SVG output")
+	}
+	if !strings.Contains(svg, "User") {
+		t.Error("missing person label")
+	}
+	if !strings.Contains(svg, "Web Application") {
+		t.Error("missing system label")
+	}
+}
+
+func TestRenderC4ContainerFixture(t *testing.T) {
+	input := readFixture(t, "c4-container.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if !strings.Contains(svg, "API") {
+		t.Error("missing container label")
+	}
+	if !strings.Contains(svg, "Database") {
+		t.Error("missing database label")
+	}
+}

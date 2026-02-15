@@ -158,3 +158,24 @@ func TestRadarConfigDefaults(t *testing.T) {
 		t.Errorf("Radar.DefaultTicks = %v, want 5", cfg.Radar.DefaultTicks)
 	}
 }
+
+func TestDefaultLayoutRequirementConfig(t *testing.T) {
+	cfg := DefaultLayout()
+	if cfg.Requirement.NodeMinWidth <= 0 {
+		t.Error("NodeMinWidth should be positive")
+	}
+}
+
+func TestDefaultLayoutBlockConfig(t *testing.T) {
+	cfg := DefaultLayout()
+	if cfg.Block.ColumnGap <= 0 {
+		t.Error("ColumnGap should be positive")
+	}
+}
+
+func TestDefaultLayoutC4Config(t *testing.T) {
+	cfg := DefaultLayout()
+	if cfg.C4.PersonWidth <= 0 {
+		t.Error("PersonWidth should be positive")
+	}
+}

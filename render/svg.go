@@ -72,6 +72,12 @@ func RenderSVG(l *layout.Layout, th *theme.Theme, cfg *config.Layout) string {
 		renderSankey(&b, l, th, cfg)
 	case layout.TreemapData:
 		renderTreemap(&b, l, th, cfg)
+	case layout.RequirementData:
+		renderRequirement(&b, l, th, cfg)
+	case layout.BlockData:
+		renderBlock(&b, l, th, cfg)
+	case layout.C4Data:
+		renderC4(&b, l, th, cfg)
 	default:
 		// For other diagram types, still render graph as a fallback.
 		renderGraph(&b, l, th, cfg)

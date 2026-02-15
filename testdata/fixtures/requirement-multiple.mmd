@@ -1,0 +1,27 @@
+requirementDiagram
+
+functionalRequirement req1 {
+id: FR-001
+text: User login must use MFA
+risk: high
+verifymethod: inspection
+}
+
+performanceRequirement req2 {
+id: PR-001
+text: Response time under 200ms
+risk: medium
+verifymethod: analysis
+}
+
+element auth_module {
+type: module
+docref: DOC-AUTH-01
+}
+
+element perf_monitor {
+type: service
+}
+
+auth_module - satisfies -> req1
+perf_monitor - verifies -> req2

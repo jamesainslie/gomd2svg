@@ -556,3 +556,45 @@ type TreemapRectLayout struct {
 	IsSection  bool
 	ColorIndex int
 }
+
+// RequirementData holds requirement-diagram-specific layout data.
+type RequirementData struct {
+	Requirements map[string]*ir.RequirementDef
+	Elements     map[string]*ir.ElementDef
+	NodeKinds    map[string]string // node ID -> "requirement" or "element"
+}
+
+func (RequirementData) diagramData() {}
+
+// BlockData holds block-diagram-specific layout data.
+type BlockData struct {
+	Columns    int
+	BlockInfos map[string]BlockInfo
+}
+
+func (BlockData) diagramData() {}
+
+// BlockInfo stores per-block layout metadata.
+type BlockInfo struct {
+	Span        int
+	HasChildren bool
+}
+
+// C4Data holds C4-diagram-specific layout data.
+type C4Data struct {
+	Elements   map[string]*ir.C4Element
+	Boundaries []*C4BoundaryLayout
+	SubKind    ir.C4Kind
+}
+
+func (C4Data) diagramData() {}
+
+// C4BoundaryLayout stores positioned boundary rectangles.
+type C4BoundaryLayout struct {
+	ID     string
+	Label  string
+	Type   string
+	X, Y   float32
+	Width  float32
+	Height float32
+}

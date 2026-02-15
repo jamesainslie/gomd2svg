@@ -45,6 +45,12 @@ func ComputeLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
 		return computeSankeyLayout(g, th, cfg)
 	case ir.Treemap:
 		return computeTreemapLayout(g, th, cfg)
+	case ir.Requirement:
+		return computeRequirementLayout(g, th, cfg)
+	case ir.Block:
+		return computeBlockLayout(g, th, cfg)
+	case ir.C4:
+		return computeC4Layout(g, th, cfg)
 	default:
 		// For unsupported diagram kinds, return a minimal layout.
 		return computeGraphLayout(g, th, cfg)
