@@ -7,7 +7,10 @@ import (
 )
 
 func renderQuadrant(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.Layout) {
-	qd := l.Diagram.(layout.QuadrantData)
+	qd, ok := l.Diagram.(layout.QuadrantData)
+	if !ok {
+		return
+	}
 
 	cx := qd.ChartX
 	cy := qd.ChartY

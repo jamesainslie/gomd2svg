@@ -9,8 +9,11 @@ import (
 	"github.com/jamesainslie/mermaid-go/theme"
 )
 
-func renderPie(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.Layout) {
-	pd := l.Diagram.(layout.PieData)
+func renderPie(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *config.Layout) {
+	pd, ok := l.Diagram.(layout.PieData)
+	if !ok {
+		return
+	}
 
 	// Title.
 	if pd.Title != "" {
@@ -28,7 +31,10 @@ func renderPie(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.Lay
 	r := pd.Radius
 
 	for _, s := range pd.Slices {
-		color := th.PieColors[s.ColorIndex%len(th.PieColors)]
+		color := "#888888" // fallback
+		if len(th.PieColors) > 0 {
+			color = th.PieColors[s.ColorIndex%len(th.PieColors)]
+		}
 		opacity := fmt.Sprintf("%.2f", th.PieOpacity)
 
 		// Full circle special case.
