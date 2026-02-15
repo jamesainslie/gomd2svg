@@ -40,6 +40,10 @@ func Parse(input string) (*ParseOutput, error) {
 		return parseGantt(input)
 	case ir.GitGraph:
 		return parseGitGraph(input)
+	case ir.XYChart:
+		return parseXYChart(input)
+	case ir.Radar:
+		return parseRadar(input)
 	default:
 		return parseFlowchart(input)
 	}

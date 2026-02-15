@@ -102,3 +102,29 @@ func TestDefaultLayoutGitGraphConfig(t *testing.T) {
 		t.Errorf("GitGraph.BranchSpacing = %f, want 40", cfg.GitGraph.BranchSpacing)
 	}
 }
+
+func TestXYChartConfigDefaults(t *testing.T) {
+	cfg := DefaultLayout()
+	if cfg.XYChart.ChartWidth != 700 {
+		t.Errorf("XYChart.ChartWidth = %v, want 700", cfg.XYChart.ChartWidth)
+	}
+	if cfg.XYChart.ChartHeight != 500 {
+		t.Errorf("XYChart.ChartHeight = %v, want 500", cfg.XYChart.ChartHeight)
+	}
+	if cfg.XYChart.BarWidth != 0.6 {
+		t.Errorf("XYChart.BarWidth = %v, want 0.6", cfg.XYChart.BarWidth)
+	}
+}
+
+func TestRadarConfigDefaults(t *testing.T) {
+	cfg := DefaultLayout()
+	if cfg.Radar.Radius != 200 {
+		t.Errorf("Radar.Radius = %v, want 200", cfg.Radar.Radius)
+	}
+	if cfg.Radar.PaddingX != 40 {
+		t.Errorf("Radar.PaddingX = %v, want 40", cfg.Radar.PaddingX)
+	}
+	if cfg.Radar.DefaultTicks != 5 {
+		t.Errorf("Radar.DefaultTicks = %v, want 5", cfg.Radar.DefaultTicks)
+	}
+}

@@ -62,6 +62,10 @@ func RenderSVG(l *layout.Layout, th *theme.Theme, cfg *config.Layout) string {
 		renderGantt(&b, l, th, cfg)
 	case layout.GitGraphData:
 		renderGitGraph(&b, l, th, cfg)
+	case layout.XYChartData:
+		renderXYChart(&b, l, th, cfg)
+	case layout.RadarData:
+		renderRadar(&b, l, th, cfg)
 	default:
 		// For other diagram types, still render graph as a fallback.
 		renderGraph(&b, l, th, cfg)

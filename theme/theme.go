@@ -99,6 +99,17 @@ type Theme struct {
 	GitTagFill       string
 	GitTagBorder     string
 	GitHighlightFill string
+
+	// XYChart colors
+	XYChartColors    []string
+	XYChartAxisColor string
+	XYChartGridColor string
+
+	// Radar colors
+	RadarCurveColors    []string
+	RadarAxisColor      string
+	RadarGraticuleColor string
+	RadarCurveOpacity   float32
 }
 
 // Modern returns a theme with a clean, modern color palette using the Inter font.
@@ -203,6 +214,21 @@ func Modern() *Theme {
 		GitTagFill:       "#EECA3B",
 		GitTagBorder:     "#C9A820",
 		GitHighlightFill: "#F58518",
+
+		XYChartColors: []string{
+			"#4C78A8", "#72B7B2", "#EECA3B", "#F58518",
+			"#E45756", "#54A24B", "#B279A2", "#FF9DA6",
+		},
+		XYChartAxisColor: "#6E7B8B",
+		XYChartGridColor: "#E0E0E0",
+
+		RadarCurveColors: []string{
+			"#4C78A8", "#E45756", "#54A24B", "#F58518",
+			"#72B7B2", "#B279A2", "#EECA3B", "#FF9DA6",
+		},
+		RadarAxisColor:      "#6E7B8B",
+		RadarGraticuleColor: "#E0E0E0",
+		RadarCurveOpacity:   0.3,
 	}
 }
 
@@ -308,5 +334,20 @@ func MermaidDefault() *Theme {
 		GitTagFill:       "#ffffde",
 		GitTagBorder:     "#aaaa33",
 		GitHighlightFill: "#ff0000",
+
+		XYChartColors: []string{
+			"#4C78A8", "#48A9A6", "#E4E36A", "#F4A261",
+			"#E76F51", "#7FB069", "#D08AC0", "#F7B7A3",
+		},
+		XYChartAxisColor: "#333",
+		XYChartGridColor: "#ddd",
+
+		RadarCurveColors: []string{
+			"#9370DB", "#E76F51", "#7FB069", "#F4A261",
+			"#48A9A6", "#D08AC0", "#E4E36A", "#F7B7A3",
+		},
+		RadarAxisColor:      "#888",
+		RadarGraticuleColor: "#ddd",
+		RadarCurveOpacity:   0.3,
 	}
 }

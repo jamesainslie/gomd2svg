@@ -106,6 +106,23 @@ type Graph struct {
 	// GitGraph diagram fields
 	GitActions    []GitAction
 	GitMainBranch string
+
+	// XYChart diagram fields
+	XYSeries     []*XYSeries
+	XYTitle      string
+	XYXAxis      *XYAxis
+	XYYAxis      *XYAxis
+	XYHorizontal bool
+
+	// Radar diagram fields
+	RadarAxes          []*RadarAxis
+	RadarCurves        []*RadarCurve
+	RadarTitle         string
+	RadarGraticuleType RadarGraticule
+	RadarShowLegend    bool
+	RadarTicks         int
+	RadarMax           float64
+	RadarMin           float64
 }
 
 func NewGraph() *Graph {

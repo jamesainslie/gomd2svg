@@ -527,3 +527,74 @@ func TestRenderGitGraphBranchesFixture(t *testing.T) {
 		t.Error("missing branch label bugfix")
 	}
 }
+
+func TestRenderXYChartFixture(t *testing.T) {
+	input := readFixture(t, "xychart-basic.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if !strings.Contains(svg, "<svg") {
+		t.Error("expected SVG output")
+	}
+	if !strings.Contains(svg, "Sales Revenue") {
+		t.Error("missing title")
+	}
+	if !strings.Contains(svg, "<rect") {
+		t.Error("missing bar rects")
+	}
+	if !strings.Contains(svg, "<polyline") {
+		t.Error("missing line polyline")
+	}
+}
+
+func TestRenderXYChartHorizontalFixture(t *testing.T) {
+	input := readFixture(t, "xychart-horizontal.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if !strings.Contains(svg, "<svg") {
+		t.Error("expected SVG output")
+	}
+	if !strings.Contains(svg, "Performance") {
+		t.Error("missing title")
+	}
+}
+
+func TestRenderRadarFixture(t *testing.T) {
+	input := readFixture(t, "radar-basic.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if !strings.Contains(svg, "<svg") {
+		t.Error("expected SVG output")
+	}
+	if !strings.Contains(svg, "Language Skills") {
+		t.Error("missing title")
+	}
+	if !strings.Contains(svg, "<polygon") {
+		t.Error("missing curve polygons")
+	}
+	if !strings.Contains(svg, "<line") {
+		t.Error("missing axis lines")
+	}
+}
+
+func TestRenderRadarPolygonFixture(t *testing.T) {
+	input := readFixture(t, "radar-polygon.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if !strings.Contains(svg, "<svg") {
+		t.Error("expected SVG output")
+	}
+	if !strings.Contains(svg, "Team Comparison") {
+		t.Error("missing title")
+	}
+	if !strings.Contains(svg, "<polygon") {
+		t.Error("missing polygon graticule/curves")
+	}
+}

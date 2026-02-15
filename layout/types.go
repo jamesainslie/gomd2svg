@@ -412,3 +412,81 @@ type GitGraphConnection struct {
 	ToX, ToY     float32
 	IsCherryPick bool
 }
+
+// XYChartData holds XY chart layout data.
+type XYChartData struct {
+	Series      []XYSeriesLayout
+	XLabels     []XYAxisLabel
+	YTicks      []XYAxisTick
+	Title       string
+	ChartX      float32
+	ChartY      float32
+	ChartWidth  float32
+	ChartHeight float32
+	YMin        float64
+	YMax        float64
+	Horizontal  bool
+}
+
+func (XYChartData) diagramData() {}
+
+// XYSeriesLayout holds one positioned data series.
+type XYSeriesLayout struct {
+	Type       ir.XYSeriesType
+	Points     []XYPointLayout
+	ColorIndex int
+}
+
+// XYPointLayout holds the pixel position and value of one data point.
+type XYPointLayout struct {
+	X      float32
+	Y      float32
+	Width  float32 // bar width (0 for line points)
+	Height float32 // bar height (0 for line points)
+	Value  float64
+}
+
+// XYAxisLabel holds a label on the x-axis.
+type XYAxisLabel struct {
+	Text string
+	X    float32
+}
+
+// XYAxisTick holds a tick mark on the y-axis.
+type XYAxisTick struct {
+	Label string
+	Y     float32
+}
+
+// RadarData holds radar chart layout data.
+type RadarData struct {
+	Axes           []RadarAxisLayout
+	Curves         []RadarCurveLayout
+	GraticuleRadii []float32
+	GraticuleType  ir.RadarGraticule
+	CenterX        float32
+	CenterY        float32
+	Radius         float32
+	Title          string
+	ShowLegend     bool
+	MaxValue       float64
+	MinValue       float64
+}
+
+func (RadarData) diagramData() {}
+
+// RadarAxisLayout holds the endpoint and label position of one axis.
+type RadarAxisLayout struct {
+	Label  string
+	EndX   float32
+	EndY   float32
+	LabelX float32
+	LabelY float32
+}
+
+// RadarCurveLayout holds one data series polygon.
+type RadarCurveLayout struct {
+	Label      string
+	Points     [][2]float32
+	ColorIndex int
+}

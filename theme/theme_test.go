@@ -96,3 +96,29 @@ func TestModernGitGraphColors(t *testing.T) {
 		t.Error("GitCommitFill is empty")
 	}
 }
+
+func TestModernXYChartColors(t *testing.T) {
+	th := Modern()
+	if len(th.XYChartColors) == 0 {
+		t.Error("Modern theme XYChartColors is empty")
+	}
+	if th.XYChartAxisColor == "" {
+		t.Error("Modern theme XYChartAxisColor is empty")
+	}
+	if th.XYChartGridColor == "" {
+		t.Error("Modern theme XYChartGridColor is empty")
+	}
+}
+
+func TestModernRadarColors(t *testing.T) {
+	th := Modern()
+	if len(th.RadarCurveColors) == 0 {
+		t.Error("Modern theme RadarCurveColors is empty")
+	}
+	if th.RadarAxisColor == "" {
+		t.Error("Modern theme RadarAxisColor is empty")
+	}
+	if th.RadarGraticuleColor == "" {
+		t.Error("Modern theme RadarGraticuleColor is empty")
+	}
+}
