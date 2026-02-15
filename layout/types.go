@@ -598,3 +598,64 @@ type C4BoundaryLayout struct {
 	Width  float32
 	Height float32
 }
+
+// JourneyData holds journey-diagram-specific layout data.
+type JourneyData struct {
+	Sections []JourneySectionLayout
+	Title    string
+	Actors   []JourneyActorLayout
+	TrackY   float32
+	TrackH   float32
+}
+
+func (JourneyData) diagramData() {}
+
+// JourneySectionLayout holds positioned section data.
+type JourneySectionLayout struct {
+	Label  string
+	X, Y   float32
+	Width  float32
+	Height float32
+	Color  string
+	Tasks  []JourneyTaskLayout
+}
+
+// JourneyTaskLayout holds positioned task data.
+type JourneyTaskLayout struct {
+	Label  string
+	Score  int
+	X, Y   float32
+	Width  float32
+	Height float32
+}
+
+// JourneyActorLayout holds actor legend data.
+type JourneyActorLayout struct {
+	Name       string
+	ColorIndex int
+}
+
+// ArchitectureData holds architecture-diagram-specific layout data.
+type ArchitectureData struct {
+	Groups    []ArchGroupLayout
+	Junctions []ArchJunctionLayout
+}
+
+func (ArchitectureData) diagramData() {}
+
+// ArchGroupLayout holds positioned group data.
+type ArchGroupLayout struct {
+	ID     string
+	Label  string
+	Icon   string
+	X, Y   float32
+	Width  float32
+	Height float32
+}
+
+// ArchJunctionLayout holds positioned junction data.
+type ArchJunctionLayout struct {
+	ID   string
+	X, Y float32
+	Size float32
+}
