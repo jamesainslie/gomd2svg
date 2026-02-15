@@ -19,6 +19,8 @@ type Layout struct {
 	Timeline             TimelineConfig
 	Gantt                GanttConfig
 	GitGraph             GitGraphConfig
+	XYChart              XYChartConfig
+	Radar                RadarConfig
 }
 
 // FlowchartConfig holds flowchart-specific layout options.
@@ -137,6 +139,28 @@ type GitGraphConfig struct {
 	TagFontSize   float32
 }
 
+// XYChartConfig holds XY chart layout options.
+type XYChartConfig struct {
+	ChartWidth    float32
+	ChartHeight   float32
+	PaddingX      float32
+	PaddingY      float32
+	BarWidth      float32 // fraction of band width (0-1)
+	TickLength    float32
+	AxisFontSize  float32
+	TitleFontSize float32
+}
+
+// RadarConfig holds radar chart layout options.
+type RadarConfig struct {
+	Radius       float32
+	PaddingX     float32
+	PaddingY     float32
+	DefaultTicks int
+	LabelOffset  float32 // extra distance for axis labels beyond radius
+	CurveOpacity float32
+}
+
 // DefaultLayout returns a Layout with default values for diagram rendering.
 func DefaultLayout() *Layout {
 	return &Layout{
@@ -232,6 +256,24 @@ func DefaultLayout() *Layout {
 			PaddingX:      30,
 			PaddingY:      30,
 			TagFontSize:   11,
+		},
+		XYChart: XYChartConfig{
+			ChartWidth:    700,
+			ChartHeight:   500,
+			PaddingX:      60,
+			PaddingY:      40,
+			BarWidth:      0.6,
+			TickLength:    5,
+			AxisFontSize:  12,
+			TitleFontSize: 16,
+		},
+		Radar: RadarConfig{
+			Radius:       200,
+			PaddingX:     40,
+			PaddingY:     40,
+			DefaultTicks: 5,
+			LabelOffset:  20,
+			CurveOpacity: 0.3,
 		},
 	}
 }
