@@ -44,6 +44,12 @@ func Parse(input string) (*ParseOutput, error) {
 		return parseXYChart(input)
 	case ir.Radar:
 		return parseRadar(input)
+	case ir.Mindmap:
+		return parseMindmap(input)
+	case ir.Sankey:
+		return parseSankey(input)
+	case ir.Treemap:
+		return parseTreemap(input)
 	default:
 		return parseFlowchart(input)
 	}
