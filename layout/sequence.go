@@ -1,6 +1,7 @@
 package layout
 
 import (
+	"math"
 	"strings"
 
 	"github.com/jamesainslie/mermaid-go/config"
@@ -307,8 +308,8 @@ func computeSequenceLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *La
 		if len(box.Participants) == 0 {
 			continue
 		}
-		minX := float32(1e9)
-		maxX := float32(-1e9)
+		minX := float32(math.MaxFloat32)
+		maxX := float32(-math.MaxFloat32)
 		for _, pid := range box.Participants {
 			if idx, ok := pIndex[pid]; ok {
 				pi := pInfos[idx]

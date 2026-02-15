@@ -98,16 +98,22 @@ func readBenchFixture(b *testing.B, name string) string {
 
 func BenchmarkRenderSequenceSimple(b *testing.B) {
 	input := readBenchFixture(b, "sequence-simple.mmd")
-	b.ResetTimer()
+	b.ReportAllocs()
 	for b.Loop() {
-		_, _ = Render(input)
+		_, err := Render(input)
+		if err != nil {
+			b.Fatal(err)
+		}
 	}
 }
 
 func BenchmarkRenderSequenceComplex(b *testing.B) {
 	input := readBenchFixture(b, "sequence-full.mmd")
-	b.ResetTimer()
+	b.ReportAllocs()
 	for b.Loop() {
-		_, _ = Render(input)
+		_, err := Render(input)
+		if err != nil {
+			b.Fatal(err)
+		}
 	}
 }
