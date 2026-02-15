@@ -11,6 +11,7 @@ type Layout struct {
 	Class                ClassConfig
 	State                StateConfig
 	ER                   ERConfig
+	Sequence             SequenceConfig
 }
 
 // FlowchartConfig holds flowchart-specific layout options.
@@ -48,6 +49,18 @@ type ERConfig struct {
 	HeaderPadding      float32
 }
 
+// SequenceConfig holds sequence diagram layout options.
+type SequenceConfig struct {
+	ParticipantSpacing float32
+	MessageSpacing     float32
+	ActivationWidth    float32
+	NoteMaxWidth       float32
+	BoxPadding         float32
+	FramePadding       float32
+	HeaderHeight       float32
+	SelfMessageWidth   float32
+}
+
 // DefaultLayout returns a Layout with default values for diagram rendering.
 func DefaultLayout() *Layout {
 	return &Layout{
@@ -78,6 +91,16 @@ func DefaultLayout() *Layout {
 			AttributeRowHeight: 22,
 			ColumnPadding:      10,
 			HeaderPadding:      8,
+		},
+		Sequence: SequenceConfig{
+			ParticipantSpacing: 80,
+			MessageSpacing:     40,
+			ActivationWidth:    16,
+			NoteMaxWidth:       200,
+			BoxPadding:         12,
+			FramePadding:       10,
+			HeaderHeight:       40,
+			SelfMessageWidth:   40,
 		},
 	}
 }

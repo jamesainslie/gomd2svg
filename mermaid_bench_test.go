@@ -1,6 +1,9 @@
 package mermaid
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
 func BenchmarkRenderSimple(b *testing.B) {
 	input := "flowchart LR; A-->B-->C"
@@ -75,6 +78,37 @@ func BenchmarkRenderERDiagram(b *testing.B) {
         string name
         int id PK
     }`
+	b.ReportAllocs()
+	for b.Loop() {
+		_, err := Render(input)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func readBenchFixture(b *testing.B, name string) string {
+	b.Helper()
+	data, err := os.ReadFile("testdata/fixtures/" + name)
+	if err != nil {
+		b.Fatalf("readBenchFixture(%q): %v", name, err)
+	}
+	return string(data)
+}
+
+func BenchmarkRenderSequenceSimple(b *testing.B) {
+	input := readBenchFixture(b, "sequence-simple.mmd")
+	b.ReportAllocs()
+	for b.Loop() {
+		_, err := Render(input)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkRenderSequenceComplex(b *testing.B) {
+	input := readBenchFixture(b, "sequence-full.mmd")
 	b.ReportAllocs()
 	for b.Loop() {
 		_, err := Render(input)

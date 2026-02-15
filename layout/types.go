@@ -110,3 +110,89 @@ type StateData struct {
 }
 
 func (StateData) diagramData() {}
+
+// SequenceData holds sequence-diagram-specific layout data.
+type SequenceData struct {
+	Participants  []SeqParticipantLayout
+	Lifelines     []SeqLifeline
+	Messages      []SeqMessageLayout
+	Activations   []SeqActivationLayout
+	Notes         []SeqNoteLayout
+	Frames        []SeqFrameLayout
+	Boxes         []SeqBoxLayout
+	Autonumber    bool
+	DiagramHeight float32
+}
+
+func (SequenceData) diagramData() {}
+
+// SeqParticipantLayout holds the position of a participant header.
+type SeqParticipantLayout struct {
+	ID     string
+	Label  TextBlock
+	Kind   ir.SeqParticipantKind
+	X      float32 // center X
+	Y      float32 // top Y (0 for normal, mid-diagram for created)
+	Width  float32
+	Height float32
+}
+
+// SeqLifeline is a vertical dashed line from participant to diagram bottom.
+type SeqLifeline struct {
+	ParticipantID string
+	X             float32
+	TopY          float32
+	BottomY       float32
+}
+
+// SeqMessageLayout holds the position of a message arrow.
+type SeqMessageLayout struct {
+	From   string
+	To     string
+	Text   TextBlock
+	Kind   ir.SeqMessageKind
+	Y      float32 // vertical position
+	FromX  float32
+	ToX    float32
+	Number int // autonumber (0 if disabled)
+}
+
+// SeqActivationLayout holds the bounds of an activation bar.
+type SeqActivationLayout struct {
+	ParticipantID string
+	X             float32
+	TopY          float32
+	BottomY       float32
+	Width         float32
+}
+
+// SeqNoteLayout holds the position and content of a note.
+type SeqNoteLayout struct {
+	Text   TextBlock
+	X      float32
+	Y      float32
+	Width  float32
+	Height float32
+}
+
+// SeqFrameLayout holds the bounds and label of a frame (combined fragment).
+type SeqFrameLayout struct {
+	Kind     ir.SeqFrameKind
+	Label    string
+	Color    string
+	X        float32
+	Y        float32
+	Width    float32
+	Height   float32
+	Dividers []float32 // Y positions of else/and/option divider lines
+}
+
+// SeqBoxLayout holds the bounds and label of a participant box group.
+type SeqBoxLayout struct {
+	Label  string
+	Color  string
+	X      float32
+	Y      float32
+	Width  float32
+	Height float32
+}

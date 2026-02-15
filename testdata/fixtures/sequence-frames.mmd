@@ -1,0 +1,16 @@
+sequenceDiagram
+    loop Every 5s
+        Alice->>Bob: Health check
+        Bob-->>Alice: OK
+    end
+    alt is authenticated
+        Alice->>Bob: Get data
+        Bob-->>Alice: Data
+    else is not authenticated
+        Bob-->>Alice: Error 401
+    end
+    par Task A
+        Alice->>Charlie: Do A
+    and Task B
+        Alice->>Dave: Do B
+    end

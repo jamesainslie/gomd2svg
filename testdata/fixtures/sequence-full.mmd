@@ -1,0 +1,18 @@
+sequenceDiagram
+    autonumber
+    box Purple Backend
+        participant API as API Gateway
+        participant DB as Database
+    end
+    actor User
+    User->>API: Login request
+    activate API
+    API->>+DB: Query user
+    Note over API,DB: Auth flow
+    DB-->>-API: User record
+    alt valid credentials
+        API-->>User: 200 OK
+    else invalid
+        API-->>User: 401 Unauthorized
+    end
+    deactivate API

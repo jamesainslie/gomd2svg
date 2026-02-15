@@ -1,6 +1,7 @@
 package mermaid
 
 import (
+	"os"
 	"strings"
 	"testing"
 )
@@ -236,5 +237,70 @@ func TestGoldenERAttributes(t *testing.T) {
 	}
 	if !strings.Contains(svg, "places") {
 		t.Error("missing relationship label 'places'")
+	}
+}
+
+func readFixture(t *testing.T, name string) string {
+	t.Helper()
+	data, err := os.ReadFile("testdata/fixtures/" + name)
+	if err != nil {
+		t.Fatalf("readFixture(%q): %v", name, err)
+	}
+	return string(data)
+}
+
+func TestRenderSequenceDiagram(t *testing.T) {
+	input := readFixture(t, "sequence-simple.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(svg, "<svg") {
+		t.Error("output should be SVG")
+	}
+	if !strings.Contains(svg, "Alice") {
+		t.Error("SVG should contain Alice")
+	}
+	if !strings.Contains(svg, "Bob") {
+		t.Error("SVG should contain Bob")
+	}
+}
+
+func TestGoldenSequenceActivations(t *testing.T) {
+	input := readFixture(t, "sequence-activations.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(svg, "Hello John") {
+		t.Error("SVG should contain message text")
+	}
+}
+
+func TestGoldenSequenceFrames(t *testing.T) {
+	input := readFixture(t, "sequence-frames.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(svg, "loop") {
+		t.Error("SVG should contain loop frame label")
+	}
+	if !strings.Contains(svg, "alt") {
+		t.Error("SVG should contain alt frame label")
+	}
+}
+
+func TestGoldenSequenceFull(t *testing.T) {
+	input := readFixture(t, "sequence-full.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(svg, "API Gateway") {
+		t.Error("SVG should contain participant alias")
+	}
+	if !strings.Contains(svg, "Auth flow") {
+		t.Error("SVG should contain note text")
 	}
 }

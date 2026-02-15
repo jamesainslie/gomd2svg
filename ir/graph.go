@@ -62,6 +62,12 @@ type Graph struct {
 	CompositeStates   map[string]*CompositeState
 	StateDescriptions map[string]string
 	StateAnnotations  map[string]StateAnnotation
+
+	// Sequence diagram fields
+	Participants []*SeqParticipant
+	Events       []*SeqEvent
+	Boxes        []*SeqBox
+	Autonumber   bool
 }
 
 func NewGraph() *Graph {
