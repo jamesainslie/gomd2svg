@@ -34,6 +34,12 @@ func Parse(input string) (*ParseOutput, error) {
 		return parsePie(input)
 	case ir.Quadrant:
 		return parseQuadrant(input)
+	case ir.Timeline:
+		return parseTimeline(input)
+	case ir.Gantt:
+		return parseGantt(input)
+	case ir.GitGraph:
+		return parseGitGraph(input)
 	default:
 		return parseFlowchart(input)
 	}
