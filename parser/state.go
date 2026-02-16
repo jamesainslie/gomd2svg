@@ -37,6 +37,31 @@ func parseState(input string) (*ParseOutput, error) {
 
 	parseStateBody(bodyLines, graph)
 
+	// Validate brace balance: count open and close braces across all body lines.
+	depth := 0
+	for _, line := range bodyLines {
+		for _, ch := range line {
+			switch ch {
+			case '{':
+				depth++
+			case '}':
+				depth--
+			}
+		}
+	}
+	if depth > 0 {
+		return nil, &ParseError{
+			Diagram: "state",
+			Message: "unclosed composite state (missing \"}\")",
+		}
+	}
+	if depth < 0 {
+		return nil, &ParseError{
+			Diagram: "state",
+			Message: "unexpected \"}\" without matching \"{\"",
+		}
+	}
+
 	return &ParseOutput{Graph: graph}, nil
 }
 

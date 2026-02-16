@@ -501,9 +501,12 @@ func parseZenUML(input string) (*ParseOutput, error) {
 		}
 	}
 
-	// Close any unclosed blocks.
-	for len(stack) > 0 {
-		closeBlock("", "")
+	// Validate: unclosed blocks are structural errors.
+	if len(stack) > 0 {
+		return nil, &ParseError{
+			Diagram: "zenuml",
+			Message: "unclosed block (missing \"}\")",
+		}
 	}
 
 	return &ParseOutput{Graph: g}, nil

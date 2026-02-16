@@ -101,6 +101,13 @@ func parseFlowchart(input string) (*ParseOutput, error) {
 		}
 	}
 
+	if len(subgraphStack) > 0 {
+		return nil, &ParseError{
+			Diagram: "flowchart",
+			Message: "unclosed subgraph (missing \"end\")",
+		}
+	}
+
 	return &ParseOutput{Graph: graph}, nil
 }
 

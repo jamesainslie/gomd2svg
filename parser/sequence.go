@@ -82,6 +82,9 @@ func parseSequence(input string) (*ParseOutput, error) {
 	var currentBox *ir.SeqBox
 	inBox := false
 
+	// Track frame/box nesting depth for structural validation.
+	frameDepth := 0
+
 	ensureParticipant := func(id string) {
 		if _, exists := participantIndex[id]; exists {
 			return
@@ -123,8 +126,15 @@ func parseSequence(input string) (*ParseOutput, error) {
 				g.Boxes = append(g.Boxes, currentBox)
 				currentBox = nil
 				inBox = false
-			} else {
+			} else if frameDepth > 0 {
+				frameDepth--
 				g.Events = append(g.Events, &ir.SeqEvent{Kind: ir.EvFrameEnd})
+			} else {
+				return nil, &ParseError{
+					Diagram: "sequence",
+					Line:    line,
+					Message: "unexpected \"end\" without matching frame or box",
+				}
 			}
 			continue
 		}
@@ -150,10 +160,15 @@ func parseSequence(input string) (*ParseOutput, error) {
 			// Parse JSON to override kind if "type" is present.
 			jsonStr := "{" + jsonBody + "}"
 			var parsed map[string]interface{}
-			if err := json.Unmarshal([]byte(jsonStr), &parsed); err == nil {
-				if t, ok := parsed["type"].(string); ok {
-					p.Kind = seqKindFromString(t)
+			if err := json.Unmarshal([]byte(jsonStr), &parsed); err != nil {
+				return nil, &ParseError{
+					Diagram: "sequence",
+					Line:    line,
+					Message: "invalid JSON in participant annotation: " + err.Error(),
 				}
+			}
+			if t, ok := parsed["type"].(string); ok {
+				p.Kind = seqKindFromString(t)
 			}
 			continue
 		}
@@ -272,13 +287,17 @@ func parseSequence(input string) (*ParseOutput, error) {
 		}
 
 		// Frames: loop, alt, else, opt, par, and, critical, option, break
-		if handled := parseFrameLine(lower, line, g); handled {
+		if handled, isStart := parseFrameLine(lower, line, g); handled {
+			if isStart {
+				frameDepth++
+			}
 			continue
 		}
 
 		// rect rgb(...)
 		if m := rectRe.FindStringSubmatch(line); m != nil {
 			color := strings.TrimSpace(m[1])
+			frameDepth++
 			g.Events = append(g.Events, &ir.SeqEvent{
 				Kind: ir.EvFrameStart,
 				Frame: &ir.SeqFrame{
@@ -318,10 +337,15 @@ func parseSequence(input string) (*ParseOutput, error) {
 			ensureParticipant(id)
 			p := findParticipant(id)
 			var parsed map[string]string
-			if err := json.Unmarshal([]byte(body), &parsed); err == nil {
-				for lbl, url := range parsed {
-					p.Links = append(p.Links, ir.SeqLink{Label: lbl, URL: url})
+			if err := json.Unmarshal([]byte(body), &parsed); err != nil {
+				return nil, &ParseError{
+					Diagram: "sequence",
+					Line:    line,
+					Message: "invalid JSON in links: " + err.Error(),
 				}
+			}
+			for lbl, url := range parsed {
+				p.Links = append(p.Links, ir.SeqLink{Label: lbl, URL: url})
 			}
 			continue
 		}
@@ -333,13 +357,18 @@ func parseSequence(input string) (*ParseOutput, error) {
 			ensureParticipant(id)
 			p := findParticipant(id)
 			var parsed map[string]string
-			if err := json.Unmarshal([]byte(body), &parsed); err == nil {
-				if p.Properties == nil {
-					p.Properties = make(map[string]string)
+			if err := json.Unmarshal([]byte(body), &parsed); err != nil {
+				return nil, &ParseError{
+					Diagram: "sequence",
+					Line:    line,
+					Message: "invalid JSON in properties: " + err.Error(),
 				}
-				for k, v := range parsed {
-					p.Properties[k] = v
-				}
+			}
+			if p.Properties == nil {
+				p.Properties = make(map[string]string)
+			}
+			for k, v := range parsed {
+				p.Properties[k] = v
 			}
 			continue
 		}
@@ -376,6 +405,20 @@ func parseSequence(input string) (*ParseOutput, error) {
 				})
 			}
 			continue
+		}
+	}
+
+	// Validate nesting.
+	if frameDepth > 0 {
+		return nil, &ParseError{
+			Diagram: "sequence",
+			Message: "unclosed frame (missing \"end\")",
+		}
+	}
+	if inBox {
+		return nil, &ParseError{
+			Diagram: "sequence",
+			Message: "unclosed box (missing \"end\")",
 		}
 	}
 
@@ -430,8 +473,8 @@ func parseSeqMessage(line string) (from, to, text string, kind ir.SeqMessageKind
 }
 
 // parseFrameLine checks if a line is a frame keyword (loop, alt, etc.) and
-// appends the appropriate event. Returns true if handled.
-func parseFrameLine(lower, original string, g *ir.Graph) bool {
+// appends the appropriate event. Returns (handled, isFrameStart).
+func parseFrameLine(lower, original string, g *ir.Graph) (bool, bool) {
 	type frameMatch struct {
 		prefix string
 		kind   ir.SeqFrameKind
@@ -457,7 +500,7 @@ func parseFrameLine(lower, original string, g *ir.Graph) bool {
 					Label: label,
 				},
 			})
-			return true
+			return true, true // handled, isStart
 		}
 	}
 
@@ -480,7 +523,7 @@ func parseFrameLine(lower, original string, g *ir.Graph) bool {
 					Label: label,
 				},
 			})
-			return true
+			return true, false // handled, not a start
 		}
 	}
 
@@ -500,7 +543,7 @@ func parseFrameLine(lower, original string, g *ir.Graph) bool {
 				Kind: kind,
 			},
 		})
-		return true
+		return true, true // handled, isStart
 	}
 
 	bareMiddles := []string{"else", "and", "option"}
@@ -510,11 +553,11 @@ func parseFrameLine(lower, original string, g *ir.Graph) bool {
 				Kind:  ir.EvFrameMiddle,
 				Frame: &ir.SeqFrame{},
 			})
-			return true
+			return true, false // handled, not a start
 		}
 	}
 
-	return false
+	return false, false
 }
 
 // parseBoxLabel extracts color and label from a box declaration.
