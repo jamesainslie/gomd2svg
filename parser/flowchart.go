@@ -7,6 +7,8 @@ import (
 )
 
 // parseFlowchart parses a Mermaid flowchart/graph diagram.
+//
+//nolint:gocognit // flowchart parsing has inherent complexity from subgraphs, edge chains, and node declarations.
 func parseFlowchart(input string) (*ParseOutput, error) {
 	graph := ir.NewGraph()
 	graph.Kind = ir.Flowchart

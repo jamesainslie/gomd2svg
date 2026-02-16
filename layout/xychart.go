@@ -1,15 +1,22 @@
 package layout
 
 import (
-	"fmt"
 	"math"
+	"strconv"
 
 	"github.com/jamesainslie/gomd2svg/config"
 	"github.com/jamesainslie/gomd2svg/ir"
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
-func computeXYChartLayout(g *ir.Graph, _ *theme.Theme, cfg *config.Layout) *Layout {
+// XY chart layout constants.
+const (
+	xyChartDefaultTickCount = 5
+	xyChartTickBase         = 10
+	xyChartNiceStepFive     = 5
+)
+
+func computeXYChartLayout(graph *ir.Graph, _ *theme.Theme, cfg *config.Layout) *Layout {
 	padX := cfg.XYChart.PaddingX
 	padY := cfg.XYChart.PaddingY
 	chartW := cfg.XYChart.ChartWidth
@@ -17,15 +24,15 @@ func computeXYChartLayout(g *ir.Graph, _ *theme.Theme, cfg *config.Layout) *Layo
 
 	// Title height.
 	var titleHeight float32
-	if g.XYTitle != "" {
+	if graph.XYTitle != "" {
 		titleHeight = cfg.XYChart.TitleFontSize + padY
 	}
 
 	// Determine Y range.
-	yMin, yMax := xyDataRange(g)
-	if g.XYYAxis != nil && (g.XYYAxis.Min != 0 || g.XYYAxis.Max != 0) {
-		yMin = g.XYYAxis.Min
-		yMax = g.XYYAxis.Max
+	yMin, yMax := xyDataRange(graph)
+	if graph.XYYAxis != nil && (graph.XYYAxis.Min != 0 || graph.XYYAxis.Max != 0) {
+		yMin = graph.XYYAxis.Min
+		yMax = graph.XYYAxis.Max
 	}
 	if yMax <= yMin {
 		yMax = yMin + 1
@@ -42,11 +49,11 @@ func computeXYChartLayout(g *ir.Graph, _ *theme.Theme, cfg *config.Layout) *Layo
 	}
 
 	// Generate Y-axis ticks.
-	yTicks := generateYTicks(yMin, yMax, 5, chartY, chartH)
+	yTicks := generateYTicks(yMin, yMax, xyChartDefaultTickCount, chartY, chartH)
 
 	// Generate X-axis labels and series points.
 	var xLabels []XYAxisLabel
-	numPoints := xyMaxPoints(g)
+	numPoints := xyMaxPoints(graph)
 	if numPoints == 0 {
 		numPoints = 1
 	}
@@ -54,8 +61,8 @@ func computeXYChartLayout(g *ir.Graph, _ *theme.Theme, cfg *config.Layout) *Layo
 	bandW := chartW / float32(numPoints)
 
 	// X-axis labels from categories or numeric range.
-	if g.XYXAxis != nil && g.XYXAxis.Mode == ir.XYAxisBand {
-		for i, cat := range g.XYXAxis.Categories {
+	if graph.XYXAxis != nil && graph.XYXAxis.Mode == ir.XYAxisBand {
+		for i, cat := range graph.XYXAxis.Categories {
 			xLabels = append(xLabels, XYAxisLabel{
 				Text: cat,
 				X:    chartX + float32(i)*bandW + bandW/2,
@@ -64,7 +71,7 @@ func computeXYChartLayout(g *ir.Graph, _ *theme.Theme, cfg *config.Layout) *Layo
 	} else {
 		for i := range numPoints {
 			xLabels = append(xLabels, XYAxisLabel{
-				Text: fmt.Sprintf("%d", i+1),
+				Text: strconv.Itoa(i + 1),
 				X:    chartX + float32(i)*bandW + bandW/2,
 			})
 		}
@@ -72,8 +79,8 @@ func computeXYChartLayout(g *ir.Graph, _ *theme.Theme, cfg *config.Layout) *Layo
 
 	// Count bar series for grouping.
 	barCount := 0
-	for _, s := range g.XYSeries {
-		if s.Type == ir.XYSeriesBar {
+	for _, series := range graph.XYSeries {
+		if series.Type == ir.XYSeriesBar {
 			barCount++
 		}
 	}
@@ -86,36 +93,36 @@ func computeXYChartLayout(g *ir.Graph, _ *theme.Theme, cfg *config.Layout) *Layo
 
 	// Build series layouts.
 	barIdx := 0
-	var series []XYSeriesLayout
-	for si, s := range g.XYSeries {
+	seriesLayouts := make([]XYSeriesLayout, 0, len(graph.XYSeries))
+	for si, xySeries := range graph.XYSeries {
 		var points []XYPointLayout
-		for i, v := range s.Values {
+		for i, val := range xySeries.Values {
 			cx := chartX + float32(i)*bandW + bandW/2
-			py := valueToY(v)
+			py := valueToY(val)
 
-			switch s.Type {
+			switch xySeries.Type {
 			case ir.XYSeriesBar:
 				barX := cx - barGroupWidth/2 + float32(barIdx)*singleBarW
 				baseY := valueToY(math.Max(yMin, 0))
-				h := baseY - py
-				if h < 0 {
-					h = -h
+				barHeight := baseY - py
+				if barHeight < 0 {
+					barHeight = -barHeight
 					py = baseY
 				}
 				points = append(points, XYPointLayout{
-					X: barX, Y: py, Width: singleBarW, Height: h, Value: v,
+					X: barX, Y: py, Width: singleBarW, Height: barHeight, Value: val,
 				})
 			case ir.XYSeriesLine:
 				points = append(points, XYPointLayout{
-					X: cx, Y: py, Value: v,
+					X: cx, Y: py, Value: val,
 				})
 			}
 		}
-		if s.Type == ir.XYSeriesBar {
+		if xySeries.Type == ir.XYSeriesBar {
 			barIdx++
 		}
-		series = append(series, XYSeriesLayout{
-			Type:       s.Type,
+		seriesLayouts = append(seriesLayouts, XYSeriesLayout{
+			Type:       xySeries.Type,
 			Points:     points,
 			ColorIndex: si,
 		})
@@ -125,90 +132,92 @@ func computeXYChartLayout(g *ir.Graph, _ *theme.Theme, cfg *config.Layout) *Layo
 	totalH := titleHeight + padY*2 + chartH + cfg.XYChart.AxisFontSize + padY
 
 	return &Layout{
-		Kind:   g.Kind,
+		Kind:   graph.Kind,
 		Nodes:  map[string]*NodeLayout{},
 		Width:  totalW,
 		Height: totalH,
 		Diagram: XYChartData{
-			Series:      series,
+			Series:      seriesLayouts,
 			XLabels:     xLabels,
 			YTicks:      yTicks,
-			Title:       g.XYTitle,
+			Title:       graph.XYTitle,
 			ChartX:      chartX,
 			ChartY:      chartY,
 			ChartWidth:  chartW,
 			ChartHeight: chartH,
 			YMin:        yMin,
 			YMax:        yMax,
-			Horizontal:  g.XYHorizontal,
+			Horizontal:  graph.XYHorizontal,
 		},
 	}
 }
 
-func xyDataRange(g *ir.Graph) (float64, float64) {
-	min, max := math.Inf(1), math.Inf(-1)
-	for _, s := range g.XYSeries {
-		for _, v := range s.Values {
-			if v < min {
-				min = v
+func xyDataRange(graph *ir.Graph) (float64, float64) {
+	minVal, maxVal := math.Inf(1), math.Inf(-1)
+	for _, xySeries := range graph.XYSeries {
+		for _, val := range xySeries.Values {
+			if val < minVal {
+				minVal = val
 			}
-			if v > max {
-				max = v
+			if val > maxVal {
+				maxVal = val
 			}
 		}
 	}
-	if math.IsInf(min, 1) {
-		min = 0
+	if math.IsInf(minVal, 1) {
+		minVal = 0
 	}
-	if math.IsInf(max, -1) {
-		max = 100
+	if math.IsInf(maxVal, -1) {
+		maxVal = 100
 	}
-	if min > 0 {
-		min = 0
+	if minVal > 0 {
+		minVal = 0
 	}
 	// Round max up to a nice number.
-	max = niceMax(max)
-	return min, max
+	maxVal = niceMax(maxVal)
+	return minVal, maxVal
 }
 
 func niceMax(v float64) float64 {
 	if v <= 0 {
 		return 1
 	}
-	magnitude := math.Pow(10, math.Floor(math.Log10(v)))
+	magnitude := math.Pow(xyChartTickBase, math.Floor(math.Log10(v)))
 	normalized := v / magnitude
-	if normalized <= 1 {
+	switch {
+	case normalized <= 1:
 		return magnitude
-	} else if normalized <= 2 {
+	case normalized <= 2:
 		return 2 * magnitude
-	} else if normalized <= 5 {
-		return 5 * magnitude
+	case normalized <= xyChartNiceStepFive:
+		return xyChartNiceStepFive * magnitude
+	default:
+		return xyChartTickBase * magnitude
 	}
-	return 10 * magnitude
 }
 
 func generateYTicks(yMin, yMax float64, count int, chartY, chartH float32) []XYAxisTick {
 	yRange := yMax - yMin
 	step := yRange / float64(count)
-	var ticks []XYAxisTick
+	ticks := make([]XYAxisTick, 0, count+1)
 	for i := range count + 1 {
 		v := yMin + float64(i)*step
 		frac := (v - yMin) / yRange
 		y := chartY + chartH - float32(frac)*chartH
 		ticks = append(ticks, XYAxisTick{
-			Label: fmt.Sprintf("%.4g", v),
+			Label: strconv.FormatFloat(v, 'g', 4, 64),
 			Y:     y,
 		})
 	}
 	return ticks
 }
 
-func xyMaxPoints(g *ir.Graph) int {
-	max := 0
-	for _, s := range g.XYSeries {
-		if len(s.Values) > max {
-			max = len(s.Values)
+func xyMaxPoints(graph *ir.Graph) int {
+	maxPoints := 0
+	for _, xySeries := range graph.XYSeries {
+		if len(xySeries.Values) > maxPoints {
+			maxPoints = len(xySeries.Values)
 		}
 	}
-	return max
+	return maxPoints
 }

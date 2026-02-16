@@ -11,22 +11,22 @@ import (
 )
 
 func TestRenderQuadrant(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Quadrant
-	g.QuadrantTitle = "Campaigns"
-	g.XAxisLeft = "Low Reach"
-	g.XAxisRight = "High Reach"
-	g.YAxisBottom = "Low Engagement"
-	g.YAxisTop = "High Engagement"
-	g.QuadrantLabels = [4]string{"Expand", "Promote", "Re-evaluate", "Improve"}
-	g.QuadrantPoints = []*ir.QuadrantPoint{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Quadrant
+	graph.QuadrantTitle = "Campaigns"
+	graph.XAxisLeft = "Low Reach"
+	graph.XAxisRight = "High Reach"
+	graph.YAxisBottom = "Low Engagement"
+	graph.YAxisTop = "High Engagement"
+	graph.QuadrantLabels = [4]string{"Expand", "Promote", "Re-evaluate", "Improve"}
+	graph.QuadrantPoints = []*ir.QuadrantPoint{
 		{Label: "Campaign A", X: 0.3, Y: 0.6},
 		{Label: "Campaign B", X: 0.7, Y: 0.4},
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "<svg") {
@@ -60,15 +60,15 @@ func TestRenderQuadrant(t *testing.T) {
 }
 
 func TestRenderQuadrantMinimal(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Quadrant
-	g.QuadrantPoints = []*ir.QuadrantPoint{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Quadrant
+	graph.QuadrantPoints = []*ir.QuadrantPoint{
 		{Label: "P", X: 0.5, Y: 0.5},
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "<svg") {

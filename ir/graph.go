@@ -1,5 +1,14 @@
 package ir
 
+// Shared string constants used across multiple enum String() methods.
+const (
+	labelLow     = "Low"
+	labelHigh    = "High"
+	labelUnknown = "unknown"
+	labelNone    = "none"
+	labelTest    = "Test"
+)
+
 type Node struct {
 	ID    string
 	Label string
@@ -184,20 +193,20 @@ func NewGraph() *Graph {
 }
 
 func (g *Graph) EnsureNode(id string, label *string, shape *NodeShape) {
-	n, exists := g.Nodes[id]
+	node, exists := g.Nodes[id]
 	if !exists {
-		n = &Node{
+		node = &Node{
 			ID:    id,
 			Label: id,
 			Shape: Rectangle,
 		}
-		g.Nodes[id] = n
+		g.Nodes[id] = node
 		g.NodeOrder[id] = len(g.NodeOrder)
 	}
 	if label != nil {
-		n.Label = *label
+		node.Label = *label
 	}
 	if shape != nil {
-		n.Shape = *shape
+		node.Shape = *shape
 	}
 }

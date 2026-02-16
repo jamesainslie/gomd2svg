@@ -32,6 +32,12 @@ func TestMindmapNode(t *testing.T) {
 			{ID: "b", Label: "Branch B", Shape: MindmapSquare},
 		},
 	}
+	if root.ID != "root" {
+		t.Errorf("ID = %q, want %q", root.ID, "root")
+	}
+	if root.Label != "Central Idea" {
+		t.Errorf("Label = %q, want %q", root.Label, "Central Idea")
+	}
 	if len(root.Children) != 2 {
 		t.Errorf("children len = %d, want 2", len(root.Children))
 	}
@@ -41,10 +47,10 @@ func TestMindmapNode(t *testing.T) {
 }
 
 func TestMindmapGraphField(t *testing.T) {
-	g := NewGraph()
-	g.Kind = Mindmap
-	g.MindmapRoot = &MindmapNode{ID: "root", Label: "Root"}
-	if g.MindmapRoot == nil {
+	graph := NewGraph()
+	graph.Kind = Mindmap
+	graph.MindmapRoot = &MindmapNode{ID: "root", Label: "Root"}
+	if graph.MindmapRoot == nil {
 		t.Error("MindmapRoot should not be nil")
 	}
 }

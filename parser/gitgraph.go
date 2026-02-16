@@ -12,10 +12,11 @@ var (
 	gitKeyValRe = regexp.MustCompile(`(\w+)\s*:\s*(?:"([^"]+)"|(\S+))`)
 )
 
+//nolint:unparam // error return is part of the parser interface contract used by Parse().
 func parseGitGraph(input string) (*ParseOutput, error) {
-	g := ir.NewGraph()
-	g.Kind = ir.GitGraph
-	g.GitMainBranch = "main"
+	graph := ir.NewGraph()
+	graph.Kind = ir.GitGraph
+	graph.GitMainBranch = "main"
 
 	lines := preprocessInput(input)
 
@@ -27,12 +28,12 @@ func parseGitGraph(input string) (*ParseOutput, error) {
 		}
 
 		if strings.HasPrefix(lower, "commit") {
-			g.GitActions = append(g.GitActions, parseGitCommit(line))
+			graph.GitActions = append(graph.GitActions, parseGitCommit(line))
 			continue
 		}
 
 		if strings.HasPrefix(lower, "branch ") {
-			g.GitActions = append(g.GitActions, parseGitBranch(line))
+			graph.GitActions = append(graph.GitActions, parseGitBranch(line))
 			continue
 		}
 
@@ -43,106 +44,106 @@ func parseGitGraph(input string) (*ParseOutput, error) {
 			} else {
 				rest = strings.TrimSpace(line[len("switch "):])
 			}
-			g.GitActions = append(g.GitActions, &ir.GitCheckout{Branch: rest})
+			graph.GitActions = append(graph.GitActions, &ir.GitCheckout{Branch: rest})
 			continue
 		}
 
 		if strings.HasPrefix(lower, "merge ") {
-			g.GitActions = append(g.GitActions, parseGitMerge(line))
+			graph.GitActions = append(graph.GitActions, parseGitMerge(line))
 			continue
 		}
 
 		if strings.HasPrefix(lower, "cherry-pick") {
-			g.GitActions = append(g.GitActions, parseGitCherryPick(line))
+			graph.GitActions = append(graph.GitActions, parseGitCherryPick(line))
 			continue
 		}
 	}
 
-	return &ParseOutput{Graph: g}, nil
+	return &ParseOutput{Graph: graph}, nil
 }
 
 func parseGitCommit(line string) *ir.GitCommit {
-	c := &ir.GitCommit{}
+	commit := &ir.GitCommit{}
 	opts := gitKeyValRe.FindAllStringSubmatch(line, -1)
-	for _, m := range opts {
-		key := strings.ToLower(m[1])
-		val := m[2]
+	for _, match := range opts {
+		key := strings.ToLower(match[1])
+		val := match[2]
 		if val == "" {
-			val = m[3]
+			val = match[3]
 		}
 		switch key {
 		case "id":
-			c.ID = val
+			commit.ID = val
 		case "tag":
-			c.Tag = val
+			commit.Tag = val
 		case "type":
-			c.Type = parseGitCommitType(val)
+			commit.Type = parseGitCommitType(val)
 		}
 	}
-	return c
+	return commit
 }
 
 func parseGitBranch(line string) *ir.GitBranch {
 	// "branch <name> order: <n>"
 	rest := strings.TrimSpace(line[len("branch "):])
-	b := &ir.GitBranch{Order: -1}
+	branch := &ir.GitBranch{Order: -1}
 
 	// Check for "order:" option.
 	if idx := strings.Index(strings.ToLower(rest), "order:"); idx >= 0 {
-		b.Name = strings.TrimSpace(rest[:idx])
+		branch.Name = strings.TrimSpace(rest[:idx])
 		orderStr := strings.TrimSpace(rest[idx+len("order:"):])
-		if n, err := strconv.Atoi(orderStr); err == nil {
-			b.Order = n
+		if orderNum, err := strconv.Atoi(orderStr); err == nil {
+			branch.Order = orderNum
 		}
 	} else {
-		b.Name = rest
+		branch.Name = rest
 	}
 
 	// Strip quotes from name if present.
-	b.Name = strings.Trim(b.Name, `"`)
+	branch.Name = strings.Trim(branch.Name, `"`)
 
-	return b
+	return branch
 }
 
 func parseGitMerge(line string) *ir.GitMerge {
 	rest := strings.TrimSpace(line[len("merge "):])
-	mg := &ir.GitMerge{}
+	merge := &ir.GitMerge{}
 
 	// Extract the branch name (first word before any key: value pairs).
 	parts := strings.Fields(rest)
 	if len(parts) > 0 {
-		mg.Branch = strings.Trim(parts[0], `"`)
+		merge.Branch = strings.Trim(parts[0], `"`)
 	}
 
 	// Parse key-value options.
 	opts := gitKeyValRe.FindAllStringSubmatch(rest, -1)
-	for _, m := range opts {
-		key := strings.ToLower(m[1])
-		val := m[2]
+	for _, match := range opts {
+		key := strings.ToLower(match[1])
+		val := match[2]
 		if val == "" {
-			val = m[3]
+			val = match[3]
 		}
 		switch key {
 		case "id":
-			mg.ID = val
+			merge.ID = val
 		case "tag":
-			mg.Tag = val
+			merge.Tag = val
 		case "type":
-			mg.Type = parseGitCommitType(val)
+			merge.Type = parseGitCommitType(val)
 		}
 	}
 
-	return mg
+	return merge
 }
 
 func parseGitCherryPick(line string) *ir.GitCherryPick {
 	cp := &ir.GitCherryPick{}
 	opts := gitKeyValRe.FindAllStringSubmatch(line, -1)
-	for _, m := range opts {
-		key := strings.ToLower(m[1])
-		val := m[2]
+	for _, match := range opts {
+		key := strings.ToLower(match[1])
+		val := match[2]
 		if val == "" {
-			val = m[3]
+			val = match[3]
 		}
 		switch key {
 		case "id":
@@ -154,8 +155,8 @@ func parseGitCherryPick(line string) *ir.GitCherryPick {
 	return cp
 }
 
-func parseGitCommitType(s string) ir.GitCommitType {
-	switch strings.ToUpper(s) {
+func parseGitCommitType(str string) ir.GitCommitType {
+	switch strings.ToUpper(str) {
 	case "REVERSE":
 		return ir.GitCommitReverse
 	case "HIGHLIGHT":

@@ -18,28 +18,28 @@ func TestRadarGraticuleType(t *testing.T) {
 }
 
 func TestRadarGraphFields(t *testing.T) {
-	g := NewGraph()
-	g.Kind = Radar
-	g.RadarTitle = "Skills"
-	g.RadarAxes = []*RadarAxis{
+	graph := NewGraph()
+	graph.Kind = Radar
+	graph.RadarTitle = "Skills"
+	graph.RadarAxes = []*RadarAxis{
 		{ID: "e", Label: "English"},
 		{ID: "f", Label: "French"},
 	}
-	g.RadarCurves = []*RadarCurve{
+	graph.RadarCurves = []*RadarCurve{
 		{ID: "a", Label: "User1", Values: []float64{80, 60}},
 	}
-	g.RadarGraticuleType = RadarGraticuleCircle
+	graph.RadarGraticuleType = RadarGraticuleCircle
 
-	if len(g.RadarAxes) != 2 {
-		t.Fatalf("RadarAxes len = %d, want 2", len(g.RadarAxes))
+	if len(graph.RadarAxes) != 2 {
+		t.Fatalf("RadarAxes len = %d, want 2", len(graph.RadarAxes))
 	}
-	if g.RadarAxes[0].Label != "English" {
-		t.Errorf("axis label = %q, want %q", g.RadarAxes[0].Label, "English")
+	if graph.RadarAxes[0].Label != "English" {
+		t.Errorf("axis label = %q, want %q", graph.RadarAxes[0].Label, "English")
 	}
-	if len(g.RadarCurves) != 1 {
-		t.Fatalf("RadarCurves len = %d, want 1", len(g.RadarCurves))
+	if len(graph.RadarCurves) != 1 {
+		t.Fatalf("RadarCurves len = %d, want 1", len(graph.RadarCurves))
 	}
-	if g.RadarCurves[0].Values[0] != 80 {
-		t.Errorf("curve value = %v, want 80", g.RadarCurves[0].Values[0])
+	if graph.RadarCurves[0].Values[0] != 80 {
+		t.Errorf("curve value = %v, want 80", graph.RadarCurves[0].Values[0])
 	}
 }

@@ -12,6 +12,9 @@ func TestTreemapNode(t *testing.T) {
 			}},
 		},
 	}
+	if root.Label != "Root" {
+		t.Errorf("Label = %q, want %q", root.Label, "Root")
+	}
 	if len(root.Children) != 2 {
 		t.Errorf("children len = %d, want 2", len(root.Children))
 	}
@@ -48,10 +51,10 @@ func TestTreemapTotalValue(t *testing.T) {
 }
 
 func TestTreemapGraphField(t *testing.T) {
-	g := NewGraph()
-	g.Kind = Treemap
-	g.TreemapRoot = &TreemapNode{Label: "Root"}
-	if g.TreemapRoot == nil {
+	graph := NewGraph()
+	graph.Kind = Treemap
+	graph.TreemapRoot = &TreemapNode{Label: "Root"}
+	if graph.TreemapRoot == nil {
 		t.Error("TreemapRoot should not be nil")
 	}
 }

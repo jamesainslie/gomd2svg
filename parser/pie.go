@@ -10,9 +10,9 @@ import (
 
 var pieDataRe = regexp.MustCompile(`^\s*"([^"]+)"\s*:\s*(\d+\.?\d*)\s*$`)
 
-func parsePie(input string) (*ParseOutput, error) {
-	g := ir.NewGraph()
-	g.Kind = ir.Pie
+func parsePie(input string) (*ParseOutput, error) { //nolint:unparam // error return is part of the parser interface contract used by Parse().
+	graph := ir.NewGraph()
+	graph.Kind = ir.Pie
 
 	lines := preprocessInput(input)
 
@@ -22,31 +22,31 @@ func parsePie(input string) (*ParseOutput, error) {
 		// Skip the declaration line, extract showData flag and inline title.
 		if strings.HasPrefix(lower, "pie") {
 			if strings.Contains(lower, "showdata") {
-				g.PieShowData = true
+				graph.PieShowData = true
 			}
-			// Extract inline title: "pie title My Title" or "pie showData title My Title"
+			// Extract inline title: "pie title My Title" or "pie showData title My Title".
 			if idx := strings.Index(lower, "title "); idx >= 0 {
-				g.PieTitle = strings.TrimSpace(line[idx+len("title "):])
+				graph.PieTitle = strings.TrimSpace(line[idx+len("title "):])
 			}
 			continue
 		}
 
 		// Title line.
 		if strings.HasPrefix(lower, "title ") {
-			g.PieTitle = strings.TrimSpace(line[len("title "):])
+			graph.PieTitle = strings.TrimSpace(line[len("title "):])
 			continue
 		}
 
-		// Data line: "Label" : value
-		if m := pieDataRe.FindStringSubmatch(line); m != nil {
-			val, _ := strconv.ParseFloat(m[2], 64) // regex guarantees digits
-			g.PieSlices = append(g.PieSlices, &ir.PieSlice{
-				Label: m[1],
+		// Data line: "Label" : value.
+		if match := pieDataRe.FindStringSubmatch(line); match != nil {
+			val, _ := strconv.ParseFloat(match[2], 64) //nolint:errcheck // regex guarantees digits.
+			graph.PieSlices = append(graph.PieSlices, &ir.PieSlice{
+				Label: match[1],
 				Value: val,
 			})
 			continue
 		}
 	}
 
-	return &ParseOutput{Graph: g}, nil
+	return &ParseOutput{Graph: graph}, nil
 }

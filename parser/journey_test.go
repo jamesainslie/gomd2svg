@@ -21,39 +21,39 @@ func TestParseJourney(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parseJourney() error: %v", err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
-	if g.Kind != ir.Journey {
-		t.Errorf("Kind = %v, want Journey", g.Kind)
+	if graph.Kind != ir.Journey {
+		t.Errorf("Kind = %v, want Journey", graph.Kind)
 	}
-	if g.JourneyTitle != "My Working Day" {
-		t.Errorf("JourneyTitle = %q, want %q", g.JourneyTitle, "My Working Day")
+	if graph.JourneyTitle != "My Working Day" {
+		t.Errorf("JourneyTitle = %q, want %q", graph.JourneyTitle, "My Working Day")
 	}
 
 	// Sections
-	if len(g.JourneySections) != 2 {
-		t.Fatalf("len(JourneySections) = %d, want 2", len(g.JourneySections))
+	if len(graph.JourneySections) != 2 {
+		t.Fatalf("len(JourneySections) = %d, want 2", len(graph.JourneySections))
 	}
-	if g.JourneySections[0].Name != "Go to work" {
-		t.Errorf("Section[0].Name = %q, want %q", g.JourneySections[0].Name, "Go to work")
+	if graph.JourneySections[0].Name != "Go to work" {
+		t.Errorf("Section[0].Name = %q, want %q", graph.JourneySections[0].Name, "Go to work")
 	}
-	if len(g.JourneySections[0].Tasks) != 3 {
-		t.Errorf("Section[0].Tasks len = %d, want 3", len(g.JourneySections[0].Tasks))
+	if len(graph.JourneySections[0].Tasks) != 3 {
+		t.Errorf("Section[0].Tasks len = %d, want 3", len(graph.JourneySections[0].Tasks))
 	}
-	if g.JourneySections[1].Name != "Go home" {
-		t.Errorf("Section[1].Name = %q, want %q", g.JourneySections[1].Name, "Go home")
+	if graph.JourneySections[1].Name != "Go home" {
+		t.Errorf("Section[1].Name = %q, want %q", graph.JourneySections[1].Name, "Go home")
 	}
-	if len(g.JourneySections[1].Tasks) != 2 {
-		t.Errorf("Section[1].Tasks len = %d, want 2", len(g.JourneySections[1].Tasks))
+	if len(graph.JourneySections[1].Tasks) != 2 {
+		t.Errorf("Section[1].Tasks len = %d, want 2", len(graph.JourneySections[1].Tasks))
 	}
 
 	// Tasks
-	if len(g.JourneyTasks) != 5 {
-		t.Fatalf("len(JourneyTasks) = %d, want 5", len(g.JourneyTasks))
+	if len(graph.JourneyTasks) != 5 {
+		t.Fatalf("len(JourneyTasks) = %d, want 5", len(graph.JourneyTasks))
 	}
 
 	// First task: Make tea
-	task0 := g.JourneyTasks[0]
+	task0 := graph.JourneyTasks[0]
 	if task0.Name != "Make tea" {
 		t.Errorf("Task[0].Name = %q, want %q", task0.Name, "Make tea")
 	}
@@ -68,7 +68,7 @@ func TestParseJourney(t *testing.T) {
 	}
 
 	// Second task: Go upstairs
-	task1 := g.JourneyTasks[1]
+	task1 := graph.JourneyTasks[1]
 	if task1.Name != "Go upstairs" {
 		t.Errorf("Task[1].Name = %q, want %q", task1.Name, "Go upstairs")
 	}
@@ -88,16 +88,16 @@ func TestParseJourneyMinimal(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parseJourney() error: %v", err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
-	if len(g.JourneyTasks) != 1 {
-		t.Fatalf("len(JourneyTasks) = %d, want 1", len(g.JourneyTasks))
+	if len(graph.JourneyTasks) != 1 {
+		t.Fatalf("len(JourneyTasks) = %d, want 1", len(graph.JourneyTasks))
 	}
-	if len(g.JourneySections) != 0 {
-		t.Errorf("len(JourneySections) = %d, want 0", len(g.JourneySections))
+	if len(graph.JourneySections) != 0 {
+		t.Errorf("len(JourneySections) = %d, want 0", len(graph.JourneySections))
 	}
 
-	task := g.JourneyTasks[0]
+	task := graph.JourneyTasks[0]
 	if task.Name != "Make tea" {
 		t.Errorf("Task.Name = %q, want %q", task.Name, "Make tea")
 	}
@@ -122,13 +122,13 @@ func TestParseJourneyNoActors(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parseJourney() error: %v", err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
-	if len(g.JourneyTasks) != 2 {
-		t.Fatalf("len(JourneyTasks) = %d, want 2", len(g.JourneyTasks))
+	if len(graph.JourneyTasks) != 2 {
+		t.Fatalf("len(JourneyTasks) = %d, want 2", len(graph.JourneyTasks))
 	}
 
-	taskA := g.JourneyTasks[0]
+	taskA := graph.JourneyTasks[0]
 	if taskA.Name != "Task A" {
 		t.Errorf("Task[0].Name = %q, want %q", taskA.Name, "Task A")
 	}
@@ -139,7 +139,7 @@ func TestParseJourneyNoActors(t *testing.T) {
 		t.Errorf("Task[0].Actors = %v, want empty", taskA.Actors)
 	}
 
-	taskB := g.JourneyTasks[1]
+	taskB := graph.JourneyTasks[1]
 	if taskB.Name != "Task B" {
 		t.Errorf("Task[1].Name = %q, want %q", taskB.Name, "Task B")
 	}

@@ -29,14 +29,14 @@ func TestHSLToHex(t *testing.T) {
 func TestColorRoundTrip(t *testing.T) {
 	// Parse hex -> HSL -> back to hex should be stable.
 	colors := []string{"#4C78A8", "#FF0000", "#00FF00", "#000000", "#FFFFFF"}
-	for _, c := range colors {
-		h, s, l, ok := ParseColorToHSL(c)
+	for _, color := range colors {
+		hue, sat, lum, ok := ParseColorToHSL(color)
 		if !ok {
-			t.Fatalf("ParseColorToHSL(%q) failed", c)
+			t.Fatalf("ParseColorToHSL(%q) failed", color)
 		}
-		got := HSLToHex(h, s, l)
-		if got != c {
-			t.Errorf("round-trip %q -> HSL(%v,%v,%v) -> %q", c, h, s, l, got)
+		got := HSLToHex(hue, sat, lum)
+		if got != color {
+			t.Errorf("round-trip %q -> HSL(%v,%v,%v) -> %q", color, hue, sat, lum, got)
 		}
 	}
 }

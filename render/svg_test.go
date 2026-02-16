@@ -11,17 +11,17 @@ import (
 )
 
 func simpleLayout() *layout.Layout {
-	g := ir.NewGraph()
-	g.Kind = ir.Flowchart
-	g.Direction = ir.LeftRight
-	g.EnsureNode("A", nil, nil)
-	g.EnsureNode("B", nil, nil)
-	g.Edges = []*ir.Edge{{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Flowchart
+	graph.Direction = ir.LeftRight
+	graph.EnsureNode("A", nil, nil)
+	graph.EnsureNode("B", nil, nil)
+	graph.Edges = []*ir.Edge{{
 		From: "A", To: "B", Directed: true, ArrowEnd: true, Style: ir.Solid,
 	}}
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	return layout.ComputeLayout(g, th, cfg)
+	return layout.ComputeLayout(graph, th, cfg)
 }
 
 func TestRenderSVGContainsSVGTags(t *testing.T) {

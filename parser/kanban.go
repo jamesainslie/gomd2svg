@@ -19,9 +19,9 @@ var kanbanCardRe = regexp.MustCompile(`^(\w+)\[([^\]]+)\](?:\s*@\{(.+)\})?$`)
 // kanbanColumnHeaderRe matches id[Label] for column headers.
 var kanbanColumnHeaderRe = regexp.MustCompile(`^(\w+)\[([^\]]+)\]$`)
 
-func parseKanban(input string) (*ParseOutput, error) {
-	g := ir.NewGraph()
-	g.Kind = ir.Kanban
+func parseKanban(input string) (*ParseOutput, error) { //nolint:unparam // error return is part of the parser interface contract used by Parse().
+	graph := ir.NewGraph()
+	graph.Kind = ir.Kanban
 
 	lines := preprocessKanbanInput(input)
 
@@ -44,15 +44,15 @@ func parseKanban(input string) (*ParseOutput, error) {
 		// Determine if this is a column or card based on indentation.
 		// The first non-header line sets the column indent level.
 		if colIndent < 0 || indent <= colIndent {
-			// New column
+			// New column.
 			colIndent = indent
-			id, label := parseKanbanColumnHeader(trimmed)
-			currentCol = &ir.KanbanColumn{ID: id, Label: label}
-			g.Columns = append(g.Columns, currentCol)
+			colID, colLabel := parseKanbanColumnHeader(trimmed)
+			currentCol = &ir.KanbanColumn{ID: colID, Label: colLabel}
+			graph.Columns = append(graph.Columns, currentCol)
 			continue
 		}
 
-		// Card line (more indented than column)
+		// Card line (more indented than column).
 		if currentCol != nil {
 			card := parseKanbanCard(trimmed)
 			if card != nil {
@@ -61,7 +61,7 @@ func parseKanban(input string) (*ParseOutput, error) {
 		}
 	}
 
-	return &ParseOutput{Graph: g}, nil
+	return &ParseOutput{Graph: graph}, nil
 }
 
 // preprocessKanbanInput splits the input into lines, strips comments and blank
@@ -71,7 +71,7 @@ func preprocessKanbanInput(input string) []indentedLine {
 	var result []indentedLine
 	for _, rawLine := range strings.Split(input, "\n") {
 		// Count leading whitespace (tabs count as 1 indent unit each,
-		// spaces count as 1 each — consistent with mermaid.js behavior).
+		// spaces count as 1 each -- consistent with mermaid.js behavior).
 		indent := 0
 		for _, ch := range rawLine {
 			switch ch {
@@ -109,30 +109,30 @@ func preprocessKanbanInput(input string) []indentedLine {
 
 // parseKanbanColumnHeader parses a column header line.
 // It handles both bare "ColumnName" and "id[Column Label]" syntax.
-func parseKanbanColumnHeader(line string) (id, label string) {
-	if m := kanbanColumnHeaderRe.FindStringSubmatch(line); m != nil {
-		return m[1], m[2]
+func parseKanbanColumnHeader(line string) (colID, colLabel string) { //nolint:nonamedreturns // named returns clarify the multi-value return.
+	if match := kanbanColumnHeaderRe.FindStringSubmatch(line); match != nil {
+		return match[1], match[2]
 	}
-	// Bare column name — ID and label are both the trimmed line.
+	// Bare column name -- ID and label are both the trimmed line.
 	trimmed := strings.TrimSpace(line)
 	return trimmed, trimmed
 }
 
 // parseKanbanCard parses a card line like "id[Label]" or "id[Label]@{ key: 'val' }".
 func parseKanbanCard(line string) *ir.KanbanCard {
-	m := kanbanCardRe.FindStringSubmatch(line)
-	if m == nil {
+	match := kanbanCardRe.FindStringSubmatch(line)
+	if match == nil {
 		return nil
 	}
 
 	card := &ir.KanbanCard{
-		ID:    m[1],
-		Label: m[2],
+		ID:    match[1],
+		Label: match[2],
 	}
 
 	// Parse optional metadata block.
-	if m[3] != "" {
-		assigned, ticket, icon, description, priority := parseKanbanMetadata(m[3])
+	if match[3] != "" {
+		assigned, ticket, icon, description, priority := parseKanbanMetadata(match[3])
 		card.Assigned = assigned
 		card.Ticket = ticket
 		card.Icon = icon
@@ -143,72 +143,82 @@ func parseKanbanCard(line string) *ir.KanbanCard {
 	return card
 }
 
+// kanbanMetadataResult holds the parsed metadata for a kanban card.
+type kanbanMetadataResult struct {
+	Assigned    string
+	Ticket      string
+	Icon        string
+	Description string
+	Priority    ir.KanbanPriority
+}
+
 // parseKanbanMetadata parses the key-value pairs inside @{ ... }.
 // Format: key: 'value', key2: 'value2'
 // Values use single quotes. Keys are unquoted identifiers.
-func parseKanbanMetadata(raw string) (assigned, ticket, icon, description string, priority ir.KanbanPriority) {
+func parseKanbanMetadata(raw string) (string, string, string, string, ir.KanbanPriority) { //nolint:revive // five return values needed for backward compatibility.
+	result := kanbanMetadataResult{}
 	// Scan through the raw string extracting key: 'value' pairs.
-	s := strings.TrimSpace(raw)
-	for len(s) > 0 {
+	str := strings.TrimSpace(raw)
+	for len(str) > 0 {
 		// Skip whitespace and commas.
-		s = strings.TrimLeft(s, " \t,")
-		if len(s) == 0 {
+		str = strings.TrimLeft(str, " \t,")
+		if len(str) == 0 {
 			break
 		}
 
 		// Extract key (everything up to ':').
-		colonIdx := strings.Index(s, ":")
+		colonIdx := strings.Index(str, ":")
 		if colonIdx < 0 {
 			break
 		}
-		key := strings.TrimSpace(s[:colonIdx])
-		s = s[colonIdx+1:]
+		key := strings.TrimSpace(str[:colonIdx])
+		str = str[colonIdx+1:]
 
 		// Skip whitespace before the value.
-		s = strings.TrimLeft(s, " \t")
-		if len(s) == 0 {
+		str = strings.TrimLeft(str, " \t")
+		if len(str) == 0 {
 			break
 		}
 
 		var value string
-		if s[0] == '\'' {
-			// Single-quoted value — find the closing quote.
-			endIdx := strings.Index(s[1:], "'")
+		if str[0] == '\'' {
+			// Single-quoted value -- find the closing quote.
+			endIdx := strings.Index(str[1:], "'")
 			if endIdx < 0 {
 				// Unterminated quote, take rest.
-				value = s[1:]
-				s = ""
+				value = str[1:]
+				str = ""
 			} else {
-				value = s[1 : endIdx+1]
-				s = s[endIdx+2:]
+				value = str[1 : endIdx+1]
+				str = str[endIdx+2:]
 			}
 		} else {
-			// Unquoted value — read until comma or end.
-			commaIdx := strings.Index(s, ",")
+			// Unquoted value -- read until comma or end.
+			commaIdx := strings.Index(str, ",")
 			if commaIdx < 0 {
-				value = strings.TrimSpace(s)
-				s = ""
+				value = strings.TrimSpace(str)
+				str = ""
 			} else {
-				value = strings.TrimSpace(s[:commaIdx])
-				s = s[commaIdx+1:]
+				value = strings.TrimSpace(str[:commaIdx])
+				str = str[commaIdx+1:]
 			}
 		}
 
 		switch strings.ToLower(key) {
 		case "assigned":
-			assigned = value
+			result.Assigned = value
 		case "ticket":
-			ticket = value
+			result.Ticket = value
 		case "icon":
-			icon = value
+			result.Icon = value
 		case "description":
-			description = value
+			result.Description = value
 		case "priority":
-			priority = parsePriorityValue(value)
+			result.Priority = parsePriorityValue(value)
 		}
 	}
 
-	return
+	return result.Assigned, result.Ticket, result.Icon, result.Description, result.Priority
 }
 
 // parsePriorityValue maps a priority string to an ir.KanbanPriority.

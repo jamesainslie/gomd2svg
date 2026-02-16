@@ -13,19 +13,19 @@ func TestPieSliceDefaults(t *testing.T) {
 }
 
 func TestGraphPieFields(t *testing.T) {
-	g := NewGraph()
-	g.Kind = Pie
-	g.PieTitle = "Pets"
-	g.PieShowData = true
-	g.PieSlices = append(g.PieSlices, &PieSlice{Label: "Dogs", Value: 386})
+	graph := NewGraph()
+	graph.Kind = Pie
+	graph.PieTitle = "Pets"
+	graph.PieShowData = true
+	graph.PieSlices = append(graph.PieSlices, &PieSlice{Label: "Dogs", Value: 386})
 
-	if g.PieTitle != "Pets" {
-		t.Errorf("PieTitle = %q, want %q", g.PieTitle, "Pets")
+	if graph.PieTitle != "Pets" {
+		t.Errorf("PieTitle = %q, want %q", graph.PieTitle, "Pets")
 	}
-	if !g.PieShowData {
+	if !graph.PieShowData {
 		t.Error("PieShowData = false, want true")
 	}
-	if len(g.PieSlices) != 1 {
-		t.Fatalf("PieSlices = %d, want 1", len(g.PieSlices))
+	if len(graph.PieSlices) != 1 {
+		t.Fatalf("PieSlices = %d, want 1", len(graph.PieSlices))
 	}
 }

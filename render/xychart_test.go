@@ -11,22 +11,22 @@ import (
 )
 
 func TestRenderXYChart(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.XYChart
-	g.XYTitle = "Revenue"
-	g.XYXAxis = &ir.XYAxis{
+	graph := ir.NewGraph()
+	graph.Kind = ir.XYChart
+	graph.XYTitle = "Revenue"
+	graph.XYXAxis = &ir.XYAxis{
 		Mode:       ir.XYAxisBand,
 		Categories: []string{"Q1", "Q2", "Q3"},
 	}
-	g.XYYAxis = &ir.XYAxis{Mode: ir.XYAxisNumeric, Min: 0, Max: 100}
-	g.XYSeries = []*ir.XYSeries{
+	graph.XYYAxis = &ir.XYAxis{Mode: ir.XYAxisNumeric, Min: 0, Max: 100}
+	graph.XYSeries = []*ir.XYSeries{
 		{Type: ir.XYSeriesBar, Values: []float64{30, 60, 90}},
 		{Type: ir.XYSeriesLine, Values: []float64{25, 55, 85}},
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "<svg") {
@@ -44,15 +44,15 @@ func TestRenderXYChart(t *testing.T) {
 }
 
 func TestRenderXYChartValidSVG(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.XYChart
-	g.XYSeries = []*ir.XYSeries{
+	graph := ir.NewGraph()
+	graph.Kind = ir.XYChart
+	graph.XYSeries = []*ir.XYSeries{
 		{Type: ir.XYSeriesLine, Values: []float64{1, 2, 3}},
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.HasPrefix(svg, "<svg") {

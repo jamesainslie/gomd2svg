@@ -16,21 +16,21 @@ func TestParsePacketRangeNotation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse: %v", err)
 	}
-	g := out.Graph
-	if g.Kind != ir.Packet {
-		t.Fatalf("Kind = %v, want Packet", g.Kind)
+	graph := out.Graph
+	if graph.Kind != ir.Packet {
+		t.Fatalf("Kind = %v, want Packet", graph.Kind)
 	}
-	if len(g.Fields) != 3 {
-		t.Fatalf("len(Fields) = %d, want 3", len(g.Fields))
+	if len(graph.Fields) != 3 {
+		t.Fatalf("len(Fields) = %d, want 3", len(graph.Fields))
 	}
-	if g.Fields[0].Start != 0 || g.Fields[0].End != 15 {
-		t.Errorf("Fields[0] = %d-%d, want 0-15", g.Fields[0].Start, g.Fields[0].End)
+	if graph.Fields[0].Start != 0 || graph.Fields[0].End != 15 {
+		t.Errorf("Fields[0] = %d-%d, want 0-15", graph.Fields[0].Start, graph.Fields[0].End)
 	}
-	if g.Fields[0].Description != "Source Port" {
-		t.Errorf("Fields[0].Description = %q, want \"Source Port\"", g.Fields[0].Description)
+	if graph.Fields[0].Description != "Source Port" {
+		t.Errorf("Fields[0].Description = %q, want \"Source Port\"", graph.Fields[0].Description)
 	}
-	if g.Fields[2].Start != 32 || g.Fields[2].End != 63 {
-		t.Errorf("Fields[2] = %d-%d, want 32-63", g.Fields[2].Start, g.Fields[2].End)
+	if graph.Fields[2].Start != 32 || graph.Fields[2].End != 63 {
+		t.Errorf("Fields[2] = %d-%d, want 32-63", graph.Fields[2].Start, graph.Fields[2].End)
 	}
 }
 
@@ -44,18 +44,18 @@ func TestParsePacketBitCountNotation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse: %v", err)
 	}
-	g := out.Graph
-	if len(g.Fields) != 3 {
-		t.Fatalf("len(Fields) = %d, want 3", len(g.Fields))
+	graph := out.Graph
+	if len(graph.Fields) != 3 {
+		t.Fatalf("len(Fields) = %d, want 3", len(graph.Fields))
 	}
-	if g.Fields[0].Start != 0 || g.Fields[0].End != 15 {
-		t.Errorf("Fields[0] = %d-%d, want 0-15", g.Fields[0].Start, g.Fields[0].End)
+	if graph.Fields[0].Start != 0 || graph.Fields[0].End != 15 {
+		t.Errorf("Fields[0] = %d-%d, want 0-15", graph.Fields[0].Start, graph.Fields[0].End)
 	}
-	if g.Fields[1].Start != 16 || g.Fields[1].End != 31 {
-		t.Errorf("Fields[1] = %d-%d, want 16-31", g.Fields[1].Start, g.Fields[1].End)
+	if graph.Fields[1].Start != 16 || graph.Fields[1].End != 31 {
+		t.Errorf("Fields[1] = %d-%d, want 16-31", graph.Fields[1].Start, graph.Fields[1].End)
 	}
-	if g.Fields[2].Start != 32 || g.Fields[2].End != 63 {
-		t.Errorf("Fields[2] = %d-%d, want 32-63", g.Fields[2].Start, g.Fields[2].End)
+	if graph.Fields[2].Start != 32 || graph.Fields[2].End != 63 {
+		t.Errorf("Fields[2] = %d-%d, want 32-63", graph.Fields[2].Start, graph.Fields[2].End)
 	}
 }
 

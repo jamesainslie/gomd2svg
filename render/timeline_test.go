@@ -11,10 +11,10 @@ import (
 )
 
 func TestRenderTimeline(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Timeline
-	g.TimelineTitle = "History"
-	g.TimelineSections = []*ir.TimelineSection{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Timeline
+	graph.TimelineTitle = "History"
+	graph.TimelineSections = []*ir.TimelineSection{
 		{
 			Title: "Early",
 			Periods: []*ir.TimelinePeriod{
@@ -26,7 +26,7 @@ func TestRenderTimeline(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "<svg") {

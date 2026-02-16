@@ -19,17 +19,17 @@ func TestParseArchitecture(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parseArchitecture() error: %v", err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
-	if g.Kind != ir.Architecture {
-		t.Errorf("Kind = %v, want Architecture", g.Kind)
+	if graph.Kind != ir.Architecture {
+		t.Errorf("Kind = %v, want Architecture", graph.Kind)
 	}
 
 	// Groups
-	if len(g.ArchGroups) != 1 {
-		t.Fatalf("len(ArchGroups) = %d, want 1", len(g.ArchGroups))
+	if len(graph.ArchGroups) != 1 {
+		t.Fatalf("len(ArchGroups) = %d, want 1", len(graph.ArchGroups))
 	}
-	grp := g.ArchGroups[0]
+	grp := graph.ArchGroups[0]
 	if grp.ID != "api" {
 		t.Errorf("group ID = %q, want %q", grp.ID, "api")
 	}
@@ -44,10 +44,10 @@ func TestParseArchitecture(t *testing.T) {
 	}
 
 	// Services
-	if len(g.ArchServices) != 2 {
-		t.Fatalf("len(ArchServices) = %d, want 2", len(g.ArchServices))
+	if len(graph.ArchServices) != 2 {
+		t.Fatalf("len(ArchServices) = %d, want 2", len(graph.ArchServices))
 	}
-	svc0 := g.ArchServices[0]
+	svc0 := graph.ArchServices[0]
 	if svc0.ID != "db" {
 		t.Errorf("service[0] ID = %q, want %q", svc0.ID, "db")
 	}
@@ -60,7 +60,7 @@ func TestParseArchitecture(t *testing.T) {
 	if svc0.GroupID != "api" {
 		t.Errorf("service[0] GroupID = %q, want %q", svc0.GroupID, "api")
 	}
-	svc1 := g.ArchServices[1]
+	svc1 := graph.ArchServices[1]
 	if svc1.ID != "server" {
 		t.Errorf("service[1] ID = %q, want %q", svc1.ID, "server")
 	}
@@ -75,10 +75,10 @@ func TestParseArchitecture(t *testing.T) {
 	}
 
 	// Junctions
-	if len(g.ArchJunctions) != 1 {
-		t.Fatalf("len(ArchJunctions) = %d, want 1", len(g.ArchJunctions))
+	if len(graph.ArchJunctions) != 1 {
+		t.Fatalf("len(ArchJunctions) = %d, want 1", len(graph.ArchJunctions))
 	}
-	junc := g.ArchJunctions[0]
+	junc := graph.ArchJunctions[0]
 	if junc.ID != "junc1" {
 		t.Errorf("junction ID = %q, want %q", junc.ID, "junc1")
 	}
@@ -87,10 +87,10 @@ func TestParseArchitecture(t *testing.T) {
 	}
 
 	// Edges
-	if len(g.ArchEdges) != 2 {
-		t.Fatalf("len(ArchEdges) = %d, want 2", len(g.ArchEdges))
+	if len(graph.ArchEdges) != 2 {
+		t.Fatalf("len(ArchEdges) = %d, want 2", len(graph.ArchEdges))
 	}
-	e0 := g.ArchEdges[0]
+	e0 := graph.ArchEdges[0]
 	if e0.FromID != "db" {
 		t.Errorf("edge[0] FromID = %q, want %q", e0.FromID, "db")
 	}
@@ -110,7 +110,7 @@ func TestParseArchitecture(t *testing.T) {
 		t.Error("edge[0] ArrowRight = true, want false")
 	}
 
-	e1 := g.ArchEdges[1]
+	e1 := graph.ArchEdges[1]
 	if e1.FromID != "server" {
 		t.Errorf("edge[1] FromID = %q, want %q", e1.FromID, "server")
 	}
@@ -132,14 +132,14 @@ func TestParseArchitecture(t *testing.T) {
 
 	// Nodes created for services and junctions
 	for _, id := range []string{"db", "server", "junc1"} {
-		if _, ok := g.Nodes[id]; !ok {
+		if _, ok := graph.Nodes[id]; !ok {
 			t.Errorf("Nodes[%q] not found", id)
 		}
 	}
 
 	// Graph edges for layout
-	if len(g.Edges) != 2 {
-		t.Fatalf("len(Edges) = %d, want 2", len(g.Edges))
+	if len(graph.Edges) != 2 {
+		t.Fatalf("len(Edges) = %d, want 2", len(graph.Edges))
 	}
 }
 
@@ -153,19 +153,19 @@ func TestParseArchitectureMinimal(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parseArchitecture() error: %v", err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
-	if g.Kind != ir.Architecture {
-		t.Errorf("Kind = %v, want Architecture", g.Kind)
+	if graph.Kind != ir.Architecture {
+		t.Errorf("Kind = %v, want Architecture", graph.Kind)
 	}
-	if len(g.ArchServices) != 2 {
-		t.Fatalf("len(ArchServices) = %d, want 2", len(g.ArchServices))
+	if len(graph.ArchServices) != 2 {
+		t.Fatalf("len(ArchServices) = %d, want 2", len(graph.ArchServices))
 	}
-	if len(g.ArchEdges) != 1 {
-		t.Fatalf("len(ArchEdges) = %d, want 1", len(g.ArchEdges))
+	if len(graph.ArchEdges) != 1 {
+		t.Fatalf("len(ArchEdges) = %d, want 1", len(graph.ArchEdges))
 	}
 
-	edge := g.ArchEdges[0]
+	edge := graph.ArchEdges[0]
 	if edge.FromID != "a" || edge.ToID != "b" {
 		t.Errorf("edge From/To = %q/%q, want a/b", edge.FromID, edge.ToID)
 	}
@@ -184,14 +184,14 @@ func TestParseArchitectureNested(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parseArchitecture() error: %v", err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
-	if len(g.ArchGroups) != 2 {
-		t.Fatalf("len(ArchGroups) = %d, want 2", len(g.ArchGroups))
+	if len(graph.ArchGroups) != 2 {
+		t.Fatalf("len(ArchGroups) = %d, want 2", len(graph.ArchGroups))
 	}
 
 	var inner *ir.ArchGroup
-	for _, grp := range g.ArchGroups {
+	for _, grp := range graph.ArchGroups {
 		if grp.ID == "inner" {
 			inner = grp
 		}
@@ -203,16 +203,16 @@ func TestParseArchitectureNested(t *testing.T) {
 		t.Errorf("inner.ParentID = %q, want %q", inner.ParentID, "outer")
 	}
 
-	if len(g.ArchServices) != 1 {
-		t.Fatalf("len(ArchServices) = %d, want 1", len(g.ArchServices))
+	if len(graph.ArchServices) != 1 {
+		t.Fatalf("len(ArchServices) = %d, want 1", len(graph.ArchServices))
 	}
-	if g.ArchServices[0].GroupID != "inner" {
-		t.Errorf("svc.GroupID = %q, want %q", g.ArchServices[0].GroupID, "inner")
+	if graph.ArchServices[0].GroupID != "inner" {
+		t.Errorf("svc.GroupID = %q, want %q", graph.ArchServices[0].GroupID, "inner")
 	}
 
 	// Outer group should have "inner" as child
 	var outer *ir.ArchGroup
-	for _, grp := range g.ArchGroups {
+	for _, grp := range graph.ArchGroups {
 		if grp.ID == "outer" {
 			outer = grp
 		}
@@ -252,12 +252,12 @@ func TestParseArchitectureBidirectionalArrow(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parseArchitecture() error: %v", err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
-	if len(g.ArchEdges) != 1 {
-		t.Fatalf("len(ArchEdges) = %d, want 1", len(g.ArchEdges))
+	if len(graph.ArchEdges) != 1 {
+		t.Fatalf("len(ArchEdges) = %d, want 1", len(graph.ArchEdges))
 	}
-	edge := g.ArchEdges[0]
+	edge := graph.ArchEdges[0]
 	if !edge.ArrowLeft {
 		t.Error("ArrowLeft = false, want true")
 	}
@@ -276,12 +276,12 @@ func TestParseArchitectureLeftArrow(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parseArchitecture() error: %v", err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
-	if len(g.ArchEdges) != 1 {
-		t.Fatalf("len(ArchEdges) = %d, want 1", len(g.ArchEdges))
+	if len(graph.ArchEdges) != 1 {
+		t.Fatalf("len(ArchEdges) = %d, want 1", len(graph.ArchEdges))
 	}
-	edge := g.ArchEdges[0]
+	edge := graph.ArchEdges[0]
 	if !edge.ArrowLeft {
 		t.Error("ArrowLeft = false, want true")
 	}

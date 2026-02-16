@@ -9,55 +9,63 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
-func computeJourneyLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
+// Journey layout constants.
+const (
+	journeyTrackGap      float32 = 10
+	journeyLabelFontSize float32 = 14
+	journeyLabelPad      float32 = 20
+	journeyScoreRange    float32 = 4.0
+)
+
+func computeJourneyLayout(graph *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
 	measurer := textmetrics.New()
 	jcfg := cfg.Journey
 
 	// Collect unique actors
 	actorSet := make(map[string]bool)
-	for _, t := range g.JourneyTasks {
-		for _, a := range t.Actors {
-			actorSet[a] = true
+	for _, task := range graph.JourneyTasks {
+		for _, actor := range task.Actors {
+			actorSet[actor] = true
 		}
 	}
-	var actorNames []string
-	for a := range actorSet {
-		actorNames = append(actorNames, a)
+	actorNames := make([]string, 0, len(actorSet))
+	for actor := range actorSet {
+		actorNames = append(actorNames, actor)
 	}
 	sort.Strings(actorNames)
-	var actors []JourneyActorLayout
-	for idx, a := range actorNames {
-		actors = append(actors, JourneyActorLayout{Name: a, ColorIndex: idx})
+	actors := make([]JourneyActorLayout, 0, len(actorNames))
+	for idx, actor := range actorNames {
+		actors = append(actors, JourneyActorLayout{Name: actor, ColorIndex: idx})
 	}
 
 	// Title height
 	var titleH float32
-	if g.JourneyTitle != "" {
+	if graph.JourneyTitle != "" {
 		titleH = 30
 	}
 
-	trackY := jcfg.PaddingY + titleH + 10
+	trackY := jcfg.PaddingY + titleH + journeyTrackGap
 	trackH := jcfg.TrackHeight
 
 	// Build section layouts
 	curX := jcfg.PaddingX
 	var sections []JourneySectionLayout
 
-	if len(g.JourneySections) == 0 {
-		// No sections — lay out all tasks in a single implicit section
-		var tasks []JourneyTaskLayout
-		for _, t := range g.JourneyTasks {
+	if len(graph.JourneySections) == 0 {
+		// No sections -- lay out all tasks in a single implicit section
+		tasks := make([]JourneyTaskLayout, 0, len(graph.JourneyTasks))
+		for _, task := range graph.JourneyTasks {
 			tw := jcfg.TaskWidth
-			labelW := measurer.Width(t.Name, 14, th.FontFamily)
-			if labelW+20 > tw {
-				tw = labelW + 20
+			labelW := measurer.Width(task.Name, journeyLabelFontSize, th.FontFamily)
+			if labelW+journeyLabelPad > tw {
+				tw = labelW + journeyLabelPad
 			}
 			// Score 5 = top, score 1 = bottom
-			scoreRatio := float32(t.Score-1) / 4.0
+			scoreRatio := float32(task.Score-1) / journeyScoreRange
 			taskY := trackY + trackH*(1-scoreRatio) - jcfg.TaskHeight/2
 			tasks = append(tasks, JourneyTaskLayout{
-				Label:  t.Name,
-				Score:  t.Score,
+				Label:  task.Name,
+				Score:  task.Score,
 				X:      curX + tw/2,
 				Y:      taskY + jcfg.TaskHeight/2,
 				Width:  tw,
@@ -77,24 +85,24 @@ func computeJourneyLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Lay
 			})
 		}
 	} else {
-		for si, sec := range g.JourneySections {
+		for si, sec := range graph.JourneySections {
 			secStartX := curX
-			var tasks []JourneyTaskLayout
+			tasks := make([]JourneyTaskLayout, 0, len(sec.Tasks))
 			for _, ti := range sec.Tasks {
-				if ti >= len(g.JourneyTasks) {
+				if ti >= len(graph.JourneyTasks) {
 					continue
 				}
-				t := g.JourneyTasks[ti]
+				task := graph.JourneyTasks[ti]
 				tw := jcfg.TaskWidth
-				labelW := measurer.Width(t.Name, 14, th.FontFamily)
-				if labelW+20 > tw {
-					tw = labelW + 20
+				labelW := measurer.Width(task.Name, journeyLabelFontSize, th.FontFamily)
+				if labelW+journeyLabelPad > tw {
+					tw = labelW + journeyLabelPad
 				}
-				scoreRatio := float32(t.Score-1) / 4.0
+				scoreRatio := float32(task.Score-1) / journeyScoreRange
 				taskY := trackY + trackH*(1-scoreRatio) - jcfg.TaskHeight/2
 				tasks = append(tasks, JourneyTaskLayout{
-					Label:  t.Name,
-					Score:  t.Score,
+					Label:  task.Name,
+					Score:  task.Score,
 					X:      curX + tw/2,
 					Y:      taskY + jcfg.TaskHeight/2,
 					Width:  tw,
@@ -136,13 +144,13 @@ func computeJourneyLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Lay
 	totalH := trackY + trackH + actorLegendH + jcfg.PaddingY
 
 	return &Layout{
-		Kind:   g.Kind,
+		Kind:   graph.Kind,
 		Nodes:  make(map[string]*NodeLayout),
 		Width:  totalW,
 		Height: totalH,
 		Diagram: JourneyData{
 			Sections: sections,
-			Title:    g.JourneyTitle,
+			Title:    graph.JourneyTitle,
 			Actors:   actors,
 			TrackY:   trackY,
 			TrackH:   trackH,

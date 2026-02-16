@@ -11,13 +11,13 @@ import (
 )
 
 func TestSVGHasRoleImg(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Flowchart
+	graph := ir.NewGraph()
+	graph.Kind = ir.Flowchart
 	label := "Start"
-	g.EnsureNode("A", &label, nil)
+	graph.EnsureNode("A", &label, nil)
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 	if !strings.Contains(svg, `role="img"`) {
 		t.Error("missing role=img")
@@ -25,13 +25,13 @@ func TestSVGHasRoleImg(t *testing.T) {
 }
 
 func TestSVGFallbackAriaLabel(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Flowchart
+	graph := ir.NewGraph()
+	graph.Kind = ir.Flowchart
 	label := "Start"
-	g.EnsureNode("A", &label, nil)
+	graph.EnsureNode("A", &label, nil)
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 	if !strings.Contains(svg, `aria-label="Flowchart diagram"`) {
 		t.Error("missing fallback aria-label")
@@ -39,14 +39,14 @@ func TestSVGFallbackAriaLabel(t *testing.T) {
 }
 
 func TestSVGTitleElement(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Pie
-	g.PieTitle = "Browser Market Share"
-	g.PieSlices = append(g.PieSlices, &ir.PieSlice{Label: "Chrome", Value: 60})
-	g.PieSlices = append(g.PieSlices, &ir.PieSlice{Label: "Firefox", Value: 40})
+	graph := ir.NewGraph()
+	graph.Kind = ir.Pie
+	graph.PieTitle = "Browser Market Share"
+	graph.PieSlices = append(graph.PieSlices, &ir.PieSlice{Label: "Chrome", Value: 60})
+	graph.PieSlices = append(graph.PieSlices, &ir.PieSlice{Label: "Firefox", Value: 40})
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 	if !strings.Contains(svg, "<title>Browser Market Share</title>") {
 		t.Error("missing <title> element")
@@ -57,13 +57,13 @@ func TestSVGTitleElement(t *testing.T) {
 }
 
 func TestSVGNoTitleNoElement(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Flowchart
+	graph := ir.NewGraph()
+	graph.Kind = ir.Flowchart
 	label := "Start"
-	g.EnsureNode("A", &label, nil)
+	graph.EnsureNode("A", &label, nil)
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 	if strings.Contains(svg, "<title>") {
 		t.Error("<title> should not be present when no diagram title is set")

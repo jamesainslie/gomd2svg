@@ -9,30 +9,30 @@ import (
 )
 
 func TestC4Layout(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.C4
-	g.C4SubKind = ir.C4Context
+	graph := ir.NewGraph()
+	graph.Kind = ir.C4
+	graph.C4SubKind = ir.C4Context
 
 	userLabel := "User"
 	sysLabel := "System"
-	g.EnsureNode("user", &userLabel, nil)
-	g.EnsureNode("sys", &sysLabel, nil)
+	graph.EnsureNode("user", &userLabel, nil)
+	graph.EnsureNode("sys", &sysLabel, nil)
 
-	g.C4Elements = append(g.C4Elements,
+	graph.C4Elements = append(graph.C4Elements,
 		&ir.C4Element{ID: "user", Label: "User", Type: ir.C4Person},
 		&ir.C4Element{ID: "sys", Label: "System", Type: ir.C4System},
 	)
 	relLabel := "Uses"
-	g.Edges = append(g.Edges, &ir.Edge{From: "user", To: "sys", Label: &relLabel, Directed: true, ArrowEnd: true})
+	graph.Edges = append(graph.Edges, &ir.Edge{From: "user", To: "sys", Label: &relLabel, Directed: true, ArrowEnd: true})
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := computeC4Layout(g, th, cfg)
+	lay := computeC4Layout(graph, th, cfg)
 
-	if l.Kind != ir.C4 {
-		t.Fatalf("Kind = %v", l.Kind)
+	if lay.Kind != ir.C4 {
+		t.Fatalf("Kind = %v", lay.Kind)
 	}
-	cd, ok := l.Diagram.(C4Data)
+	cd, ok := lay.Diagram.(C4Data)
 	if !ok {
 		t.Fatal("Diagram is not C4Data")
 	}
@@ -45,30 +45,30 @@ func TestC4Layout(t *testing.T) {
 }
 
 func TestC4LayoutWithBoundary(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.C4
-	g.C4SubKind = ir.C4Container
+	graph := ir.NewGraph()
+	graph.Kind = ir.C4
+	graph.C4SubKind = ir.C4Container
 
 	apiLabel := "API"
 	dbLabel := "DB"
-	g.EnsureNode("api", &apiLabel, nil)
-	g.EnsureNode("db", &dbLabel, nil)
+	graph.EnsureNode("api", &apiLabel, nil)
+	graph.EnsureNode("db", &dbLabel, nil)
 
-	g.C4Elements = append(g.C4Elements,
+	graph.C4Elements = append(graph.C4Elements,
 		&ir.C4Element{ID: "api", Label: "API", Type: ir.C4ContainerPlain, BoundaryID: "sys"},
 		&ir.C4Element{ID: "db", Label: "DB", Type: ir.C4ContainerDb, BoundaryID: "sys"},
 	)
-	g.C4Boundaries = append(g.C4Boundaries, &ir.C4Boundary{
+	graph.C4Boundaries = append(graph.C4Boundaries, &ir.C4Boundary{
 		ID: "sys", Label: "My System", Type: "Software System", Children: []string{"api", "db"},
 	})
 	relLabel := "reads"
-	g.Edges = append(g.Edges, &ir.Edge{From: "api", To: "db", Label: &relLabel, Directed: true, ArrowEnd: true})
+	graph.Edges = append(graph.Edges, &ir.Edge{From: "api", To: "db", Label: &relLabel, Directed: true, ArrowEnd: true})
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := computeC4Layout(g, th, cfg)
+	lay := computeC4Layout(graph, th, cfg)
 
-	cd, ok := l.Diagram.(C4Data)
+	cd, ok := lay.Diagram.(C4Data)
 	if !ok {
 		t.Fatal("Diagram is not C4Data")
 	}
@@ -85,12 +85,12 @@ func TestC4LayoutWithBoundary(t *testing.T) {
 }
 
 func TestC4LayoutEmpty(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.C4
+	graph := ir.NewGraph()
+	graph.Kind = ir.C4
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := computeC4Layout(g, th, cfg)
-	if len(l.Nodes) != 0 {
-		t.Errorf("Nodes = %d", len(l.Nodes))
+	lay := computeC4Layout(graph, th, cfg)
+	if len(lay.Nodes) != 0 {
+		t.Errorf("Nodes = %d", len(lay.Nodes))
 	}
 }

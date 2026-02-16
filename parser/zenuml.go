@@ -53,6 +53,8 @@ var (
 )
 
 // zenControlKeywords lists keywords that should not be treated as self-calls.
+//
+//nolint:gochecknoglobals // package-level lookup table is idiomatic for constant keyword sets.
 var zenControlKeywords = map[string]bool{
 	"if": true, "else": true, "while": true, "for": true,
 	"foreach": true, "loop": true, "try": true, "catch": true,
@@ -61,9 +63,10 @@ var zenControlKeywords = map[string]bool{
 	"group": true, "zenuml": true,
 }
 
+//nolint:gocognit,funlen,gocyclo,cyclop,maintidx // ZenUML parsing has inherent complexity from 20+ syntax patterns and block nesting.
 func parseZenUML(input string) (*ParseOutput, error) {
-	g := ir.NewGraph()
-	g.Kind = ir.ZenUML
+	graph := ir.NewGraph()
+	graph.Kind = ir.ZenUML
 
 	lines := zenPreprocess(input)
 
@@ -77,8 +80,8 @@ func parseZenUML(input string) (*ParseOutput, error) {
 		if _, ok := pIdx[id]; ok {
 			return
 		}
-		pIdx[id] = len(g.Participants)
-		g.Participants = append(g.Participants, &ir.SeqParticipant{
+		pIdx[id] = len(graph.Participants)
+		graph.Participants = append(graph.Participants, &ir.SeqParticipant{
 			ID:   id,
 			Kind: ir.ParticipantBox,
 		})
@@ -89,13 +92,13 @@ func parseZenUML(input string) (*ParseOutput, error) {
 
 	find := func(id string) *ir.SeqParticipant {
 		if idx, ok := pIdx[id]; ok {
-			return g.Participants[idx]
+			return graph.Participants[idx]
 		}
 		return nil
 	}
 
 	emit := func(ev *ir.SeqEvent) {
-		g.Events = append(g.Events, ev)
+		graph.Events = append(graph.Events, ev)
 	}
 
 	// closeBlock pops the top block from the stack and emits appropriate
@@ -142,7 +145,7 @@ func parseZenUML(input string) (*ParseOutput, error) {
 
 		case zenGroupBlock:
 			if currentBox != nil {
-				g.Boxes = append(g.Boxes, currentBox)
+				graph.Boxes = append(graph.Boxes, currentBox)
 				currentBox = nil
 			}
 			inGroup = false
@@ -152,15 +155,15 @@ func parseZenUML(input string) (*ParseOutput, error) {
 		}
 	}
 
-	for i := 0; i < len(lines); i++ {
-		line := lines[i]
+	for lineIdx := range lines {
+		line := lines[lineIdx]
 
 		// Process leading close braces. Each '}' closes the top block.
 		for strings.HasPrefix(line, "}") {
 			line = strings.TrimSpace(line[1:])
 			nextLine := ""
-			if line == "" && i+1 < len(lines) {
-				nextLine = lines[i+1]
+			if line == "" && lineIdx+1 < len(lines) {
+				nextLine = lines[lineIdx+1]
 			}
 			closeBlock(line, nextLine)
 		}
@@ -181,17 +184,17 @@ func parseZenUML(input string) (*ParseOutput, error) {
 		}
 
 		// @Starter(Participant)
-		if m := zenStarterRe.FindStringSubmatch(line); m != nil {
-			caller = m[1]
+		if match := zenStarterRe.FindStringSubmatch(line); match != nil {
+			caller = match[1]
 			ensure(caller)
 			continue
 		}
 
 		// @return A->B: text
-		if m := zenAtReturnRe.FindStringSubmatch(line); m != nil {
-			from := m[1]
-			to := m[2]
-			text := strings.TrimSpace(m[3])
+		if match := zenAtReturnRe.FindStringSubmatch(line); match != nil {
+			from := match[1]
+			to := match[2]
+			text := strings.TrimSpace(match[3])
 			ensure(from)
 			ensure(to)
 			emit(&ir.SeqEvent{
@@ -207,31 +210,31 @@ func parseZenUML(input string) (*ParseOutput, error) {
 		}
 
 		// Participant annotation: @Actor A, @Database DB as MyDB
-		if m := zenAnnotRe.FindStringSubmatch(line); m != nil {
-			kind := seqKindFromString(m[1])
-			id := m[2]
-			alias := strings.TrimSpace(m[3])
+		if match := zenAnnotRe.FindStringSubmatch(line); match != nil {
+			kind := seqKindFromString(match[1])
+			id := match[2]
+			alias := strings.TrimSpace(match[3])
 			ensure(id)
-			p := find(id)
-			p.Kind = kind
+			participant := find(id)
+			participant.Kind = kind
 			if alias != "" {
-				p.Alias = alias
+				participant.Alias = alias
 			}
 			continue
 		}
 
 		// Alias: A as Alice
-		if m := zenAliasRe.FindStringSubmatch(line); m != nil {
-			id := m[1]
-			alias := strings.TrimSpace(m[2])
+		if match := zenAliasRe.FindStringSubmatch(line); match != nil {
+			id := match[1]
+			alias := strings.TrimSpace(match[2])
 			ensure(id)
 			find(id).Alias = alias
 			continue
 		}
 
 		// group Name {
-		if m := zenGroupRe.FindStringSubmatch(line); m != nil {
-			name := strings.TrimSpace(m[1])
+		if match := zenGroupRe.FindStringSubmatch(line); match != nil {
+			name := strings.TrimSpace(match[1])
 			currentBox = &ir.SeqBox{Label: name}
 			inGroup = true
 			stack = append(stack, zenBlock{kind: zenGroupBlock, caller: caller})
@@ -239,8 +242,8 @@ func parseZenUML(input string) (*ParseOutput, error) {
 		}
 
 		// else if(cond) {
-		if m := zenElseIfRe.FindStringSubmatch(line); m != nil {
-			cond := m[1]
+		if match := zenElseIfRe.FindStringSubmatch(line); match != nil {
+			cond := match[1]
 			emit(&ir.SeqEvent{
 				Kind:  ir.EvFrameMiddle,
 				Frame: &ir.SeqFrame{Kind: ir.FrameAlt, Label: cond},
@@ -260,8 +263,8 @@ func parseZenUML(input string) (*ParseOutput, error) {
 		}
 
 		// if(cond) {
-		if m := zenIfRe.FindStringSubmatch(line); m != nil {
-			cond := m[1]
+		if match := zenIfRe.FindStringSubmatch(line); match != nil {
+			cond := match[1]
 			emit(&ir.SeqEvent{
 				Kind:  ir.EvFrameStart,
 				Frame: &ir.SeqFrame{Kind: ir.FrameAlt, Label: cond},
@@ -271,8 +274,8 @@ func parseZenUML(input string) (*ParseOutput, error) {
 		}
 
 		// while/for/forEach/loop
-		if m := zenLoopRe.FindStringSubmatch(line); m != nil {
-			label := m[2]
+		if match := zenLoopRe.FindStringSubmatch(line); match != nil {
+			label := match[2]
 			emit(&ir.SeqEvent{
 				Kind:  ir.EvFrameStart,
 				Frame: &ir.SeqFrame{Kind: ir.FrameLoop, Label: label},
@@ -337,13 +340,13 @@ func parseZenUML(input string) (*ParseOutput, error) {
 			// Walk stack to find enclosing message block for the return target.
 			// If no message block exists (orphan return), skip silently — the
 			// return has no source/destination in the sequence diagram.
-			for j := len(stack) - 1; j >= 0; j-- {
-				if stack[j].kind == zenMsgBlock {
+			for stackIdx := len(stack) - 1; stackIdx >= 0; stackIdx-- {
+				if stack[stackIdx].kind == zenMsgBlock {
 					emit(&ir.SeqEvent{
 						Kind: ir.EvMessage,
 						Message: &ir.SeqMessage{
-							From: stack[j].target,
-							To:   stack[j].caller,
+							From: stack[stackIdx].target,
+							To:   stack[stackIdx].caller,
 							Text: retVal,
 							Kind: ir.MsgDottedArrow,
 						},
@@ -355,13 +358,13 @@ func parseZenUML(input string) (*ParseOutput, error) {
 		}
 
 		// new Object() or obj = new Object()
-		if m := zenNewRe.FindStringSubmatchIndex(line); m != nil {
+		if match := zenNewRe.FindStringSubmatchIndex(line); match != nil {
 			varName := ""
-			if m[2] >= 0 {
-				varName = line[m[2]:m[3]]
+			if match[2] >= 0 {
+				varName = line[match[2]:match[3]]
 			}
-			className := line[m[4]:m[5]]
-			openIdx := m[1] - 1 // position of '('
+			className := line[match[4]:match[5]]
+			openIdx := match[1] - 1 // position of '('
 			args, hasBlock, ok := zenParseCallArgs(line, openIdx)
 			if !ok {
 				continue
@@ -396,10 +399,10 @@ func parseZenUML(input string) (*ParseOutput, error) {
 		}
 
 		// Async message: A->B: text
-		if m := zenAsyncRe.FindStringSubmatch(line); m != nil {
-			from := m[1]
-			to := m[2]
-			text := strings.TrimSpace(m[3])
+		if match := zenAsyncRe.FindStringSubmatch(line); match != nil {
+			from := match[1]
+			to := match[2]
+			text := strings.TrimSpace(match[3])
 			ensure(from)
 			ensure(to)
 			emit(&ir.SeqEvent{
@@ -415,14 +418,14 @@ func parseZenUML(input string) (*ParseOutput, error) {
 		}
 
 		// Sync message: A.method() or result = A.method() or A.method() {
-		if m := zenSyncRe.FindStringSubmatchIndex(line); m != nil {
+		if match := zenSyncRe.FindStringSubmatchIndex(line); match != nil {
 			varName := ""
-			if m[2] >= 0 {
-				varName = line[m[2]:m[3]]
+			if match[2] >= 0 {
+				varName = line[match[2]:match[3]]
 			}
-			target := line[m[4]:m[5]]
-			methodName := line[m[6]:m[7]]
-			openIdx := m[1] - 1 // position of '('
+			target := line[match[4]:match[5]]
+			methodName := line[match[6]:match[7]]
+			openIdx := match[1] - 1 // position of '('
 			args, hasBlock, ok := zenParseCallArgs(line, openIdx)
 			if !ok {
 				continue
@@ -461,15 +464,15 @@ func parseZenUML(input string) (*ParseOutput, error) {
 		}
 
 		// Self-call: method() or method(args) or method() {
-		if m := zenSelfCallRe.FindStringSubmatchIndex(line); m != nil && caller != "" {
-			methodName := line[m[2]:m[3]]
+		if match := zenSelfCallRe.FindStringSubmatchIndex(line); match != nil && caller != "" {
+			methodName := line[match[2]:match[3]]
 
 			// Skip control keywords.
 			if zenControlKeywords[strings.ToLower(methodName)] {
 				continue
 			}
 
-			openIdx := m[1] - 1 // position of '('
+			openIdx := match[1] - 1 // position of '('
 			args, hasBlock, ok := zenParseCallArgs(line, openIdx)
 			if !ok {
 				continue
@@ -509,7 +512,7 @@ func parseZenUML(input string) (*ParseOutput, error) {
 		}
 	}
 
-	return &ParseOutput{Graph: g}, nil
+	return &ParseOutput{Graph: graph}, nil
 }
 
 // zenPreprocess strips // comments (quote-aware) and %% comments,
@@ -543,14 +546,14 @@ func zenPreprocess(input string) []string {
 // paren at position openIdx. Returns the index of the closing ')' or -1.
 func zenFindBalancedParen(line string, openIdx int) int {
 	depth := 0
-	for i := openIdx; i < len(line); i++ {
-		switch line[i] {
+	for pos := openIdx; pos < len(line); pos++ {
+		switch line[pos] {
 		case '(':
 			depth++
 		case ')':
 			depth--
 			if depth == 0 {
-				return i
+				return pos
 			}
 		}
 	}
@@ -560,6 +563,8 @@ func zenFindBalancedParen(line string, openIdx int) int {
 // zenParseCallArgs extracts the argument string and trailing content from a
 // line starting at the open paren position. Returns (args, hasBlock) where
 // hasBlock indicates a trailing '{'.
+//
+//nolint:nonamedreturns // named returns clarify the multi-value return.
 func zenParseCallArgs(line string, openIdx int) (args string, hasBlock bool, ok bool) {
 	closeIdx := zenFindBalancedParen(line, openIdx)
 	if closeIdx < 0 {
@@ -575,15 +580,16 @@ func zenParseCallArgs(line string, openIdx int) (args string, hasBlock bool, ok 
 func zenStripLineComment(line string) string {
 	inQuote := false
 	var quoteChar byte
-	for i := 0; i < len(line); i++ {
-		ch := line[i]
-		if !inQuote && (ch == '"' || ch == '\'') {
+	for pos := range len(line) {
+		ch := line[pos]
+		switch {
+		case !inQuote && (ch == '"' || ch == '\''):
 			inQuote = true
 			quoteChar = ch
-		} else if inQuote && ch == quoteChar {
+		case inQuote && ch == quoteChar:
 			inQuote = false
-		} else if !inQuote && ch == '/' && i+1 < len(line) && line[i+1] == '/' {
-			return strings.TrimSpace(line[:i])
+		case !inQuote && ch == '/' && pos+1 < len(line) && line[pos+1] == '/':
+			return strings.TrimSpace(line[:pos])
 		}
 	}
 	return line

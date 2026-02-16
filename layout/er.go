@@ -1,31 +1,33 @@
 package layout
 
 import (
+	"strings"
+
 	"github.com/jamesainslie/gomd2svg/config"
 	"github.com/jamesainslie/gomd2svg/ir"
 	"github.com/jamesainslie/gomd2svg/textmetrics"
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
-func computeERLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
+func computeERLayout(graph *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
 	measurer := textmetrics.New()
 
-	nodes, entityDims := sizeERNodes(g, measurer, th, cfg)
+	nodes, entityDims := sizeERNodes(graph, measurer, th, cfg)
 
-	r := runSugiyama(g, nodes, cfg)
+	result := runSugiyama(graph, nodes, cfg)
 
 	return &Layout{
-		Kind:    g.Kind,
+		Kind:    graph.Kind,
 		Nodes:   nodes,
-		Edges:   r.Edges,
-		Width:   r.Width,
-		Height:  r.Height,
-		Diagram: ERData{EntityDims: entityDims, Entities: g.Entities},
+		Edges:   result.Edges,
+		Width:   result.Width,
+		Height:  result.Height,
+		Diagram: ERData{EntityDims: entityDims, Entities: graph.Entities},
 	}
 }
 
-func sizeERNodes(g *ir.Graph, measurer *textmetrics.Measurer, th *theme.Theme, cfg *config.Layout) (map[string]*NodeLayout, map[string]EntityDimensions) {
-	nodes := make(map[string]*NodeLayout, len(g.Nodes))
+func sizeERNodes(graph *ir.Graph, measurer *textmetrics.Measurer, th *theme.Theme, cfg *config.Layout) (map[string]*NodeLayout, map[string]EntityDimensions) {
+	nodes := make(map[string]*NodeLayout, len(graph.Nodes))
 	dims := make(map[string]EntityDimensions)
 
 	padH := cfg.Padding.NodeHorizontal
@@ -34,8 +36,8 @@ func sizeERNodes(g *ir.Graph, measurer *textmetrics.Measurer, th *theme.Theme, c
 	colPad := cfg.ER.ColumnPadding
 	rowH := cfg.ER.AttributeRowHeight
 
-	for id, node := range g.Nodes {
-		entity := g.Entities[id]
+	for id, node := range graph.Nodes {
+		entity := graph.Entities[id]
 		if entity == nil {
 			nl := sizeNode(node, measurer, th, cfg)
 			nodes[id] = nl
@@ -58,13 +60,11 @@ func sizeERNodes(g *ir.Graph, measurer *textmetrics.Measurer, th *theme.Theme, c
 			if nw > maxNameW {
 				maxNameW = nw
 			}
-			var keyStr string
-			for i, k := range attr.Keys {
-				if i > 0 {
-					keyStr += ","
-				}
-				keyStr += k.String()
+			keyParts := make([]string, len(attr.Keys))
+			for ki, k := range attr.Keys {
+				keyParts[ki] = k.String()
 			}
+			keyStr := strings.Join(keyParts, ",")
 			kw := measurer.Width(keyStr, th.FontSize, th.FontFamily)
 			if kw > maxKeyW {
 				maxKeyW = kw

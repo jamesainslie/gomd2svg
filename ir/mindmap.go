@@ -30,7 +30,7 @@ func (s MindmapShape) String() string {
 	case MindmapHexagon:
 		return "hexagon"
 	default:
-		return "unknown"
+		return labelUnknown
 	}
 }
 

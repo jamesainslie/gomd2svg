@@ -32,84 +32,84 @@ type Overrides struct {
 
 // WithOverrides creates a new Theme by copying base and applying non-nil overrides.
 // If base is nil, Modern() is used.
-func WithOverrides(base *Theme, o Overrides) *Theme {
+func WithOverrides(base *Theme, overrides Overrides) *Theme {
 	if base == nil {
 		base = Modern()
 	}
 	// Shallow copy the base theme.
-	t := *base
+	result := *base
 	// Deep-copy slice fields to prevent mutation.
-	t.PieColors = copyStrings(base.PieColors)
-	t.TimelineSectionColors = copyStrings(base.TimelineSectionColors)
-	t.GanttSectionColors = copyStrings(base.GanttSectionColors)
-	t.GitBranchColors = copyStrings(base.GitBranchColors)
-	t.XYChartColors = copyStrings(base.XYChartColors)
-	t.RadarCurveColors = copyStrings(base.RadarCurveColors)
-	t.MindmapBranchColors = copyStrings(base.MindmapBranchColors)
-	t.SankeyNodeColors = copyStrings(base.SankeyNodeColors)
-	t.TreemapColors = copyStrings(base.TreemapColors)
-	t.BlockColors = copyStrings(base.BlockColors)
-	t.JourneySectionColors = copyStrings(base.JourneySectionColors)
+	result.PieColors = copyStrings(base.PieColors)
+	result.TimelineSectionColors = copyStrings(base.TimelineSectionColors)
+	result.GanttSectionColors = copyStrings(base.GanttSectionColors)
+	result.GitBranchColors = copyStrings(base.GitBranchColors)
+	result.XYChartColors = copyStrings(base.XYChartColors)
+	result.RadarCurveColors = copyStrings(base.RadarCurveColors)
+	result.MindmapBranchColors = copyStrings(base.MindmapBranchColors)
+	result.SankeyNodeColors = copyStrings(base.SankeyNodeColors)
+	result.TreemapColors = copyStrings(base.TreemapColors)
+	result.BlockColors = copyStrings(base.BlockColors)
+	result.JourneySectionColors = copyStrings(base.JourneySectionColors)
 
 	// Apply non-nil overrides.
-	if o.FontFamily != nil {
-		t.FontFamily = *o.FontFamily
+	if overrides.FontFamily != nil {
+		result.FontFamily = *overrides.FontFamily
 	}
-	if o.FontSize != nil {
-		t.FontSize = *o.FontSize
+	if overrides.FontSize != nil {
+		result.FontSize = *overrides.FontSize
 	}
-	if o.Background != nil {
-		t.Background = *o.Background
+	if overrides.Background != nil {
+		result.Background = *overrides.Background
 	}
-	if o.PrimaryColor != nil {
-		t.PrimaryColor = *o.PrimaryColor
+	if overrides.PrimaryColor != nil {
+		result.PrimaryColor = *overrides.PrimaryColor
 	}
-	if o.PrimaryBorderColor != nil {
-		t.PrimaryBorderColor = *o.PrimaryBorderColor
+	if overrides.PrimaryBorderColor != nil {
+		result.PrimaryBorderColor = *overrides.PrimaryBorderColor
 	}
-	if o.PrimaryTextColor != nil {
-		t.PrimaryTextColor = *o.PrimaryTextColor
+	if overrides.PrimaryTextColor != nil {
+		result.PrimaryTextColor = *overrides.PrimaryTextColor
 	}
-	if o.SecondaryColor != nil {
-		t.SecondaryColor = *o.SecondaryColor
+	if overrides.SecondaryColor != nil {
+		result.SecondaryColor = *overrides.SecondaryColor
 	}
-	if o.SecondaryBorderColor != nil {
-		t.SecondaryBorderColor = *o.SecondaryBorderColor
+	if overrides.SecondaryBorderColor != nil {
+		result.SecondaryBorderColor = *overrides.SecondaryBorderColor
 	}
-	if o.SecondaryTextColor != nil {
-		t.SecondaryTextColor = *o.SecondaryTextColor
+	if overrides.SecondaryTextColor != nil {
+		result.SecondaryTextColor = *overrides.SecondaryTextColor
 	}
-	if o.TertiaryColor != nil {
-		t.TertiaryColor = *o.TertiaryColor
+	if overrides.TertiaryColor != nil {
+		result.TertiaryColor = *overrides.TertiaryColor
 	}
-	if o.TertiaryBorderColor != nil {
-		t.TertiaryBorderColor = *o.TertiaryBorderColor
+	if overrides.TertiaryBorderColor != nil {
+		result.TertiaryBorderColor = *overrides.TertiaryBorderColor
 	}
-	if o.LineColor != nil {
-		t.LineColor = *o.LineColor
+	if overrides.LineColor != nil {
+		result.LineColor = *overrides.LineColor
 	}
-	if o.TextColor != nil {
-		t.TextColor = *o.TextColor
+	if overrides.TextColor != nil {
+		result.TextColor = *overrides.TextColor
 	}
-	if o.ClusterBackground != nil {
-		t.ClusterBackground = *o.ClusterBackground
+	if overrides.ClusterBackground != nil {
+		result.ClusterBackground = *overrides.ClusterBackground
 	}
-	if o.ClusterBorder != nil {
-		t.ClusterBorder = *o.ClusterBorder
+	if overrides.ClusterBorder != nil {
+		result.ClusterBorder = *overrides.ClusterBorder
 	}
-	if o.NodeBorderColor != nil {
-		t.NodeBorderColor = *o.NodeBorderColor
+	if overrides.NodeBorderColor != nil {
+		result.NodeBorderColor = *overrides.NodeBorderColor
 	}
-	if o.NoteBackground != nil {
-		t.NoteBackground = *o.NoteBackground
+	if overrides.NoteBackground != nil {
+		result.NoteBackground = *overrides.NoteBackground
 	}
-	if o.NoteBorderColor != nil {
-		t.NoteBorderColor = *o.NoteBorderColor
+	if overrides.NoteBorderColor != nil {
+		result.NoteBorderColor = *overrides.NoteBorderColor
 	}
-	if o.NoteTextColor != nil {
-		t.NoteTextColor = *o.NoteTextColor
+	if overrides.NoteTextColor != nil {
+		result.NoteTextColor = *overrides.NoteTextColor
 	}
-	return &t
+	return &result
 }
 
 func copyStrings(s []string) []string {

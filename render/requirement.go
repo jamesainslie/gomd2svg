@@ -9,20 +9,27 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
+// Requirement diagram rendering constants.
+const (
+	reqNodeBorderRadius    float32 = 4
+	reqStereotypeLineScale float32 = 0.75
+	reqNameDividerScale    float32 = 0.25
+)
+
 // renderRequirement renders all requirement diagram elements: edges and
 // requirement/element nodes with stereotype headers and metadata lines.
-func renderRequirement(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.Layout) {
-	rd, ok := l.Diagram.(layout.RequirementData)
+func renderRequirement(builder *svgBuilder, lay *layout.Layout, th *theme.Theme, cfg *config.Layout) {
+	rd, ok := lay.Diagram.(layout.RequirementData)
 	if !ok {
 		return
 	}
 
 	// Render edges (reuse shared edge rendering with arrow markers and labels).
-	renderEdges(b, l, th)
+	renderEdges(builder, lay, th)
 
 	// Render nodes sorted by ID for deterministic output.
-	ids := make([]string, 0, len(l.Nodes))
-	for id := range l.Nodes {
+	ids := make([]string, 0, len(lay.Nodes))
+	for id := range lay.Nodes {
 		ids = append(ids, id)
 	}
 	sort.Strings(ids)
@@ -39,21 +46,21 @@ func renderRequirement(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *co
 	}
 
 	for _, id := range ids {
-		n := l.Nodes[id]
+		node := lay.Nodes[id]
 
 		// Top-left from center coordinates.
-		x := n.X - n.Width/2
-		y := n.Y - n.Height/2
+		posX := node.X - node.Width/2
+		posY := node.Y - node.Height/2
 
 		// Outer rounded rectangle.
-		b.rect(x, y, n.Width, n.Height, 4,
+		builder.rect(posX, posY, node.Width, node.Height, reqNodeBorderRadius,
 			"fill", th.RequirementFill,
 			"stroke", th.RequirementBorder,
 			"stroke-width", "1",
 		)
 
 		kind := rd.NodeKinds[id]
-		curY := y + cfg.Padding.NodeVertical
+		curY := posY + cfg.Padding.NodeVertical
 
 		// Stereotype header line.
 		stereotype := "\u00ABelement\u00BB"
@@ -62,39 +69,39 @@ func renderRequirement(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *co
 				stereotype = "\u00AB" + req.Type.Stereotype() + "\u00BB"
 			}
 		}
-		curY += lineH * 0.75
-		b.text(x+n.Width/2, curY, stereotype,
+		curY += lineH * reqStereotypeLineScale
+		builder.text(posX+node.Width/2, curY, stereotype,
 			"text-anchor", "middle",
 			"font-family", th.FontFamily,
 			"font-size", fmtFloat(metaFontSize),
 			"font-style", "italic",
 			"fill", th.TextColor,
 		)
-		curY += lineH * 0.25
+		curY += lineH * reqNameDividerScale
 
 		// Divider line after stereotype.
-		b.line(x, curY, x+n.Width, curY,
+		builder.line(posX, curY, posX+node.Width, curY,
 			"stroke", th.RequirementBorder,
 			"stroke-width", "0.5",
 		)
 
 		// Name line (bold, centered).
-		curY += lineH * 0.75
+		curY += lineH * reqStereotypeLineScale
 		name := ""
-		if len(n.Label.Lines) > 0 {
-			name = n.Label.Lines[0]
+		if len(node.Label.Lines) > 0 {
+			name = node.Label.Lines[0]
 		}
-		b.text(x+n.Width/2, curY, name,
+		builder.text(posX+node.Width/2, curY, name,
 			"text-anchor", "middle",
 			"font-family", th.FontFamily,
 			"font-size", fmtFloat(th.FontSize),
 			"font-weight", "bold",
 			"fill", th.TextColor,
 		)
-		curY += lineH * 0.25
+		curY += lineH * reqNameDividerScale
 
 		// Divider line after name.
-		b.line(x, curY, x+n.Width, curY,
+		builder.line(posX, curY, posX+node.Width, curY,
 			"stroke", th.RequirementBorder,
 			"stroke-width", "0.5",
 		)
@@ -102,21 +109,21 @@ func renderRequirement(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *co
 		// Metadata lines.
 		if kind == "requirement" {
 			if req, ok := rd.Requirements[id]; ok {
-				renderRequirementMeta(b, x+padX, &curY, metaFontSize, metaLineH, th, req)
+				renderRequirementMeta(builder, posX+padX, &curY, metaFontSize, metaLineH, th, req)
 			}
 		} else {
 			if elem, ok := rd.Elements[id]; ok {
-				renderElementMeta(b, x+padX, &curY, metaFontSize, metaLineH, th, elem)
+				renderElementMeta(builder, posX+padX, &curY, metaFontSize, metaLineH, th, elem)
 			}
 		}
 	}
 }
 
 // renderRequirementMeta renders metadata lines for a requirement node.
-func renderRequirementMeta(b *svgBuilder, x float32, curY *float32, fontSize, lineH float32, th *theme.Theme, req *ir.RequirementDef) {
+func renderRequirementMeta(builder *svgBuilder, posX float32, curY *float32, fontSize, lineH float32, th *theme.Theme, req *ir.RequirementDef) {
 	if req.ID != "" {
 		*curY += lineH
-		b.text(x, *curY, "Id: "+req.ID,
+		builder.text(posX, *curY, "Id: "+req.ID,
 			"font-family", th.FontFamily,
 			"font-size", fmtFloat(fontSize),
 			"fill", th.TextColor,
@@ -124,7 +131,7 @@ func renderRequirementMeta(b *svgBuilder, x float32, curY *float32, fontSize, li
 	}
 	if req.Text != "" {
 		*curY += lineH
-		b.text(x, *curY, "Text: "+req.Text,
+		builder.text(posX, *curY, "Text: "+req.Text,
 			"font-family", th.FontFamily,
 			"font-size", fmtFloat(fontSize),
 			"fill", th.TextColor,
@@ -132,7 +139,7 @@ func renderRequirementMeta(b *svgBuilder, x float32, curY *float32, fontSize, li
 	}
 	if req.Risk != ir.RiskNone {
 		*curY += lineH
-		b.text(x, *curY, "Risk: "+req.Risk.String(),
+		builder.text(posX, *curY, "Risk: "+req.Risk.String(),
 			"font-family", th.FontFamily,
 			"font-size", fmtFloat(fontSize),
 			"fill", th.TextColor,
@@ -140,7 +147,7 @@ func renderRequirementMeta(b *svgBuilder, x float32, curY *float32, fontSize, li
 	}
 	if req.VerifyMethod != ir.VerifyNone {
 		*curY += lineH
-		b.text(x, *curY, "Verify: "+req.VerifyMethod.String(),
+		builder.text(posX, *curY, "Verify: "+req.VerifyMethod.String(),
 			"font-family", th.FontFamily,
 			"font-size", fmtFloat(fontSize),
 			"fill", th.TextColor,
@@ -149,10 +156,10 @@ func renderRequirementMeta(b *svgBuilder, x float32, curY *float32, fontSize, li
 }
 
 // renderElementMeta renders metadata lines for an element node.
-func renderElementMeta(b *svgBuilder, x float32, curY *float32, fontSize, lineH float32, th *theme.Theme, elem *ir.ElementDef) {
+func renderElementMeta(builder *svgBuilder, posX float32, curY *float32, fontSize, lineH float32, th *theme.Theme, elem *ir.ElementDef) {
 	if elem.Type != "" {
 		*curY += lineH
-		b.text(x, *curY, "Type: "+elem.Type,
+		builder.text(posX, *curY, "Type: "+elem.Type,
 			"font-family", th.FontFamily,
 			"font-size", fmtFloat(fontSize),
 			"fill", th.TextColor,
@@ -160,7 +167,7 @@ func renderElementMeta(b *svgBuilder, x float32, curY *float32, fontSize, lineH 
 	}
 	if elem.DocRef != "" {
 		*curY += lineH
-		b.text(x, *curY, "Doc: "+elem.DocRef,
+		builder.text(posX, *curY, "Doc: "+elem.DocRef,
 			"font-family", th.FontFamily,
 			"font-size", fmtFloat(fontSize),
 			"fill", th.TextColor,

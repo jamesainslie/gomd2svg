@@ -7,6 +7,7 @@ import (
 )
 
 func TestParseGitGraphBasic(t *testing.T) {
+	//nolint:dupword // mermaid syntax
 	input := `gitGraph
     commit
     commit id: "feat1"
@@ -20,30 +21,39 @@ func TestParseGitGraphBasic(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
-	g := out.Graph
-	if g.Kind != ir.GitGraph {
-		t.Errorf("Kind = %v, want GitGraph", g.Kind)
+	graph := out.Graph
+	if graph.Kind != ir.GitGraph {
+		t.Errorf("Kind = %v, want GitGraph", graph.Kind)
 	}
-	if len(g.GitActions) != 7 {
-		t.Fatalf("Actions = %d, want 7", len(g.GitActions))
+	if len(graph.GitActions) != 7 {
+		t.Fatalf("Actions = %d, want 7", len(graph.GitActions))
 	}
 
 	// First action should be a commit.
-	if _, ok := g.GitActions[0].(*ir.GitCommit); !ok {
-		t.Errorf("Action[0] type = %T, want *GitCommit", g.GitActions[0])
+	if _, ok := graph.GitActions[0].(*ir.GitCommit); !ok {
+		t.Errorf("Action[0] type = %T, want *GitCommit", graph.GitActions[0])
 	}
 	// Second commit has ID.
-	c1 := g.GitActions[1].(*ir.GitCommit)
+	c1, ok := graph.GitActions[1].(*ir.GitCommit)
+	if !ok {
+		t.Fatal("expected *ir.GitCommit")
+	}
 	if c1.ID != "feat1" {
 		t.Errorf("Action[1].ID = %q, want feat1", c1.ID)
 	}
 	// Branch.
-	br := g.GitActions[2].(*ir.GitBranch)
+	br, ok := graph.GitActions[2].(*ir.GitBranch)
+	if !ok {
+		t.Fatal("expected *ir.GitBranch")
+	}
 	if br.Name != "develop" {
 		t.Errorf("Branch.Name = %q", br.Name)
 	}
 	// Merge.
-	mg := g.GitActions[6].(*ir.GitMerge)
+	mg, ok := graph.GitActions[6].(*ir.GitMerge)
+	if !ok {
+		t.Fatal("expected *ir.GitMerge")
+	}
 	if mg.Branch != "develop" {
 		t.Errorf("Merge.Branch = %q", mg.Branch)
 	}
@@ -58,11 +68,17 @@ func TestParseGitGraphCommitOptions(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
-	c0 := out.Graph.GitActions[0].(*ir.GitCommit)
+	c0, ok := out.Graph.GitActions[0].(*ir.GitCommit)
+	if !ok {
+		t.Fatal("expected *ir.GitCommit")
+	}
 	if c0.ID != "c1" || c0.Tag != "v1.0" || c0.Type != ir.GitCommitHighlight {
 		t.Errorf("commit[0] = %+v", c0)
 	}
-	c1 := out.Graph.GitActions[1].(*ir.GitCommit)
+	c1, ok := out.Graph.GitActions[1].(*ir.GitCommit)
+	if !ok {
+		t.Fatal("expected *ir.GitCommit")
+	}
 	if c1.Type != ir.GitCommitReverse {
 		t.Errorf("commit[1].Type = %v, want REVERSE", c1.Type)
 	}
@@ -78,11 +94,17 @@ func TestParseGitGraphBranchOrder(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
-	b0 := out.Graph.GitActions[1].(*ir.GitBranch)
+	b0, ok := out.Graph.GitActions[1].(*ir.GitBranch)
+	if !ok {
+		t.Fatal("expected *ir.GitBranch")
+	}
 	if b0.Name != "develop" || b0.Order != 2 {
 		t.Errorf("branch[0] = %+v", b0)
 	}
-	b1 := out.Graph.GitActions[2].(*ir.GitBranch)
+	b1, ok := out.Graph.GitActions[2].(*ir.GitBranch)
+	if !ok {
+		t.Fatal("expected *ir.GitBranch")
+	}
 	if b1.Name != "feature" || b1.Order != 1 {
 		t.Errorf("branch[1] = %+v", b1)
 	}
@@ -101,7 +123,10 @@ func TestParseGitGraphMergeOptions(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
-	mg := out.Graph.GitActions[5].(*ir.GitMerge)
+	mg, ok := out.Graph.GitActions[5].(*ir.GitMerge)
+	if !ok {
+		t.Fatal("expected *ir.GitMerge")
+	}
 	if mg.Branch != "dev" || mg.ID != "m1" || mg.Tag != "v2.0" || mg.Type != ir.GitCommitHighlight {
 		t.Errorf("merge = %+v", mg)
 	}
@@ -118,7 +143,10 @@ func TestParseGitGraphCherryPick(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
-	cp := out.Graph.GitActions[3].(*ir.GitCherryPick)
+	cp, ok := out.Graph.GitActions[3].(*ir.GitCherryPick)
+	if !ok {
+		t.Fatal("expected *ir.GitCherryPick")
+	}
 	if cp.ID != "src" {
 		t.Errorf("cherry-pick.ID = %q", cp.ID)
 	}
@@ -135,7 +163,10 @@ func TestParseGitGraphSwitch(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
-	co := out.Graph.GitActions[2].(*ir.GitCheckout)
+	co, ok := out.Graph.GitActions[2].(*ir.GitCheckout)
+	if !ok {
+		t.Fatal("expected *ir.GitCheckout")
+	}
 	if co.Branch != "dev" {
 		t.Errorf("switch.Branch = %q", co.Branch)
 	}

@@ -11,10 +11,10 @@ import (
 )
 
 func TestRenderGitGraph(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.GitGraph
-	g.GitMainBranch = "main"
-	g.GitActions = []ir.GitAction{
+	graph := ir.NewGraph()
+	graph.Kind = ir.GitGraph
+	graph.GitMainBranch = "main"
+	graph.GitActions = []ir.GitAction{
 		&ir.GitCommit{ID: "c1", Tag: "v1.0"},
 		&ir.GitBranch{Name: "develop"},
 		&ir.GitCheckout{Branch: "develop"},
@@ -25,7 +25,7 @@ func TestRenderGitGraph(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "<svg") {

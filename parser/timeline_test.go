@@ -17,18 +17,18 @@ func TestParseTimelineBasic(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
-	g := out.Graph
-	if g.Kind != ir.Timeline {
-		t.Errorf("Kind = %v, want Timeline", g.Kind)
+	graph := out.Graph
+	if graph.Kind != ir.Timeline {
+		t.Errorf("Kind = %v, want Timeline", graph.Kind)
 	}
-	if g.TimelineTitle != "History of Social Media" {
-		t.Errorf("Title = %q", g.TimelineTitle)
+	if graph.TimelineTitle != "History of Social Media" {
+		t.Errorf("Title = %q", graph.TimelineTitle)
 	}
 	// No explicit sections, so 1 implicit section.
-	if len(g.TimelineSections) != 1 {
-		t.Fatalf("Sections = %d, want 1", len(g.TimelineSections))
+	if len(graph.TimelineSections) != 1 {
+		t.Fatalf("Sections = %d, want 1", len(graph.TimelineSections))
 	}
-	sec := g.TimelineSections[0]
+	sec := graph.TimelineSections[0]
 	if len(sec.Periods) != 3 {
 		t.Fatalf("Periods = %d, want 3", len(sec.Periods))
 	}
@@ -60,18 +60,18 @@ func TestParseTimelineSections(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
-	g := out.Graph
-	if len(g.TimelineSections) != 2 {
-		t.Fatalf("Sections = %d, want 2", len(g.TimelineSections))
+	graph := out.Graph
+	if len(graph.TimelineSections) != 2 {
+		t.Fatalf("Sections = %d, want 2", len(graph.TimelineSections))
 	}
-	if g.TimelineSections[0].Title != "Phase 1" {
-		t.Errorf("Section[0].Title = %q", g.TimelineSections[0].Title)
+	if graph.TimelineSections[0].Title != "Phase 1" {
+		t.Errorf("Section[0].Title = %q", graph.TimelineSections[0].Title)
 	}
-	if len(g.TimelineSections[0].Periods) != 2 {
-		t.Errorf("Section[0].Periods = %d, want 2", len(g.TimelineSections[0].Periods))
+	if len(graph.TimelineSections[0].Periods) != 2 {
+		t.Errorf("Section[0].Periods = %d, want 2", len(graph.TimelineSections[0].Periods))
 	}
-	if g.TimelineSections[1].Title != "Phase 2" {
-		t.Errorf("Section[1].Title = %q", g.TimelineSections[1].Title)
+	if graph.TimelineSections[1].Title != "Phase 2" {
+		t.Errorf("Section[1].Title = %q", graph.TimelineSections[1].Title)
 	}
 }
 
@@ -85,8 +85,8 @@ func TestParseTimelineContinuationEvents(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
-	g := out.Graph
-	sec := g.TimelineSections[0]
+	graph := out.Graph
+	sec := graph.TimelineSections[0]
 	if len(sec.Periods) != 1 {
 		t.Fatalf("Periods = %d, want 1", len(sec.Periods))
 	}

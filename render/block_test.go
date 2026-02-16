@@ -11,20 +11,20 @@ import (
 )
 
 func TestRenderBlock(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Block
-	g.BlockColumns = 2
+	graph := ir.NewGraph()
+	graph.Kind = ir.Block
+	graph.BlockColumns = 2
 
 	// Add 3 block nodes.
 	for _, id := range []string{"a", "b", "c"} {
 		label := strings.ToUpper(id)
-		g.EnsureNode(id, &label, nil)
-		g.Blocks = append(g.Blocks, &ir.BlockDef{ID: id, Label: label, Width: 1})
+		graph.EnsureNode(id, &label, nil)
+		graph.Blocks = append(graph.Blocks, &ir.BlockDef{ID: id, Label: label, Width: 1})
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "<svg") {
@@ -41,12 +41,12 @@ func TestRenderBlock(t *testing.T) {
 }
 
 func TestRenderBlockEmpty(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Block
+	graph := ir.NewGraph()
+	graph.Kind = ir.Block
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "<svg") {

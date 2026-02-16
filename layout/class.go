@@ -7,31 +7,31 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
-func computeClassLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
+func computeClassLayout(graph *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
 	measurer := textmetrics.New()
 
 	// Size class nodes with UML compartments.
-	nodes, compartments := sizeClassNodes(g, measurer, th, cfg)
+	nodes, compartments := sizeClassNodes(graph, measurer, th, cfg)
 
 	// Reuse Sugiyama pipeline.
-	r := runSugiyama(g, nodes, cfg)
+	result := runSugiyama(graph, nodes, cfg)
 
 	return &Layout{
-		Kind:   g.Kind,
+		Kind:   graph.Kind,
 		Nodes:  nodes,
-		Edges:  r.Edges,
-		Width:  r.Width,
-		Height: r.Height,
+		Edges:  result.Edges,
+		Width:  result.Width,
+		Height: result.Height,
 		Diagram: ClassData{
 			Compartments: compartments,
-			Members:      g.Members,
-			Annotations:  g.Annotations,
+			Members:      graph.Members,
+			Annotations:  graph.Annotations,
 		},
 	}
 }
 
-func sizeClassNodes(g *ir.Graph, measurer *textmetrics.Measurer, th *theme.Theme, cfg *config.Layout) (map[string]*NodeLayout, map[string]ClassCompartment) {
-	nodes := make(map[string]*NodeLayout, len(g.Nodes))
+func sizeClassNodes(graph *ir.Graph, measurer *textmetrics.Measurer, th *theme.Theme, cfg *config.Layout) (map[string]*NodeLayout, map[string]ClassCompartment) {
+	nodes := make(map[string]*NodeLayout, len(graph.Nodes))
 	compartments := make(map[string]ClassCompartment)
 
 	padH := cfg.Padding.NodeHorizontal
@@ -42,8 +42,8 @@ func sizeClassNodes(g *ir.Graph, measurer *textmetrics.Measurer, th *theme.Theme
 
 	memberLineH := memberFontSize * cfg.LabelLineHeight
 
-	for id, node := range g.Nodes {
-		members := g.Members[id]
+	for id, node := range graph.Nodes {
+		members := graph.Members[id]
 
 		if members == nil || (len(members.Attributes) == 0 && len(members.Methods) == 0) {
 			// Simple node — no compartments, just measure label.
@@ -57,7 +57,7 @@ func sizeClassNodes(g *ir.Graph, measurer *textmetrics.Measurer, th *theme.Theme
 		headerH := lineH + padV
 
 		// Measure annotation if present.
-		if ann, ok := g.Annotations[id]; ok {
+		if ann, ok := graph.Annotations[id]; ok {
 			annW := measurer.Width("<<"+ann+">>", th.FontSize, th.FontFamily)
 			if annW > headerW {
 				headerW = annW

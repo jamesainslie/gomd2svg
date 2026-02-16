@@ -99,17 +99,17 @@ func TestSeqFrameKindString(t *testing.T) {
 }
 
 func TestGraphSequenceFields(t *testing.T) {
-	g := NewGraph()
-	if g.Participants != nil {
+	graph := NewGraph()
+	if graph.Participants != nil {
 		t.Error("Participants should be nil on new graph")
 	}
-	if g.Events != nil {
+	if graph.Events != nil {
 		t.Error("Events should be nil on new graph")
 	}
-	if g.Boxes != nil {
+	if graph.Boxes != nil {
 		t.Error("Boxes should be nil on new graph")
 	}
-	if g.Autonumber {
+	if graph.Autonumber {
 		t.Error("Autonumber should be false on new graph")
 	}
 }

@@ -13,9 +13,9 @@ var (
 	packetBitCountRe = regexp.MustCompile(`^\+(\d+)\s*:\s*"([^"]*)"$`)
 )
 
-func parsePacket(input string) (*ParseOutput, error) {
-	g := ir.NewGraph()
-	g.Kind = ir.Packet
+func parsePacket(input string) (*ParseOutput, error) { //nolint:unparam // error return is part of the parser interface contract used by Parse().
+	graph := ir.NewGraph()
+	graph.Kind = ir.Packet
 
 	lines := preprocessInput(input)
 	nextBit := 0
@@ -26,25 +26,25 @@ func parsePacket(input string) (*ParseOutput, error) {
 			continue
 		}
 
-		// Try range notation: 0-15: "Source Port"
-		if m := packetRangeRe.FindStringSubmatch(line); m != nil {
-			start, _ := strconv.Atoi(m[1]) // regex guarantees digits
-			end, _ := strconv.Atoi(m[2])   // regex guarantees digits
-			desc := m[3]
-			g.Fields = append(g.Fields, &ir.PacketField{
+		// Try range notation: 0-15: "Source Port".
+		if match := packetRangeRe.FindStringSubmatch(line); match != nil {
+			start, _ := strconv.Atoi(match[1]) //nolint:errcheck // regex guarantees digits.
+			end, _ := strconv.Atoi(match[2])   //nolint:errcheck // regex guarantees digits.
+			desc := match[3]
+			graph.Fields = append(graph.Fields, &ir.PacketField{
 				Start: start, End: end, Description: desc,
 			})
 			nextBit = end + 1
 			continue
 		}
 
-		// Try bit count notation: +16: "Source Port"
-		if m := packetBitCountRe.FindStringSubmatch(line); m != nil {
-			count, _ := strconv.Atoi(m[1]) // regex guarantees digits
-			desc := m[2]
+		// Try bit count notation: +16: "Source Port".
+		if match := packetBitCountRe.FindStringSubmatch(line); match != nil {
+			count, _ := strconv.Atoi(match[1]) //nolint:errcheck // regex guarantees digits.
+			desc := match[2]
 			start := nextBit
 			end := start + count - 1
-			g.Fields = append(g.Fields, &ir.PacketField{
+			graph.Fields = append(graph.Fields, &ir.PacketField{
 				Start: start, End: end, Description: desc,
 			})
 			nextBit = end + 1
@@ -52,5 +52,5 @@ func parsePacket(input string) (*ParseOutput, error) {
 		}
 	}
 
-	return &ParseOutput{Graph: g}, nil
+	return &ParseOutput{Graph: graph}, nil
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -66,7 +67,7 @@ func runRender(args []string, stdin io.Reader, stdout, stderr io.Writer) error {
 	}
 
 	if len(strings.TrimSpace(string(input))) == 0 {
-		return fmt.Errorf("empty input")
+		return errors.New("empty input")
 	}
 
 	opts := gomd2svg.Options{}
@@ -102,7 +103,7 @@ func writeOutput(path, svg string, stdout io.Writer) error {
 			return err
 		}
 	}
-	return os.WriteFile(path, []byte(svg), 0o644)
+	return os.WriteFile(path, []byte(svg), 0o600)
 }
 
 func runThemes(w io.Writer) error {

@@ -6,7 +6,7 @@ import (
 )
 
 // registry maps lowercase theme names to constructor functions.
-var registry = map[string]func() *Theme{
+var registry = map[string]func() *Theme{ //nolint:gochecknoglobals // theme registry is intentionally global
 	"modern":  Modern,
 	"default": MermaidDefault,
 	"dark":    Dark,

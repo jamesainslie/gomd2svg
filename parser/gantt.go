@@ -9,15 +9,17 @@ import (
 
 var (
 	ganttTaskRe = regexp.MustCompile(`^(.+?)\s*:\s*(.+)$`)
+	//nolint:gochecknoglobals // package-level lookup table is idiomatic for constant sets.
 	ganttTagSet = map[string]bool{"done": true, "active": true, "crit": true, "milestone": true}
 	ganttDateRe = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
 	ganttDurRe  = regexp.MustCompile(`^\d+[dwmhDWMH]$`)
 )
 
+//nolint:unparam // error return is part of the parser interface contract used by Parse().
 func parseGantt(input string) (*ParseOutput, error) {
-	g := ir.NewGraph()
-	g.Kind = ir.Gantt
-	g.GanttDateFormat = "YYYY-MM-DD" // default
+	graph := ir.NewGraph()
+	graph.Kind = ir.Gantt
+	graph.GanttDateFormat = "YYYY-MM-DD" // default
 
 	lines := preprocessInput(input)
 
@@ -32,34 +34,34 @@ func parseGantt(input string) (*ParseOutput, error) {
 
 		// Directives.
 		if strings.HasPrefix(lower, "title ") {
-			g.GanttTitle = strings.TrimSpace(line[len("title "):])
+			graph.GanttTitle = strings.TrimSpace(line[len("title "):])
 			continue
 		}
 		if strings.HasPrefix(lower, "dateformat ") {
-			g.GanttDateFormat = strings.TrimSpace(line[len("dateformat "):])
+			graph.GanttDateFormat = strings.TrimSpace(line[len("dateformat "):])
 			continue
 		}
 		if strings.HasPrefix(lower, "axisformat ") {
-			g.GanttAxisFormat = strings.TrimSpace(line[len("axisformat "):])
+			graph.GanttAxisFormat = strings.TrimSpace(line[len("axisformat "):])
 			continue
 		}
 		if strings.HasPrefix(lower, "excludes ") {
 			val := strings.TrimSpace(line[len("excludes "):])
 			for _, ex := range strings.Split(val, ",") {
-				g.GanttExcludes = append(g.GanttExcludes, strings.TrimSpace(ex))
+				graph.GanttExcludes = append(graph.GanttExcludes, strings.TrimSpace(ex))
 			}
 			continue
 		}
 		if strings.HasPrefix(lower, "tickinterval ") {
-			g.GanttTickInterval = strings.TrimSpace(line[len("tickinterval "):])
+			graph.GanttTickInterval = strings.TrimSpace(line[len("tickinterval "):])
 			continue
 		}
 		if strings.HasPrefix(lower, "todaymarker ") {
-			g.GanttTodayMarker = strings.TrimSpace(line[len("todaymarker "):])
+			graph.GanttTodayMarker = strings.TrimSpace(line[len("todaymarker "):])
 			continue
 		}
 		if strings.HasPrefix(lower, "weekend ") {
-			g.GanttWeekday = strings.TrimSpace(line[len("weekend "):])
+			graph.GanttWeekday = strings.TrimSpace(line[len("weekend "):])
 			continue
 		}
 
@@ -68,72 +70,74 @@ func parseGantt(input string) (*ParseOutput, error) {
 			currentSection = &ir.GanttSection{
 				Title: strings.TrimSpace(line[len("section "):]),
 			}
-			g.GanttSections = append(g.GanttSections, currentSection)
+			graph.GanttSections = append(graph.GanttSections, currentSection)
 			continue
 		}
 
-		// Task line: "Task Name : metadata"
-		if m := ganttTaskRe.FindStringSubmatch(line); m != nil {
+		// Task line: "Task Name : metadata".
+		if match := ganttTaskRe.FindStringSubmatch(line); match != nil {
 			if currentSection == nil {
 				currentSection = &ir.GanttSection{}
-				g.GanttSections = append(g.GanttSections, currentSection)
+				graph.GanttSections = append(graph.GanttSections, currentSection)
 			}
 
-			label := strings.TrimSpace(m[1])
-			metadata := strings.TrimSpace(m[2])
+			label := strings.TrimSpace(match[1])
+			metadata := strings.TrimSpace(match[2])
 			task := parseGanttTask(label, metadata)
 			currentSection.Tasks = append(currentSection.Tasks, task)
 		}
 	}
 
-	return &ParseOutput{Graph: g}, nil
+	return &ParseOutput{Graph: graph}, nil
 }
 
 func parseGanttTask(label, metadata string) *ir.GanttTask {
 	task := &ir.GanttTask{Label: label}
 
 	parts := strings.Split(metadata, ",")
-	for i := range parts {
-		parts[i] = strings.TrimSpace(parts[i])
+	for idx := range parts {
+		parts[idx] = strings.TrimSpace(parts[idx])
 	}
 
 	// Extract tags first.
 	var remaining []string
-	for _, p := range parts {
-		if ganttTagSet[strings.ToLower(p)] {
-			task.Tags = append(task.Tags, strings.ToLower(p))
+	for _, part := range parts {
+		if ganttTagSet[strings.ToLower(part)] {
+			task.Tags = append(task.Tags, strings.ToLower(part))
 		} else {
-			remaining = append(remaining, p)
+			remaining = append(remaining, part)
 		}
 	}
 
 	// Classify remaining items.
-	for i, p := range remaining {
-		lp := strings.ToLower(p)
+	for idx, part := range remaining {
+		lp := strings.ToLower(part)
 
-		if strings.HasPrefix(lp, "after ") {
-			ids := strings.Fields(p[len("after "):])
+		switch {
+		case strings.HasPrefix(lp, "after "):
+			ids := strings.Fields(part[len("after "):])
 			task.AfterIDs = ids
-			task.StartStr = p
-		} else if strings.HasPrefix(lp, "until ") {
-			task.UntilID = strings.TrimSpace(p[len("until "):])
-		} else if ganttDateRe.MatchString(p) {
+			task.StartStr = part
+		case strings.HasPrefix(lp, "until "):
+			task.UntilID = strings.TrimSpace(part[len("until "):])
+		case ganttDateRe.MatchString(part):
 			if task.StartStr == "" {
-				task.StartStr = p
+				task.StartStr = part
 			} else {
-				task.EndStr = p
+				task.EndStr = part
 			}
-		} else if ganttDurRe.MatchString(p) {
-			task.EndStr = p
-		} else {
-			// Must be a task ID — only if it's the first non-tag item
+		case ganttDurRe.MatchString(part):
+			task.EndStr = part
+		default:
+			// Must be a task ID -- only if it's the first non-tag item
 			// and we haven't set start yet.
-			if i == 0 && task.ID == "" {
-				task.ID = p
-			} else if task.StartStr == "" {
-				task.StartStr = p
-			} else {
-				task.EndStr = p
+			switch {
+			case idx == 0 && task.ID == "":
+				task.ID = part
+			case task.StartStr == "":
+				task.StartStr = part
+			default:
+				task.EndStr = part
 			}
 		}
 	}

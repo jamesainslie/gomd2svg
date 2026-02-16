@@ -8,7 +8,10 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
-func computePieLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
+// piePercentScale is the multiplier for converting a fraction to a percentage.
+const piePercentScale = 100
+
+func computePieLayout(graph *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
 	radius := cfg.Pie.Radius
 	padX := cfg.Pie.PaddingX
 	padY := cfg.Pie.PaddingY
@@ -16,8 +19,8 @@ func computePieLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout 
 
 	// Compute total value.
 	var total float64
-	for _, s := range g.PieSlices {
-		total += s.Value
+	for _, slice := range graph.PieSlices {
+		total += slice.Value
 	}
 	if total <= 0 {
 		total = 1
@@ -25,7 +28,7 @@ func computePieLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout 
 
 	// Title height.
 	var titleHeight float32
-	if g.PieTitle != "" {
+	if graph.PieTitle != "" {
 		titleHeight = th.PieTitleTextSize + padY
 	}
 
@@ -33,11 +36,11 @@ func computePieLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout 
 	centerY := titleHeight + padY + radius
 
 	// Compute slice angles (clockwise from top = -pi/2).
-	slices := make([]PieSliceLayout, len(g.PieSlices))
+	slices := make([]PieSliceLayout, len(graph.PieSlices))
 	var angle float32 = -math.Pi / 2 // start at top
 
-	for i, s := range g.PieSlices {
-		frac := float32(s.Value / total)
+	for idx, slice := range graph.PieSlices {
+		frac := float32(slice.Value / total)
 		span := frac * 2 * math.Pi
 
 		midAngle := angle + span/2
@@ -45,15 +48,15 @@ func computePieLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout 
 		labelX := centerX + labelR*float32(math.Cos(float64(midAngle)))
 		labelY := centerY + labelR*float32(math.Sin(float64(midAngle)))
 
-		slices[i] = PieSliceLayout{
-			Label:      s.Label,
-			Value:      s.Value,
-			Percentage: frac * 100,
+		slices[idx] = PieSliceLayout{
+			Label:      slice.Label,
+			Value:      slice.Value,
+			Percentage: frac * piePercentScale,
 			StartAngle: angle,
 			EndAngle:   angle + span,
 			LabelX:     labelX,
 			LabelY:     labelY,
-			ColorIndex: i,
+			ColorIndex: idx,
 		}
 
 		angle += span
@@ -63,7 +66,7 @@ func computePieLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout 
 	height := titleHeight + 2*padY + 2*radius
 
 	return &Layout{
-		Kind:   g.Kind,
+		Kind:   graph.Kind,
 		Nodes:  map[string]*NodeLayout{},
 		Width:  width,
 		Height: height,
@@ -72,8 +75,8 @@ func computePieLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout 
 			CenterX:  centerX,
 			CenterY:  centerY,
 			Radius:   radius,
-			Title:    g.PieTitle,
-			ShowData: g.PieShowData,
+			Title:    graph.PieTitle,
+			ShowData: graph.PieShowData,
 		},
 	}
 }

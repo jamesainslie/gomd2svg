@@ -7,7 +7,7 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
-func computePacketLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
+func computePacketLayout(graph *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
 	measurer := textmetrics.New()
 	pc := cfg.Packet
 	bitsPerRow := pc.BitsPerRow
@@ -31,7 +31,7 @@ func computePacketLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layo
 		cursorY += th.FontSize*cfg.LabelLineHeight + padY
 	}
 
-	for _, field := range g.Fields {
+	for _, field := range graph.Fields {
 		startRow := field.Start / bitsPerRow
 		endRow := field.End / bitsPerRow
 
@@ -57,8 +57,8 @@ func computePacketLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layo
 			bitsInRow := fieldEndInRow - fieldStartInRow + 1
 			offsetInRow := fieldStartInRow - rowStartBit
 
-			x := padX + float32(offsetInRow)*bitW
-			w := float32(bitsInRow) * bitW
+			fieldX := padX + float32(offsetInRow)*bitW
+			fieldW := float32(bitsInRow) * bitW
 
 			tw := measurer.Width(field.Description, th.FontSize, th.FontFamily)
 			tb := TextBlock{
@@ -70,9 +70,9 @@ func computePacketLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layo
 
 			rows[row].fields = append(rows[row].fields, PacketFieldLayout{
 				Label:    tb,
-				X:        x,
+				X:        fieldX,
 				Y:        rows[row].y,
-				Width:    w,
+				Width:    fieldW,
 				Height:   rowH,
 				StartBit: fieldStartInRow,
 				EndBit:   fieldEndInRow,
@@ -94,7 +94,7 @@ func computePacketLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layo
 	totalW := totalRowW + 2*padX
 
 	return &Layout{
-		Kind:   g.Kind,
+		Kind:   graph.Kind,
 		Width:  totalW,
 		Height: totalH,
 		Diagram: PacketData{

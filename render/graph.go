@@ -10,22 +10,35 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
+// Graph rendering constants.
+const (
+	subgraphBorderRadius   float32 = 4
+	subgraphLabelOffsetX   float32 = 8
+	subgraphLabelOffsetY   float32 = 16
+	subgraphFontScale      float32 = 0.9
+	edgeLabelPadX          float32 = 4
+	edgeLabelPadY          float32 = 2
+	edgeLabelFontScale     float32 = 0.85
+	edgeLabelLineHeight    float32 = 1.2
+	edgeLabelBaselineShift float32 = 0.75
+)
+
 // renderGraph renders all flowchart/graph elements: subgraphs, edges, and nodes.
-func renderGraph(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.Layout) {
+func renderGraph(builder *svgBuilder, computed *layout.Layout, th *theme.Theme, _ *config.Layout) {
 	// Render subgraphs first (they appear behind nodes and edges).
-	renderSubgraphs(b, l, th)
+	renderSubgraphs(builder, computed, th)
 
 	// Render edges.
-	renderEdges(b, l, th)
+	renderEdges(builder, computed, th)
 
 	// Render nodes (on top of edges).
-	renderNodes(b, l, th)
+	renderNodes(builder, computed, th)
 }
 
 // renderSubgraphs renders subgraph containers as rectangles with labels.
-func renderSubgraphs(b *svgBuilder, l *layout.Layout, th *theme.Theme) {
-	for _, sg := range l.Subgraphs {
-		b.rect(sg.X, sg.Y, sg.Width, sg.Height, 4,
+func renderSubgraphs(builder *svgBuilder, computed *layout.Layout, th *theme.Theme) {
+	for _, sg := range computed.Subgraphs {
+		builder.rect(sg.X, sg.Y, sg.Width, sg.Height, subgraphBorderRadius,
 			"fill", th.ClusterBackground,
 			"stroke", th.ClusterBorder,
 			"stroke-width", "1",
@@ -34,11 +47,11 @@ func renderSubgraphs(b *svgBuilder, l *layout.Layout, th *theme.Theme) {
 
 		// Subgraph label at top-left.
 		if sg.Label != "" {
-			labelX := sg.X + 8
-			labelY := sg.Y + 16
-			b.text(labelX, labelY, sg.Label,
+			labelX := sg.X + subgraphLabelOffsetX
+			labelY := sg.Y + subgraphLabelOffsetY
+			builder.text(labelX, labelY, sg.Label,
 				"fill", th.TextColor,
-				"font-size", fmtFloat(th.FontSize*0.9),
+				"font-size", fmtFloat(th.FontSize*subgraphFontScale),
 				"font-weight", "bold",
 			)
 		}
@@ -46,14 +59,14 @@ func renderSubgraphs(b *svgBuilder, l *layout.Layout, th *theme.Theme) {
 }
 
 // renderEdges renders all edges as SVG paths with optional arrow markers.
-func renderEdges(b *svgBuilder, l *layout.Layout, th *theme.Theme) {
-	for i, edge := range l.Edges {
+func renderEdges(builder *svgBuilder, computed *layout.Layout, th *theme.Theme) {
+	for edgeIdx, edge := range computed.Edges {
 		if len(edge.Points) < 2 {
 			continue
 		}
 
-		d := pointsToPath(edge.Points)
-		edgeID := fmt.Sprintf("edge-%d", i)
+		pathData := pointsToPath(edge.Points)
+		edgeID := fmt.Sprintf("edge-%d", edgeIdx)
 
 		strokeColor := th.LineColor
 		strokeWidth := "1.5"
@@ -61,7 +74,7 @@ func renderEdges(b *svgBuilder, l *layout.Layout, th *theme.Theme) {
 		attrs := []string{
 			"id", edgeID,
 			"class", "edgePath",
-			"d", d,
+			"d", pathData,
 			"fill", "none",
 			"stroke", strokeColor,
 			"stroke-width", strokeWidth,
@@ -85,28 +98,25 @@ func renderEdges(b *svgBuilder, l *layout.Layout, th *theme.Theme) {
 			attrs = append(attrs, "marker-start", "url(#arrowhead-start)")
 		}
 
-		b.selfClose("path", attrs...)
+		builder.selfClose("path", attrs...)
 
 		// Render edge label if present.
 		if edge.Label != nil && len(edge.Label.Lines) > 0 {
-			renderEdgeLabel(b, edge, th)
+			renderEdgeLabel(builder, edge, th)
 		}
 	}
 }
 
 // renderEdgeLabel renders the label for an edge at its anchor point.
-func renderEdgeLabel(b *svgBuilder, edge *layout.EdgeLayout, th *theme.Theme) {
+func renderEdgeLabel(builder *svgBuilder, edge *layout.EdgeLayout, th *theme.Theme) {
 	label := edge.Label
 	anchorX := edge.LabelAnchor[0]
 	anchorY := edge.LabelAnchor[1]
 
-	padX := float32(4)
-	padY := float32(2)
-
 	// Background rect.
-	bgW := label.Width + padX*2
-	bgH := label.Height + padY*2
-	b.rect(anchorX-bgW/2, anchorY-bgH/2, bgW, bgH, 2,
+	bgW := label.Width + edgeLabelPadX*2
+	bgH := label.Height + edgeLabelPadY*2
+	builder.rect(anchorX-bgW/2, anchorY-bgH/2, bgW, bgH, 2,
 		"fill", th.EdgeLabelBackground,
 		"stroke", "none",
 	)
@@ -114,15 +124,15 @@ func renderEdgeLabel(b *svgBuilder, edge *layout.EdgeLayout, th *theme.Theme) {
 	// Label text.
 	fontSize := label.FontSize
 	if fontSize <= 0 {
-		fontSize = th.FontSize * 0.85
+		fontSize = th.FontSize * edgeLabelFontScale
 	}
-	lineHeight := fontSize * 1.2
+	lineHeight := fontSize * edgeLabelLineHeight
 	totalH := lineHeight * float32(len(label.Lines))
-	startY := anchorY - totalH/2 + lineHeight*0.75
+	startY := anchorY - totalH/2 + lineHeight*edgeLabelBaselineShift
 
-	for i, line := range label.Lines {
-		ly := startY + float32(i)*lineHeight
-		b.text(anchorX, ly, line,
+	for idx, line := range label.Lines {
+		ly := startY + float32(idx)*lineHeight
+		builder.text(anchorX, ly, line,
 			"text-anchor", "middle",
 			"fill", th.LabelTextColor,
 			"font-size", fmtFloat(fontSize),
@@ -131,33 +141,33 @@ func renderEdgeLabel(b *svgBuilder, edge *layout.EdgeLayout, th *theme.Theme) {
 }
 
 // renderNodes renders all nodes sorted by ID for deterministic output.
-func renderNodes(b *svgBuilder, l *layout.Layout, th *theme.Theme) {
+func renderNodes(builder *svgBuilder, computed *layout.Layout, th *theme.Theme) {
 	// Sort node IDs for deterministic rendering order.
-	ids := make([]string, 0, len(l.Nodes))
-	for id := range l.Nodes {
+	ids := make([]string, 0, len(computed.Nodes))
+	for id := range computed.Nodes {
 		ids = append(ids, id)
 	}
 	sort.Strings(ids)
 
 	for _, id := range ids {
-		n := l.Nodes[id]
+		node := computed.Nodes[id]
 
 		// Determine colors: use node style overrides if set, otherwise theme defaults.
 		fill := th.PrimaryColor
-		if n.Style.Fill != nil {
-			fill = *n.Style.Fill
+		if node.Style.Fill != nil {
+			fill = *node.Style.Fill
 		}
 
 		stroke := th.PrimaryBorderColor
-		if n.Style.Stroke != nil {
-			stroke = *n.Style.Stroke
+		if node.Style.Stroke != nil {
+			stroke = *node.Style.Stroke
 		}
 
 		textColor := th.PrimaryTextColor
-		if n.Style.TextColor != nil {
-			textColor = *n.Style.TextColor
+		if node.Style.TextColor != nil {
+			textColor = *node.Style.TextColor
 		}
 
-		renderNodeShape(b, n, fill, stroke, textColor)
+		renderNodeShape(builder, node, fill, stroke, textColor)
 	}
 }

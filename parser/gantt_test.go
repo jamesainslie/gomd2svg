@@ -18,20 +18,20 @@ func TestParseGanttBasic(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
-	g := out.Graph
-	if g.Kind != ir.Gantt {
-		t.Errorf("Kind = %v, want Gantt", g.Kind)
+	graph := out.Graph
+	if graph.Kind != ir.Gantt {
+		t.Errorf("Kind = %v, want Gantt", graph.Kind)
 	}
-	if g.GanttTitle != "A Gantt Diagram" {
-		t.Errorf("Title = %q", g.GanttTitle)
+	if graph.GanttTitle != "A Gantt Diagram" {
+		t.Errorf("Title = %q", graph.GanttTitle)
 	}
-	if g.GanttDateFormat != "YYYY-MM-DD" {
-		t.Errorf("DateFormat = %q", g.GanttDateFormat)
+	if graph.GanttDateFormat != "YYYY-MM-DD" {
+		t.Errorf("DateFormat = %q", graph.GanttDateFormat)
 	}
-	if len(g.GanttSections) != 1 {
-		t.Fatalf("Sections = %d, want 1", len(g.GanttSections))
+	if len(graph.GanttSections) != 1 {
+		t.Fatalf("Sections = %d, want 1", len(graph.GanttSections))
 	}
-	sec := g.GanttSections[0]
+	sec := graph.GanttSections[0]
 	if sec.Title != "Development" {
 		t.Errorf("Section.Title = %q", sec.Title)
 	}
@@ -97,21 +97,21 @@ func TestParseGanttDirectives(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
-	g := out.Graph
-	if g.GanttAxisFormat != "%m/%d" {
-		t.Errorf("AxisFormat = %q", g.GanttAxisFormat)
+	graph := out.Graph
+	if graph.GanttAxisFormat != "%m/%d" {
+		t.Errorf("AxisFormat = %q", graph.GanttAxisFormat)
 	}
-	if len(g.GanttExcludes) != 1 || g.GanttExcludes[0] != "weekends" {
-		t.Errorf("Excludes = %v", g.GanttExcludes)
+	if len(graph.GanttExcludes) != 1 || graph.GanttExcludes[0] != "weekends" {
+		t.Errorf("Excludes = %v", graph.GanttExcludes)
 	}
-	if g.GanttTickInterval != "1week" {
-		t.Errorf("TickInterval = %q", g.GanttTickInterval)
+	if graph.GanttTickInterval != "1week" {
+		t.Errorf("TickInterval = %q", graph.GanttTickInterval)
 	}
-	if g.GanttTodayMarker != "off" {
-		t.Errorf("TodayMarker = %q", g.GanttTodayMarker)
+	if graph.GanttTodayMarker != "off" {
+		t.Errorf("TodayMarker = %q", graph.GanttTodayMarker)
 	}
-	if g.GanttWeekday != "friday" {
-		t.Errorf("Weekday = %q", g.GanttWeekday)
+	if graph.GanttWeekday != "friday" {
+		t.Errorf("Weekday = %q", graph.GanttWeekday)
 	}
 }
 

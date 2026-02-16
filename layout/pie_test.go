@@ -10,28 +10,28 @@ import (
 )
 
 func TestPieLayout(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Pie
-	g.PieTitle = "Pets"
-	g.PieSlices = []*ir.PieSlice{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Pie
+	graph.PieTitle = "Pets"
+	graph.PieSlices = []*ir.PieSlice{
 		{Label: "Dogs", Value: 50},
 		{Label: "Cats", Value: 50},
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	if l.Kind != ir.Pie {
-		t.Errorf("Kind = %v, want Pie", l.Kind)
+	if lay.Kind != ir.Pie {
+		t.Errorf("Kind = %v, want Pie", lay.Kind)
 	}
-	if l.Width <= 0 || l.Height <= 0 {
-		t.Errorf("dimensions = %f x %f, want > 0", l.Width, l.Height)
+	if lay.Width <= 0 || lay.Height <= 0 {
+		t.Errorf("dimensions = %f x %f, want > 0", lay.Width, lay.Height)
 	}
 
-	pd, ok := l.Diagram.(PieData)
+	pd, ok := lay.Diagram.(PieData)
 	if !ok {
-		t.Fatalf("Diagram type = %T, want PieData", l.Diagram)
+		t.Fatalf("Diagram type = %T, want PieData", lay.Diagram)
 	}
 	if len(pd.Slices) != 2 {
 		t.Fatalf("Slices = %d, want 2", len(pd.Slices))
@@ -51,17 +51,20 @@ func TestPieLayout(t *testing.T) {
 }
 
 func TestPieLayoutSingleSlice(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Pie
-	g.PieSlices = []*ir.PieSlice{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Pie
+	graph.PieSlices = []*ir.PieSlice{
 		{Label: "All", Value: 100},
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	pd := l.Diagram.(PieData)
+	pd, ok := lay.Diagram.(PieData)
+	if !ok {
+		t.Fatal("expected PieData")
+	}
 	if len(pd.Slices) != 1 {
 		t.Fatalf("Slices = %d, want 1", len(pd.Slices))
 	}

@@ -67,30 +67,36 @@ func TestCompositeStateWithRegions(t *testing.T) {
 	region2.EnsureNode("r2_idle", nil, nil)
 
 	dir := LeftRight
-	cs := &CompositeState{
+	concurrent := &CompositeState{
 		ID:        "Concurrent",
 		Label:     "Concurrent State",
 		Regions:   []*Graph{region1, region2},
 		Direction: &dir,
 	}
 
-	if len(cs.Regions) != 2 {
-		t.Errorf("Regions = %d, want 2", len(cs.Regions))
+	if concurrent.ID != "Concurrent" {
+		t.Errorf("ID = %q, want %q", concurrent.ID, "Concurrent")
 	}
-	if cs.Direction == nil || *cs.Direction != LeftRight {
-		t.Errorf("Direction = %v, want LeftRight", cs.Direction)
+	if concurrent.Label != "Concurrent State" {
+		t.Errorf("Label = %q, want %q", concurrent.Label, "Concurrent State")
+	}
+	if len(concurrent.Regions) != 2 {
+		t.Errorf("Regions = %d, want 2", len(concurrent.Regions))
+	}
+	if concurrent.Direction == nil || *concurrent.Direction != LeftRight {
+		t.Errorf("Direction = %v, want LeftRight", concurrent.Direction)
 	}
 }
 
 func TestNewGraphInitializesStateMaps(t *testing.T) {
-	g := NewGraph()
-	if g.CompositeStates == nil {
+	graph := NewGraph()
+	if graph.CompositeStates == nil {
 		t.Error("CompositeStates is nil")
 	}
-	if g.StateDescriptions == nil {
+	if graph.StateDescriptions == nil {
 		t.Error("StateDescriptions is nil")
 	}
-	if g.StateAnnotations == nil {
+	if graph.StateAnnotations == nil {
 		t.Error("StateAnnotations is nil")
 	}
 }

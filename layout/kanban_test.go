@@ -9,9 +9,9 @@ import (
 )
 
 func TestKanbanLayout(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Kanban
-	g.Columns = []*ir.KanbanColumn{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Kanban
+	graph.Columns = []*ir.KanbanColumn{
 		{ID: "todo", Label: "Todo", Cards: []*ir.KanbanCard{
 			{ID: "t1", Label: "Task 1"},
 			{ID: "t2", Label: "Task 2"},
@@ -23,11 +23,11 @@ func TestKanbanLayout(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	kd, ok := l.Diagram.(KanbanData)
+	kd, ok := lay.Diagram.(KanbanData)
 	if !ok {
-		t.Fatalf("Diagram type = %T, want KanbanData", l.Diagram)
+		t.Fatalf("Diagram type = %T, want KanbanData", lay.Diagram)
 	}
 	if len(kd.Columns) != 2 {
 		t.Fatalf("len(Columns) = %d, want 2", len(kd.Columns))
@@ -50,15 +50,15 @@ func TestKanbanLayout(t *testing.T) {
 	}
 
 	// Diagram should have positive dimensions
-	if l.Width <= 0 || l.Height <= 0 {
-		t.Errorf("dimensions = %v x %v, want positive", l.Width, l.Height)
+	if lay.Width <= 0 || lay.Height <= 0 {
+		t.Errorf("dimensions = %v x %v, want positive", lay.Width, lay.Height)
 	}
 }
 
 func TestKanbanLayoutEmptyColumn(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Kanban
-	g.Columns = []*ir.KanbanColumn{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Kanban
+	graph.Columns = []*ir.KanbanColumn{
 		{ID: "empty", Label: "Empty"},
 		{ID: "has", Label: "Has Cards", Cards: []*ir.KanbanCard{
 			{ID: "t1", Label: "Task"},
@@ -67,9 +67,12 @@ func TestKanbanLayoutEmptyColumn(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	kd := l.Diagram.(KanbanData)
+	kd, ok := lay.Diagram.(KanbanData)
+	if !ok {
+		t.Fatal("expected KanbanData")
+	}
 	if len(kd.Columns[0].Cards) != 0 {
 		t.Errorf("empty column should have 0 cards, got %d", len(kd.Columns[0].Cards))
 	}

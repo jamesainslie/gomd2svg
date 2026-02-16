@@ -9,9 +9,9 @@ import (
 )
 
 func TestMindmapLayout(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Mindmap
-	g.MindmapRoot = &ir.MindmapNode{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Mindmap
+	graph.MindmapRoot = &ir.MindmapNode{
 		ID: "root", Label: "Central", Shape: ir.MindmapCircle,
 		Children: []*ir.MindmapNode{
 			{ID: "a", Label: "Branch A", Shape: ir.MindmapShapeDefault},
@@ -25,13 +25,13 @@ func TestMindmapLayout(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	if l.Width <= 0 || l.Height <= 0 {
-		t.Errorf("invalid dimensions: %v x %v", l.Width, l.Height)
+	if lay.Width <= 0 || lay.Height <= 0 {
+		t.Errorf("invalid dimensions: %v x %v", lay.Width, lay.Height)
 	}
 
-	md, ok := l.Diagram.(MindmapData)
+	md, ok := lay.Diagram.(MindmapData)
 	if !ok {
 		t.Fatal("Diagram is not MindmapData")
 	}
@@ -47,30 +47,30 @@ func TestMindmapLayout(t *testing.T) {
 }
 
 func TestMindmapLayoutEmpty(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Mindmap
+	graph := ir.NewGraph()
+	graph.Kind = ir.Mindmap
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	if l.Width <= 0 || l.Height <= 0 {
-		t.Errorf("invalid dimensions for empty mindmap: %v x %v", l.Width, l.Height)
+	if lay.Width <= 0 || lay.Height <= 0 {
+		t.Errorf("invalid dimensions for empty mindmap: %v x %v", lay.Width, lay.Height)
 	}
 }
 
 func TestMindmapLayoutSingleRoot(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Mindmap
-	g.MindmapRoot = &ir.MindmapNode{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Mindmap
+	graph.MindmapRoot = &ir.MindmapNode{
 		ID: "root", Label: "Only Root", Shape: ir.MindmapShapeDefault,
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := computeMindmapLayout(g, th, cfg)
+	lay := computeMindmapLayout(graph, th, cfg)
 
-	md, ok := l.Diagram.(MindmapData)
+	md, ok := lay.Diagram.(MindmapData)
 	if !ok {
 		t.Fatal("Diagram is not MindmapData")
 	}
@@ -89,9 +89,9 @@ func TestMindmapLayoutSingleRoot(t *testing.T) {
 }
 
 func TestMindmapLayoutBranchColors(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Mindmap
-	g.MindmapRoot = &ir.MindmapNode{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Mindmap
+	graph.MindmapRoot = &ir.MindmapNode{
 		ID: "root", Label: "Root", Shape: ir.MindmapShapeDefault,
 		Children: []*ir.MindmapNode{
 			{ID: "a", Label: "A", Shape: ir.MindmapShapeDefault,
@@ -106,9 +106,12 @@ func TestMindmapLayoutBranchColors(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := computeMindmapLayout(g, th, cfg)
+	lay := computeMindmapLayout(graph, th, cfg)
 
-	md := l.Diagram.(MindmapData)
+	md, ok := lay.Diagram.(MindmapData)
+	if !ok {
+		t.Fatal("Diagram is not MindmapData")
+	}
 
 	// Root should have ColorIndex 0 (branchIdx passed as 0).
 	if md.Root.ColorIndex != 0 {
@@ -134,9 +137,9 @@ func TestMindmapLayoutBranchColors(t *testing.T) {
 }
 
 func TestMindmapLayoutNoOverlap(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Mindmap
-	g.MindmapRoot = &ir.MindmapNode{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Mindmap
+	graph.MindmapRoot = &ir.MindmapNode{
 		ID: "root", Label: "Center", Shape: ir.MindmapCircle,
 		Children: []*ir.MindmapNode{
 			{ID: "a", Label: "North", Shape: ir.MindmapShapeDefault},
@@ -148,9 +151,12 @@ func TestMindmapLayoutNoOverlap(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := computeMindmapLayout(g, th, cfg)
+	lay := computeMindmapLayout(graph, th, cfg)
 
-	md := l.Diagram.(MindmapData)
+	md, ok := lay.Diagram.(MindmapData)
+	if !ok {
+		t.Fatal("Diagram is not MindmapData")
+	}
 
 	// All child nodes should be at different positions from root.
 	for i, child := range md.Root.Children {
@@ -160,7 +166,7 @@ func TestMindmapLayoutNoOverlap(t *testing.T) {
 	}
 
 	// All child nodes should be at different positions from each other.
-	for i := 0; i < len(md.Root.Children); i++ {
+	for i := range len(md.Root.Children) {
 		for j := i + 1; j < len(md.Root.Children); j++ {
 			ci := md.Root.Children[i]
 			cj := md.Root.Children[j]
@@ -172,9 +178,9 @@ func TestMindmapLayoutNoOverlap(t *testing.T) {
 }
 
 func TestMindmapLayoutPositiveCoordinates(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Mindmap
-	g.MindmapRoot = &ir.MindmapNode{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Mindmap
+	graph.MindmapRoot = &ir.MindmapNode{
 		ID: "root", Label: "Root", Shape: ir.MindmapShapeDefault,
 		Children: []*ir.MindmapNode{
 			{ID: "a", Label: "Alpha", Shape: ir.MindmapSquare},
@@ -189,22 +195,25 @@ func TestMindmapLayoutPositiveCoordinates(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := computeMindmapLayout(g, th, cfg)
+	lay := computeMindmapLayout(graph, th, cfg)
 
-	md := l.Diagram.(MindmapData)
+	md, ok := lay.Diagram.(MindmapData)
+	if !ok {
+		t.Fatal("Diagram is not MindmapData")
+	}
 
 	// After normalization, all node top-left corners should be non-negative.
-	var checkPositive func(n *MindmapNodeLayout, path string)
-	checkPositive = func(n *MindmapNodeLayout, path string) {
-		left := n.X - n.Width/2
-		top := n.Y - n.Height/2
+	var checkPositive func(node *MindmapNodeLayout, path string)
+	checkPositive = func(node *MindmapNodeLayout, path string) {
+		left := node.X - node.Width/2
+		top := node.Y - node.Height/2
 		if left < 0 {
 			t.Errorf("%s left edge = %v (negative)", path, left)
 		}
 		if top < 0 {
 			t.Errorf("%s top edge = %v (negative)", path, top)
 		}
-		for _, child := range n.Children {
+		for _, child := range node.Children {
 			checkPositive(child, path+"/"+child.Label)
 		}
 	}

@@ -8,18 +8,28 @@ import (
 )
 
 var (
-	c4ElementRe  = regexp.MustCompile(`^(Person|Person_Ext|System|System_Ext|SystemDb|SystemDb_Ext|SystemQueue|SystemQueue_Ext|Container|Container_Ext|ContainerDb|ContainerDb_Ext|ContainerQueue|ContainerQueue_Ext|Component|Component_Ext)\s*\((.+)\)\s*$`)
-	c4BoundaryRe = regexp.MustCompile(`^(Enterprise_Boundary|System_Boundary|Container_Boundary|Boundary)\s*\(([^,]+),\s*"([^"]*)"(?:\s*,\s*"([^"]*)")?\)\s*\{?\s*$`)
-	c4RelRe      = regexp.MustCompile(`^(Rel|Rel_Back|Rel_Neighbor|Rel_Back_Neighbor|BiRel|BiRel_Neighbor)\s*\((.+)\)\s*$`)
+	c4ElementRe = regexp.MustCompile(
+		`^(Person|Person_Ext|System|System_Ext|SystemDb|SystemDb_Ext|SystemQueue|SystemQueue_Ext` +
+			`|Container|Container_Ext|ContainerDb|ContainerDb_Ext|ContainerQueue|ContainerQueue_Ext` +
+			`|Component|Component_Ext)\s*\((.+)\)\s*$`,
+	)
+	c4BoundaryRe = regexp.MustCompile(
+		`^(Enterprise_Boundary|System_Boundary|Container_Boundary|Boundary)` +
+			`\s*\(([^,]+),\s*"([^"]*)"(?:\s*,\s*"([^"]*)")?\)\s*\{?\s*$`,
+	)
+	c4RelRe = regexp.MustCompile(
+		`^(Rel|Rel_Back|Rel_Neighbor|Rel_Back_Neighbor|BiRel|BiRel_Neighbor)\s*\((.+)\)\s*$`,
+	)
 )
 
+//nolint:unparam // error return is part of the parser interface contract used by Parse().
 func parseC4(input string) (*ParseOutput, error) {
 	lines := preprocessInput(input)
-	g := ir.NewGraph()
-	g.Kind = ir.C4
+	graph := ir.NewGraph()
+	graph.Kind = ir.C4
 
 	if len(lines) > 0 {
-		g.C4SubKind = parseC4Kind(lines[0])
+		graph.C4SubKind = parseC4Kind(lines[0])
 		lines = lines[1:]
 	}
 
@@ -33,11 +43,11 @@ func parseC4(input string) (*ParseOutput, error) {
 			continue
 		}
 
-		if m := c4BoundaryRe.FindStringSubmatch(line); m != nil {
-			boundaryType := m[1]
-			id := strings.TrimSpace(m[2])
-			label := m[3]
-			bType := ""
+		if match := c4BoundaryRe.FindStringSubmatch(line); match != nil {
+			boundaryType := match[1]
+			id := strings.TrimSpace(match[2])
+			label := match[3]
+			var bType string
 			switch boundaryType {
 			case "Enterprise_Boundary":
 				bType = "Enterprise"
@@ -46,7 +56,7 @@ func parseC4(input string) (*ParseOutput, error) {
 			case "Container_Boundary":
 				bType = "Container"
 			default:
-				bType = m[4]
+				bType = match[4]
 			}
 
 			boundary := &ir.C4Boundary{
@@ -54,14 +64,14 @@ func parseC4(input string) (*ParseOutput, error) {
 				Label: label,
 				Type:  bType,
 			}
-			g.C4Boundaries = append(g.C4Boundaries, boundary)
+			graph.C4Boundaries = append(graph.C4Boundaries, boundary)
 			boundaryStack = append(boundaryStack, boundary)
 			continue
 		}
 
-		if m := c4ElementRe.FindStringSubmatch(line); m != nil {
-			elemType := parseC4ElementType(m[1])
-			args := parseC4Args(m[2])
+		if match := c4ElementRe.FindStringSubmatch(line); match != nil {
+			elemType := parseC4ElementType(match[1])
+			args := parseC4Args(match[2])
 			if len(args) < 2 {
 				continue
 			}
@@ -87,14 +97,14 @@ func parseC4(input string) (*ParseOutput, error) {
 				parent.Children = append(parent.Children, elem.ID)
 			}
 
-			g.C4Elements = append(g.C4Elements, elem)
+			graph.C4Elements = append(graph.C4Elements, elem)
 			label := elem.Label
-			g.EnsureNode(elem.ID, &label, nil)
+			graph.EnsureNode(elem.ID, &label, nil)
 			continue
 		}
 
-		if m := c4RelRe.FindStringSubmatch(line); m != nil {
-			args := parseC4Args(m[2])
+		if match := c4RelRe.FindStringSubmatch(line); match != nil {
+			args := parseC4Args(match[2])
 			if len(args) < 3 {
 				continue
 			}
@@ -106,9 +116,9 @@ func parseC4(input string) (*ParseOutput, error) {
 			if len(args) > 3 {
 				rel.Technology = args[3]
 			}
-			g.C4Rels = append(g.C4Rels, rel)
+			graph.C4Rels = append(graph.C4Rels, rel)
 			relLabel := rel.Label
-			g.Edges = append(g.Edges, &ir.Edge{
+			graph.Edges = append(graph.Edges, &ir.Edge{
 				From:     rel.From,
 				To:       rel.To,
 				Label:    &relLabel,
@@ -119,7 +129,7 @@ func parseC4(input string) (*ParseOutput, error) {
 		}
 	}
 
-	return &ParseOutput{Graph: g}, nil
+	return &ParseOutput{Graph: graph}, nil
 }
 
 func parseC4Kind(line string) ir.C4Kind {
@@ -138,8 +148,8 @@ func parseC4Kind(line string) ir.C4Kind {
 	}
 }
 
-func parseC4ElementType(s string) ir.C4ElementType {
-	switch s {
+func parseC4ElementType(str string) ir.C4ElementType {
+	switch str {
 	case "Person":
 		return ir.C4Person
 	case "Person_Ext":
@@ -177,12 +187,12 @@ func parseC4ElementType(s string) ir.C4ElementType {
 	}
 }
 
-func parseC4Args(s string) []string {
+func parseC4Args(str string) []string {
 	var args []string
 	var current strings.Builder
 	inQuote := false
 
-	for _, ch := range s {
+	for _, ch := range str {
 		switch {
 		case ch == '"':
 			inQuote = !inQuote

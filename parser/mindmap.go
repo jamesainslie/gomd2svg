@@ -13,13 +13,13 @@ var (
 	mindmapClassRe = regexp.MustCompile(`:::(\S+)`)
 )
 
-func parseMindmap(input string) (*ParseOutput, error) {
-	g := ir.NewGraph()
-	g.Kind = ir.Mindmap
+func parseMindmap(input string) (*ParseOutput, error) { //nolint:unparam // error return is part of the parser interface contract used by Parse().
+	graph := ir.NewGraph()
+	graph.Kind = ir.Mindmap
 
 	lines := preprocessMindmapInput(input)
 	if len(lines) == 0 {
-		return &ParseOutput{Graph: g}, nil
+		return &ParseOutput{Graph: graph}, nil
 	}
 
 	type stackEntry struct {
@@ -46,7 +46,7 @@ func parseMindmap(input string) (*ParseOutput, error) {
 		}
 
 		if len(stack) == 0 {
-			g.MindmapRoot = node
+			graph.MindmapRoot = node
 		} else {
 			parent := stack[len(stack)-1].node
 			parent.Children = append(parent.Children, node)
@@ -55,21 +55,21 @@ func parseMindmap(input string) (*ParseOutput, error) {
 		stack = append(stack, stackEntry{node: node, indent: indent})
 	}
 
-	return &ParseOutput{Graph: g}, nil
+	return &ParseOutput{Graph: graph}, nil
 }
 
 func parseMindmapNodeText(text string, index int) *ir.MindmapNode {
 	node := &ir.MindmapNode{}
 
 	// Extract and strip icon decorator.
-	if m := mindmapIconRe.FindStringSubmatch(text); m != nil {
-		node.Icon = m[1]
+	if match := mindmapIconRe.FindStringSubmatch(text); match != nil {
+		node.Icon = match[1]
 		text = strings.TrimSpace(mindmapIconRe.ReplaceAllString(text, ""))
 	}
 
 	// Extract and strip class decorator.
-	if m := mindmapClassRe.FindStringSubmatch(text); m != nil {
-		node.Class = m[1]
+	if match := mindmapClassRe.FindStringSubmatch(text); match != nil {
+		node.Class = match[1]
 		text = strings.TrimSpace(mindmapClassRe.ReplaceAllString(text, ""))
 	}
 
@@ -83,52 +83,52 @@ func parseMindmapNodeText(text string, index int) *ir.MindmapNode {
 }
 
 func parseMindmapShape(text string) (ir.MindmapShape, string) {
-	// Handle shapes with possible ID prefix: e.g., "root((Central))", "A[Square]"
+	// Handle shapes with possible ID prefix: e.g., "root((Central))", "A[Square]".
 	// Check for double-char delimiters first, then single-char.
 
-	// Bang: either standalone ))text(( or id))text((
+	// Bang: either standalone ))text(( or id))text((.
 	if idx := strings.Index(text, "))"); idx >= 0 {
 		if strings.HasSuffix(text, "((") {
 			label := text[idx+2 : len(text)-2]
 			return ir.MindmapBang, label
 		}
 	}
-	// Circle: either standalone ((text)) or id((text))
+	// Circle: either standalone ((text)) or id((text)).
 	if idx := strings.Index(text, "(("); idx >= 0 {
 		if strings.HasSuffix(text, "))") {
 			label := text[idx+2 : len(text)-2]
 			return ir.MindmapCircle, label
 		}
 	}
-	// Hexagon: either standalone {{text}} or id{{text}}
+	// Hexagon: either standalone {{text}} or id{{text}}.
 	if idx := strings.Index(text, "{{"); idx >= 0 {
 		if strings.HasSuffix(text, "}}") {
 			label := text[idx+2 : len(text)-2]
 			return ir.MindmapHexagon, label
 		}
 	}
-	// Cloud: either standalone )text( or id)text(
+	// Cloud: either standalone )text( or id)text(.
 	if idx := strings.Index(text, ")"); idx >= 0 && !strings.HasPrefix(text, "))") {
 		if strings.HasSuffix(text, "(") && !strings.HasSuffix(text, "((") {
 			label := text[idx+1 : len(text)-1]
 			return ir.MindmapCloud, label
 		}
 	}
-	// Square: either standalone [text] or id[text]
+	// Square: either standalone [text] or id[text].
 	if idx := strings.Index(text, "["); idx >= 0 {
 		if strings.HasSuffix(text, "]") {
 			label := text[idx+1 : len(text)-1]
 			return ir.MindmapSquare, label
 		}
 	}
-	// Rounded: either standalone (text) or id(text)
+	// Rounded: either standalone (text) or id(text).
 	if idx := strings.Index(text, "("); idx >= 0 && !strings.HasPrefix(text[idx:], "((") {
 		if strings.HasSuffix(text, ")") && !strings.HasSuffix(text, "))") {
 			label := text[idx+1 : len(text)-1]
 			return ir.MindmapRounded, label
 		}
 	}
-	// Default: bare text
+	// Default: bare text.
 	return ir.MindmapShapeDefault, text
 }
 

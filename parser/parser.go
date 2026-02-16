@@ -77,6 +77,8 @@ func Parse(input string) (*ParseOutput, error) {
 
 // detectDiagramKind scans lines, skipping comments and empty lines,
 // and matches the first keyword case-insensitively.
+//
+//nolint:gocognit // diagram kind detection requires checking all 20+ diagram type prefixes.
 func detectDiagramKind(input string) ir.DiagramKind {
 	for _, rawLine := range strings.Split(input, "\n") {
 		trimmed := strings.TrimSpace(rawLine)

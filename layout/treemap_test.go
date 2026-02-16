@@ -9,10 +9,10 @@ import (
 )
 
 func TestTreemapLayout(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Treemap
-	g.TreemapTitle = "Budget"
-	g.TreemapRoot = &ir.TreemapNode{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Treemap
+	graph.TreemapTitle = "Budget"
+	graph.TreemapRoot = &ir.TreemapNode{
 		Label: "Root",
 		Children: []*ir.TreemapNode{
 			{Label: "A", Value: 60},
@@ -23,13 +23,13 @@ func TestTreemapLayout(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	if l.Width <= 0 || l.Height <= 0 {
-		t.Errorf("invalid dimensions: %v x %v", l.Width, l.Height)
+	if lay.Width <= 0 || lay.Height <= 0 {
+		t.Errorf("invalid dimensions: %v x %v", lay.Width, lay.Height)
 	}
 
-	td, ok := l.Diagram.(TreemapData)
+	td, ok := lay.Diagram.(TreemapData)
 	if !ok {
 		t.Fatal("Diagram is not TreemapData")
 	}
@@ -39,17 +39,17 @@ func TestTreemapLayout(t *testing.T) {
 	if len(td.Rects) != 3 {
 		t.Fatalf("rects = %d, want 3", len(td.Rects))
 	}
-	for _, r := range td.Rects {
-		if r.Width <= 0 || r.Height <= 0 {
-			t.Errorf("rect %q has zero dimension: %v x %v", r.Label, r.Width, r.Height)
+	for _, rect := range td.Rects {
+		if rect.Width <= 0 || rect.Height <= 0 {
+			t.Errorf("rect %q has zero dimension: %v x %v", rect.Label, rect.Width, rect.Height)
 		}
 	}
 }
 
 func TestTreemapLayoutAreaProportional(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Treemap
-	g.TreemapRoot = &ir.TreemapNode{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Treemap
+	graph.TreemapRoot = &ir.TreemapNode{
 		Label: "Root",
 		Children: []*ir.TreemapNode{
 			{Label: "Big", Value: 75},
@@ -59,17 +59,20 @@ func TestTreemapLayoutAreaProportional(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	td := l.Diagram.(TreemapData)
+	td, ok := lay.Diagram.(TreemapData)
+	if !ok {
+		t.Fatal("expected TreemapData")
+	}
 	if len(td.Rects) != 2 {
 		t.Fatalf("rects = %d, want 2", len(td.Rects))
 	}
 
 	var bigArea, smallArea float64
-	for _, r := range td.Rects {
-		area := float64(r.Width) * float64(r.Height)
-		if r.Label == "Big" {
+	for _, rect := range td.Rects {
+		area := float64(rect.Width) * float64(rect.Height)
+		if rect.Label == "Big" {
 			bigArea = area
 		} else {
 			smallArea = area
@@ -88,9 +91,9 @@ func TestTreemapLayoutAreaProportional(t *testing.T) {
 }
 
 func TestTreemapLayoutNested(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Treemap
-	g.TreemapRoot = &ir.TreemapNode{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Treemap
+	graph.TreemapRoot = &ir.TreemapNode{
 		Label: "Root",
 		Children: []*ir.TreemapNode{
 			{Label: "Section", Children: []*ir.TreemapNode{
@@ -103,9 +106,9 @@ func TestTreemapLayoutNested(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	td, ok := l.Diagram.(TreemapData)
+	td, ok := lay.Diagram.(TreemapData)
 	if !ok {
 		t.Fatal("Diagram is not TreemapData")
 	}
@@ -116,19 +119,19 @@ func TestTreemapLayoutNested(t *testing.T) {
 
 	// Verify the section rect exists and is marked.
 	foundSection := false
-	for _, r := range td.Rects {
-		if r.Label == "Section" {
+	for _, rect := range td.Rects {
+		if rect.Label == "Section" {
 			foundSection = true
-			if !r.IsSection {
+			if !rect.IsSection {
 				t.Error("Section rect should have IsSection=true")
 			}
-			if r.Depth != 0 {
-				t.Errorf("Section depth = %d, want 0", r.Depth)
+			if rect.Depth != 0 {
+				t.Errorf("Section depth = %d, want 0", rect.Depth)
 			}
 		}
-		if r.Label == "X" || r.Label == "Y" {
-			if r.Depth != 1 {
-				t.Errorf("leaf %q depth = %d, want 1", r.Label, r.Depth)
+		if rect.Label == "X" || rect.Label == "Y" {
+			if rect.Depth != 1 {
+				t.Errorf("leaf %q depth = %d, want 1", rect.Label, rect.Depth)
 			}
 		}
 	}
@@ -138,18 +141,18 @@ func TestTreemapLayoutNested(t *testing.T) {
 }
 
 func TestTreemapLayoutEmpty(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Treemap
+	graph := ir.NewGraph()
+	graph.Kind = ir.Treemap
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	if l.Width <= 0 || l.Height <= 0 {
-		t.Errorf("invalid dimensions: %v x %v", l.Width, l.Height)
+	if lay.Width <= 0 || lay.Height <= 0 {
+		t.Errorf("invalid dimensions: %v x %v", lay.Width, lay.Height)
 	}
 
-	td, ok := l.Diagram.(TreemapData)
+	td, ok := lay.Diagram.(TreemapData)
 	if !ok {
 		t.Fatal("Diagram is not TreemapData")
 	}
@@ -159,18 +162,21 @@ func TestTreemapLayoutEmpty(t *testing.T) {
 }
 
 func TestTreemapLayoutSingleLeafRoot(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Treemap
-	g.TreemapRoot = &ir.TreemapNode{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Treemap
+	graph.TreemapRoot = &ir.TreemapNode{
 		Label: "Only",
 		Value: 100,
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	td := l.Diagram.(TreemapData)
+	td, ok := lay.Diagram.(TreemapData)
+	if !ok {
+		t.Fatal("expected TreemapData")
+	}
 	if len(td.Rects) != 1 {
 		t.Fatalf("rects = %d, want 1", len(td.Rects))
 	}
@@ -183,9 +189,9 @@ func TestTreemapLayoutSingleLeafRoot(t *testing.T) {
 }
 
 func TestTreemapLayoutRectsWithinBounds(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Treemap
-	g.TreemapRoot = &ir.TreemapNode{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Treemap
+	graph.TreemapRoot = &ir.TreemapNode{
 		Label: "Root",
 		Children: []*ir.TreemapNode{
 			{Label: "A", Value: 40},
@@ -197,18 +203,21 @@ func TestTreemapLayoutRectsWithinBounds(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	td := l.Diagram.(TreemapData)
-	for _, r := range td.Rects {
-		if r.X < 0 || r.Y < 0 {
-			t.Errorf("rect %q has negative position: (%v, %v)", r.Label, r.X, r.Y)
+	td, ok := lay.Diagram.(TreemapData)
+	if !ok {
+		t.Fatal("expected TreemapData")
+	}
+	for _, rect := range td.Rects {
+		if rect.X < 0 || rect.Y < 0 {
+			t.Errorf("rect %q has negative position: (%v, %v)", rect.Label, rect.X, rect.Y)
 		}
-		if r.X+r.Width > l.Width {
-			t.Errorf("rect %q exceeds right bound: %v + %v > %v", r.Label, r.X, r.Width, l.Width)
+		if rect.X+rect.Width > lay.Width {
+			t.Errorf("rect %q exceeds right bound: %v + %v > %v", rect.Label, rect.X, rect.Width, lay.Width)
 		}
-		if r.Y+r.Height > l.Height {
-			t.Errorf("rect %q exceeds bottom bound: %v + %v > %v", r.Label, r.Y, r.Height, l.Height)
+		if rect.Y+rect.Height > lay.Height {
+			t.Errorf("rect %q exceeds bottom bound: %v + %v > %v", rect.Label, rect.Y, rect.Height, lay.Height)
 		}
 	}
 }
@@ -228,17 +237,17 @@ func TestTreemapSquarifyAspectRatios(t *testing.T) {
 	if len(rects) != len(items) {
 		t.Fatalf("got %d rects, want %d", len(rects), len(items))
 	}
-	for _, r := range rects {
-		if r.w <= 0 || r.h <= 0 {
-			t.Errorf("rect idx %d has zero dimension: %v x %v", r.item.idx, r.w, r.h)
+	for _, rect := range rects {
+		if rect.w <= 0 || rect.h <= 0 {
+			t.Errorf("rect idx %d has zero dimension: %v x %v", rect.item.idx, rect.w, rect.h)
 		}
-		aspect := float64(r.w) / float64(r.h)
+		aspect := float64(rect.w) / float64(rect.h)
 		if aspect < 1 {
 			aspect = 1 / aspect
 		}
 		// Squarified algorithm should keep aspect ratios reasonable (< 10:1).
 		if aspect > 10 {
-			t.Errorf("rect idx %d has bad aspect ratio: %f (w=%f, h=%f)", r.item.idx, aspect, r.w, r.h)
+			t.Errorf("rect idx %d has bad aspect ratio: %f (w=%f, h=%f)", rect.item.idx, aspect, rect.w, rect.h)
 		}
 	}
 }

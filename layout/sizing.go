@@ -20,8 +20,8 @@ func sizeNodes(
 ) map[string]*NodeLayout {
 	result := make(map[string]*NodeLayout, len(nodes))
 	for id, node := range nodes {
-		nl := sizeNode(node, measurer, th, cfg)
-		result[id] = nl
+		nodeLayout := sizeNode(node, measurer, th, cfg)
+		result[id] = nodeLayout
 	}
 	return result
 }
@@ -42,16 +42,16 @@ func sizeNode(
 
 	var maxLineWidth float32
 	for _, line := range lines {
-		w := measurer.Width(line, fontSize, fontFamily)
-		if w > maxLineWidth {
-			maxLineWidth = w
+		lineWidth := measurer.Width(line, fontSize, fontFamily)
+		if lineWidth > maxLineWidth {
+			maxLineWidth = lineWidth
 		}
 	}
 
 	textWidth := maxLineWidth
 	textHeight := lineHeight * float32(len(lines))
 
-	tb := TextBlock{
+	textBlock := TextBlock{
 		Lines:    lines,
 		Width:    textWidth,
 		Height:   textHeight,
@@ -73,7 +73,7 @@ func sizeNode(
 		if height > side {
 			side = height
 		}
-		side *= 1.42 // approx sqrt(2)
+		side *= diamondScaleFactor
 		width = side
 		height = side
 
@@ -83,7 +83,7 @@ func sizeNode(
 
 	case ir.Parallelogram, ir.ParallelogramAlt:
 		// Parallelograms need extra horizontal space for the skew.
-		width += flowchartPadCross * 0.5
+		width += flowchartPadCross * parallelogramSkewFactor
 
 	case ir.Circle, ir.DoubleCircle:
 		// Circle must contain the text; diameter = diagonal of text box.
@@ -91,14 +91,14 @@ func sizeNode(
 		if height > diag {
 			diag = height
 		}
-		diag *= 1.15 // slight padding beyond inscribed
+		diag *= circlePaddingFactor
 		width = diag
 		height = diag
 	}
 
 	return &NodeLayout{
 		ID:     node.ID,
-		Label:  tb,
+		Label:  textBlock,
 		Shape:  node.Shape,
 		Width:  width,
 		Height: height,
@@ -107,7 +107,10 @@ func sizeNode(
 
 // Layout constants matching the Rust reference implementation.
 const (
-	flowchartPadMain  = 40.0 // main-axis padding
-	flowchartPadCross = 30.0 // cross-axis padding
-	layoutBoundaryPad = 8.0  // final canvas padding
+	flowchartPadMain        = 40.0 // main-axis padding
+	flowchartPadCross       = 30.0 // cross-axis padding
+	layoutBoundaryPad       = 8.0  // final canvas padding
+	diamondScaleFactor      = 1.42 // approx sqrt(2)
+	parallelogramSkewFactor = 0.5  // skew fraction of cross padding
+	circlePaddingFactor     = 1.15 // slight padding beyond inscribed
 )

@@ -9,45 +9,45 @@ import (
 )
 
 func TestComputeStateLayoutSimple(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.State
-	g.Direction = ir.TopDown
+	graph := ir.NewGraph()
+	graph.Kind = ir.State
+	graph.Direction = ir.TopDown
 
-	g.EnsureNode("__start__", nil, nil)
-	g.EnsureNode("First", nil, nil)
-	g.EnsureNode("__end__", nil, nil)
-	g.Edges = append(g.Edges,
+	graph.EnsureNode("__start__", nil, nil)
+	graph.EnsureNode("First", nil, nil)
+	graph.EnsureNode("__end__", nil, nil)
+	graph.Edges = append(graph.Edges,
 		&ir.Edge{From: "__start__", To: "First", Directed: true, ArrowEnd: true},
 		&ir.Edge{From: "First", To: "__end__", Directed: true, ArrowEnd: true},
 	)
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	if l.Kind != ir.State {
-		t.Errorf("Kind = %v, want State", l.Kind)
+	if lay.Kind != ir.State {
+		t.Errorf("Kind = %v, want State", lay.Kind)
 	}
-	if len(l.Nodes) != 3 {
-		t.Errorf("nodes = %d, want 3", len(l.Nodes))
+	if len(lay.Nodes) != 3 {
+		t.Errorf("nodes = %d, want 3", len(lay.Nodes))
 	}
-	if _, ok := l.Diagram.(StateData); !ok {
-		t.Errorf("Diagram data type = %T, want StateData", l.Diagram)
+	if _, ok := lay.Diagram.(StateData); !ok {
+		t.Errorf("Diagram data type = %T, want StateData", lay.Diagram)
 	}
 }
 
 func TestComputeStateLayoutComposite(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.State
-	g.Direction = ir.TopDown
+	graph := ir.NewGraph()
+	graph.Kind = ir.State
+	graph.Direction = ir.TopDown
 
-	g.EnsureNode("Outer", nil, nil)
+	graph.EnsureNode("Outer", nil, nil)
 	inner := ir.NewGraph()
 	inner.Kind = ir.State
 	inner.EnsureNode("__start__", nil, nil)
 	inner.EnsureNode("inner1", nil, nil)
 	inner.Edges = append(inner.Edges, &ir.Edge{From: "__start__", To: "inner1", Directed: true, ArrowEnd: true})
-	g.CompositeStates["Outer"] = &ir.CompositeState{
+	graph.CompositeStates["Outer"] = &ir.CompositeState{
 		ID:    "Outer",
 		Label: "Outer",
 		Inner: inner,
@@ -55,16 +55,16 @@ func TestComputeStateLayoutComposite(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	outer := l.Nodes["Outer"]
+	outer := lay.Nodes["Outer"]
 	if outer == nil {
 		t.Fatal("Outer node not in layout")
 	}
 	if outer.Width < 100 {
 		t.Errorf("Outer width = %f, expected > 100 for composite", outer.Width)
 	}
-	sd, ok := l.Diagram.(StateData)
+	sd, ok := lay.Diagram.(StateData)
 	if !ok {
 		t.Fatal("expected StateData")
 	}

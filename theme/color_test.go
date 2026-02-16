@@ -6,42 +6,42 @@ import (
 )
 
 func TestParseHex3(t *testing.T) {
-	h, s, l, ok := ParseColorToHSL("#fff")
+	hue, sat, lum, ok := ParseColorToHSL("#fff")
 	if !ok {
 		t.Fatal("expected ok")
 	}
-	if math.Abs(float64(l)-100.0) > 0.1 {
-		t.Errorf("l = %f, want ~100", l)
+	if math.Abs(float64(lum)-100.0) > 0.1 {
+		t.Errorf("l = %f, want ~100", lum)
 	}
-	_ = h
-	_ = s
+	_ = hue
+	_ = sat
 }
 
 func TestParseHex6(t *testing.T) {
-	h, s, l, ok := ParseColorToHSL("#ECECFF")
+	hue, sat, lum, ok := ParseColorToHSL("#ECECFF")
 	if !ok {
 		t.Fatal("expected ok")
 	}
-	if h < 200 || h > 280 {
-		t.Errorf("h = %f, expected ~240", h)
+	if hue < 200 || hue > 280 {
+		t.Errorf("h = %f, expected ~240", hue)
 	}
-	_ = s
-	_ = l
+	_ = sat
+	_ = lum
 }
 
 func TestParseHSL(t *testing.T) {
-	h, s, l, ok := ParseColorToHSL("hsl(240, 100%, 46.27%)")
+	hue, sat, lum, ok := ParseColorToHSL("hsl(240, 100%, 46.27%)")
 	if !ok {
 		t.Fatal("expected ok")
 	}
-	if math.Abs(float64(h)-240) > 0.1 {
-		t.Errorf("h = %f, want 240", h)
+	if math.Abs(float64(hue)-240) > 0.1 {
+		t.Errorf("h = %f, want 240", hue)
 	}
-	if math.Abs(float64(s)-100) > 0.1 {
-		t.Errorf("s = %f, want 100", s)
+	if math.Abs(float64(sat)-100) > 0.1 {
+		t.Errorf("s = %f, want 100", sat)
 	}
-	if math.Abs(float64(l)-46.27) > 0.1 {
-		t.Errorf("l = %f, want 46.27", l)
+	if math.Abs(float64(lum)-46.27) > 0.1 {
+		t.Errorf("l = %f, want 46.27", lum)
 	}
 }
 

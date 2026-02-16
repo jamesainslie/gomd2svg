@@ -11,22 +11,22 @@ import (
 )
 
 func TestRenderRadar(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Radar
-	g.RadarTitle = "Skills"
-	g.RadarAxes = []*ir.RadarAxis{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Radar
+	graph.RadarTitle = "Skills"
+	graph.RadarAxes = []*ir.RadarAxis{
 		{ID: "a", Label: "Speed"},
 		{ID: "b", Label: "Power"},
 		{ID: "c", Label: "Magic"},
 	}
-	g.RadarCurves = []*ir.RadarCurve{
+	graph.RadarCurves = []*ir.RadarCurve{
 		{ID: "p1", Label: "Player1", Values: []float64{80, 60, 40}},
 	}
-	g.RadarMax = 100
+	graph.RadarMax = 100
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "<svg") {
@@ -41,20 +41,20 @@ func TestRenderRadar(t *testing.T) {
 }
 
 func TestRenderRadarValidSVG(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Radar
-	g.RadarAxes = []*ir.RadarAxis{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Radar
+	graph.RadarAxes = []*ir.RadarAxis{
 		{ID: "a", Label: "A"},
 		{ID: "b", Label: "B"},
 		{ID: "c", Label: "C"},
 	}
-	g.RadarCurves = []*ir.RadarCurve{
+	graph.RadarCurves = []*ir.RadarCurve{
 		{ID: "x", Label: "X", Values: []float64{50, 50, 50}},
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.HasPrefix(svg, "<svg") {

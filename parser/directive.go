@@ -40,7 +40,8 @@ func extractDirective(input string) (Directive, string) {
 		jsonStr = "{" + jsonStr + "}"
 	}
 
-	_ = json.Unmarshal([]byte(jsonStr), &dir)
+	//nolint:errcheck // best-effort JSON parsing; invalid directives are silently ignored.
+	json.Unmarshal([]byte(jsonStr), &dir)
 
 	// Remove the directive line from input.
 	rest := input[:loc[0]] + input[loc[1]:]

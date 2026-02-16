@@ -6,9 +6,9 @@ import (
 	"github.com/jamesainslie/gomd2svg/ir"
 )
 
-func parseTimeline(input string) (*ParseOutput, error) {
-	g := ir.NewGraph()
-	g.Kind = ir.Timeline
+func parseTimeline(input string) (*ParseOutput, error) { //nolint:unparam // error return is part of the parser interface contract used by Parse().
+	graph := ir.NewGraph()
+	graph.Kind = ir.Timeline
 
 	lines := preprocessInput(input)
 
@@ -23,7 +23,7 @@ func parseTimeline(input string) (*ParseOutput, error) {
 		}
 
 		if strings.HasPrefix(lower, "title ") {
-			g.TimelineTitle = strings.TrimSpace(line[len("title "):])
+			graph.TimelineTitle = strings.TrimSpace(line[len("title "):])
 			continue
 		}
 
@@ -31,7 +31,7 @@ func parseTimeline(input string) (*ParseOutput, error) {
 			currentSection = &ir.TimelineSection{
 				Title: strings.TrimSpace(line[len("section "):]),
 			}
-			g.TimelineSections = append(g.TimelineSections, currentSection)
+			graph.TimelineSections = append(graph.TimelineSections, currentSection)
 			currentPeriod = nil
 			continue
 		}
@@ -39,10 +39,10 @@ func parseTimeline(input string) (*ParseOutput, error) {
 		// Ensure we have a section.
 		if currentSection == nil {
 			currentSection = &ir.TimelineSection{}
-			g.TimelineSections = append(g.TimelineSections, currentSection)
+			graph.TimelineSections = append(graph.TimelineSections, currentSection)
 		}
 
-		// Continuation event line: starts with ":"
+		// Continuation event line: starts with ":".
 		if strings.HasPrefix(strings.TrimSpace(line), ":") {
 			if currentPeriod != nil {
 				eventText := strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(line), ":"))
@@ -53,7 +53,7 @@ func parseTimeline(input string) (*ParseOutput, error) {
 			continue
 		}
 
-		// Period line: "period : event : event ..."
+		// Period line: "period : event : event ...".
 		if idx := strings.Index(line, ":"); idx >= 0 {
 			period := strings.TrimSpace(line[:idx])
 			rest := line[idx+1:]
@@ -63,8 +63,8 @@ func parseTimeline(input string) (*ParseOutput, error) {
 
 			// Split remaining by ":" for multiple events.
 			parts := strings.Split(rest, ":")
-			for _, p := range parts {
-				text := strings.TrimSpace(p)
+			for _, part := range parts {
+				text := strings.TrimSpace(part)
 				if text != "" {
 					currentPeriod.Events = append(currentPeriod.Events, &ir.TimelineEvent{Text: text})
 				}
@@ -72,5 +72,5 @@ func parseTimeline(input string) (*ParseOutput, error) {
 		}
 	}
 
-	return &ParseOutput{Graph: g}, nil
+	return &ParseOutput{Graph: graph}, nil
 }

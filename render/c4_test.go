@@ -11,16 +11,16 @@ import (
 )
 
 func TestRenderC4(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.C4
-	g.C4SubKind = ir.C4Context
+	graph := ir.NewGraph()
+	graph.Kind = ir.C4
+	graph.C4SubKind = ir.C4Context
 
-	g.C4Elements = append(g.C4Elements, &ir.C4Element{
+	graph.C4Elements = append(graph.C4Elements, &ir.C4Element{
 		ID:    "user",
 		Label: "User",
 		Type:  ir.C4Person,
 	})
-	g.C4Elements = append(g.C4Elements, &ir.C4Element{
+	graph.C4Elements = append(graph.C4Elements, &ir.C4Element{
 		ID:         "webapp",
 		Label:      "Web App",
 		Type:       ir.C4System,
@@ -28,11 +28,11 @@ func TestRenderC4(t *testing.T) {
 	})
 
 	// Add nodes for each element.
-	for _, elem := range g.C4Elements {
-		g.EnsureNode(elem.ID, &elem.Label, nil)
+	for _, elem := range graph.C4Elements {
+		graph.EnsureNode(elem.ID, &elem.Label, nil)
 	}
 
-	g.Edges = append(g.Edges, &ir.Edge{
+	graph.Edges = append(graph.Edges, &ir.Edge{
 		From:     "user",
 		To:       "webapp",
 		Directed: true,
@@ -41,7 +41,7 @@ func TestRenderC4(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "<svg") {
@@ -62,12 +62,12 @@ func TestRenderC4(t *testing.T) {
 }
 
 func TestRenderC4Empty(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.C4
+	graph := ir.NewGraph()
+	graph.Kind = ir.C4
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "<svg") {

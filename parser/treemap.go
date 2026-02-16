@@ -7,13 +7,13 @@ import (
 	"github.com/jamesainslie/gomd2svg/ir"
 )
 
-func parseTreemap(input string) (*ParseOutput, error) {
-	g := ir.NewGraph()
-	g.Kind = ir.Treemap
+func parseTreemap(input string) (*ParseOutput, error) { //nolint:unparam // error return is part of the parser interface contract used by Parse().
+	graph := ir.NewGraph()
+	graph.Kind = ir.Treemap
 
 	lines := preprocessMindmapInput(input) // reuse indentation-aware preprocessor
 	if len(lines) == 0 {
-		return &ParseOutput{Graph: g}, nil
+		return &ParseOutput{Graph: graph}, nil
 	}
 
 	type stackEntry struct {
@@ -34,11 +34,11 @@ func parseTreemap(input string) (*ParseOutput, error) {
 
 		// Handle title directive.
 		if strings.HasPrefix(lower, "title ") || strings.HasPrefix(lower, "title\t") {
-			g.TreemapTitle = strings.TrimSpace(text[6:])
+			graph.TreemapTitle = strings.TrimSpace(text[6:])
 			continue
 		}
 
-		// Parse node: "Label": value  or  "Label"
+		// Parse node: "Label": value  or  "Label".
 		label, value, hasValue, class := parseTreemapNodeLine(text)
 		if label == "" {
 			continue
@@ -55,7 +55,7 @@ func parseTreemap(input string) (*ParseOutput, error) {
 		}
 
 		if len(stack) == 0 {
-			g.TreemapRoot = node
+			graph.TreemapRoot = node
 		} else {
 			parent := stack[len(stack)-1].node
 			parent.Children = append(parent.Children, node)
@@ -64,11 +64,11 @@ func parseTreemap(input string) (*ParseOutput, error) {
 		stack = append(stack, stackEntry{node: node, indent: indent})
 	}
 
-	return &ParseOutput{Graph: g}, nil
+	return &ParseOutput{Graph: graph}, nil
 }
 
 // parseTreemapNodeLine parses a line like `"Label": 30` or `"Label"`.
-func parseTreemapNodeLine(line string) (label string, value float64, hasValue bool, class string) {
+func parseTreemapNodeLine(line string) (label string, value float64, hasValue bool, class string) { //nolint:nonamedreturns // named returns clarify the multi-value return.
 	line = strings.TrimSpace(line)
 
 	// Strip optional :::class decorator.
@@ -93,8 +93,8 @@ func parseTreemapNodeLine(line string) (label string, value float64, hasValue bo
 
 	if len(rest) > 0 && (rest[0] == ':' || rest[0] == ',') {
 		valStr := strings.TrimSpace(rest[1:])
-		if v, err := strconv.ParseFloat(valStr, 64); err == nil {
-			return label, v, true, class
+		if parsedVal, parseErr := strconv.ParseFloat(valStr, 64); parseErr == nil {
+			return label, parsedVal, true, class
 		}
 	}
 

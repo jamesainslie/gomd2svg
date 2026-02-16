@@ -12,13 +12,13 @@ const (
 func (g RadarGraticule) String() string {
 	switch g {
 	case RadarGraticuleNone:
-		return "none"
+		return labelNone
 	case RadarGraticuleCircle:
 		return "circle"
 	case RadarGraticulePolygon:
 		return "polygon"
 	default:
-		return "unknown"
+		return labelUnknown
 	}
 }
 

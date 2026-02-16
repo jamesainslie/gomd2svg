@@ -18,18 +18,18 @@ Grid,Homes,114`
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
-	g := out.Graph
-	if g.Kind != ir.Sankey {
-		t.Fatalf("Kind = %v, want Sankey", g.Kind)
+	graph := out.Graph
+	if graph.Kind != ir.Sankey {
+		t.Fatalf("Kind = %v, want Sankey", graph.Kind)
 	}
-	if len(g.SankeyLinks) != 4 {
-		t.Fatalf("links len = %d, want 4", len(g.SankeyLinks))
+	if len(graph.SankeyLinks) != 4 {
+		t.Fatalf("links len = %d, want 4", len(graph.SankeyLinks))
 	}
-	if g.SankeyLinks[0].Source != "Solar" {
-		t.Errorf("link[0] source = %q, want Solar", g.SankeyLinks[0].Source)
+	if graph.SankeyLinks[0].Source != "Solar" {
+		t.Errorf("link[0] source = %q, want Solar", graph.SankeyLinks[0].Source)
 	}
-	if g.SankeyLinks[0].Value != 60 {
-		t.Errorf("link[0] value = %v, want 60", g.SankeyLinks[0].Value)
+	if graph.SankeyLinks[0].Value != 60 {
+		t.Errorf("link[0] value = %v, want 60", graph.SankeyLinks[0].Value)
 	}
 }
 
@@ -43,18 +43,18 @@ func TestParseSankeyQuotedNames(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
-	g := out.Graph
-	if len(g.SankeyLinks) != 2 {
-		t.Fatalf("links len = %d, want 2", len(g.SankeyLinks))
+	graph := out.Graph
+	if len(graph.SankeyLinks) != 2 {
+		t.Fatalf("links len = %d, want 2", len(graph.SankeyLinks))
 	}
-	if g.SankeyLinks[0].Target != "Target, B" {
-		t.Errorf("link[0] target = %q, want %q", g.SankeyLinks[0].Target, "Target, B")
+	if graph.SankeyLinks[0].Target != "Target, B" {
+		t.Errorf("link[0] target = %q, want %q", graph.SankeyLinks[0].Target, "Target, B")
 	}
-	if g.SankeyLinks[0].Value != 100.5 {
-		t.Errorf("link[0] value = %v, want 100.5", g.SankeyLinks[0].Value)
+	if graph.SankeyLinks[0].Value != 100.5 {
+		t.Errorf("link[0] value = %v, want 100.5", graph.SankeyLinks[0].Value)
 	}
-	if g.SankeyLinks[1].Source != `Source "C"` {
-		t.Errorf("link[1] source = %q, want %q", g.SankeyLinks[1].Source, `Source "C"`)
+	if graph.SankeyLinks[1].Source != `Source "C"` {
+		t.Errorf("link[1] source = %q, want %q", graph.SankeyLinks[1].Source, `Source "C"`)
 	}
 }
 

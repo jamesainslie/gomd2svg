@@ -7,41 +7,47 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
-func computeStateLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
+// State layout constants.
+const (
+	stateStartEndPadding = 4
+	stateChoicePadding   = 24
+)
+
+func computeStateLayout(graph *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
 	measurer := textmetrics.New()
 	innerLayouts := make(map[string]*Layout)
 
 	// Size state nodes. Special handling for __start__/__end__/fork/choice.
-	nodes := sizeStateNodes(g, measurer, th, cfg, innerLayouts)
+	nodes := sizeStateNodes(graph, measurer, th, cfg, innerLayouts)
 
-	r := runSugiyama(g, nodes, cfg)
+	result := runSugiyama(graph, nodes, cfg)
 
 	return &Layout{
-		Kind:   g.Kind,
+		Kind:   graph.Kind,
 		Nodes:  nodes,
-		Edges:  r.Edges,
-		Width:  r.Width,
-		Height: r.Height,
+		Edges:  result.Edges,
+		Width:  result.Width,
+		Height: result.Height,
 		Diagram: StateData{
 			InnerLayouts:    innerLayouts,
-			Descriptions:    g.StateDescriptions,
-			Annotations:     g.StateAnnotations,
-			CompositeStates: g.CompositeStates,
+			Descriptions:    graph.StateDescriptions,
+			Annotations:     graph.StateAnnotations,
+			CompositeStates: graph.CompositeStates,
 		},
 	}
 }
 
-func sizeStateNodes(g *ir.Graph, measurer *textmetrics.Measurer, th *theme.Theme, cfg *config.Layout, innerLayouts map[string]*Layout) map[string]*NodeLayout {
-	nodes := make(map[string]*NodeLayout, len(g.Nodes))
+func sizeStateNodes(graph *ir.Graph, measurer *textmetrics.Measurer, th *theme.Theme, cfg *config.Layout, innerLayouts map[string]*Layout) map[string]*NodeLayout {
+	nodes := make(map[string]*NodeLayout, len(graph.Nodes))
 
 	padH := cfg.Padding.NodeHorizontal
 	padV := cfg.Padding.NodeVertical
 	lineH := th.FontSize * cfg.LabelLineHeight
 
-	for id, node := range g.Nodes {
+	for id, node := range graph.Nodes {
 		// Special nodes: __start__ and __end__ are small circles.
 		if id == "__start__" || id == "__end__" {
-			size := cfg.State.StartEndRadius*2 + 4
+			size := cfg.State.StartEndRadius*2 + stateStartEndPadding
 			shape := ir.Circle
 			if id == "__end__" {
 				shape = ir.DoubleCircle
@@ -57,7 +63,7 @@ func sizeStateNodes(g *ir.Graph, measurer *textmetrics.Measurer, th *theme.Theme
 		}
 
 		// Fork/join annotations: narrow bar shape.
-		if ann, ok := g.StateAnnotations[id]; ok {
+		if ann, ok := graph.StateAnnotations[id]; ok {
 			switch ann {
 			case ir.StateFork, ir.StateJoin:
 				nodes[id] = &NodeLayout{
@@ -69,7 +75,7 @@ func sizeStateNodes(g *ir.Graph, measurer *textmetrics.Measurer, th *theme.Theme
 				}
 				continue
 			case ir.StateChoice:
-				choiceSize := cfg.State.StartEndRadius*2 + 24
+				choiceSize := cfg.State.StartEndRadius*2 + stateChoicePadding
 				nodes[id] = &NodeLayout{
 					ID:     id,
 					Label:  TextBlock{FontSize: th.FontSize},
@@ -82,7 +88,7 @@ func sizeStateNodes(g *ir.Graph, measurer *textmetrics.Measurer, th *theme.Theme
 		}
 
 		// Composite states: recursively layout inner graph.
-		if cs, ok := g.CompositeStates[id]; ok && cs.Inner != nil {
+		if cs, ok := graph.CompositeStates[id]; ok && cs.Inner != nil {
 			innerLayout := computeStateLayout(cs.Inner, th, cfg)
 			innerLayouts[id] = innerLayout
 
@@ -110,20 +116,20 @@ func sizeStateNodes(g *ir.Graph, measurer *textmetrics.Measurer, th *theme.Theme
 		}
 
 		// Regular state node with optional description.
-		nl := sizeNode(node, measurer, th, cfg)
+		nodeLayout := sizeNode(node, measurer, th, cfg)
 
 		// Add description height if present.
-		if desc, ok := g.StateDescriptions[id]; ok {
+		if desc, ok := graph.StateDescriptions[id]; ok {
 			descW := measurer.Width(desc, th.FontSize, th.FontFamily)
-			nl.Height += lineH + padV
-			if descW+2*padH > nl.Width {
-				nl.Width = descW + 2*padH
+			nodeLayout.Height += lineH + padV
+			if descW+2*padH > nodeLayout.Width {
+				nodeLayout.Width = descW + 2*padH
 			}
 		}
 
 		// Apply rounded corners style for state nodes.
-		nl.Shape = ir.RoundRect
-		nodes[id] = nl
+		nodeLayout.Shape = ir.RoundRect
+		nodes[id] = nodeLayout
 	}
 
 	return nodes

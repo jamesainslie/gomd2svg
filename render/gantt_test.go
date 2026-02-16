@@ -11,11 +11,11 @@ import (
 )
 
 func TestRenderGantt(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Gantt
-	g.GanttTitle = "Project"
-	g.GanttDateFormat = "YYYY-MM-DD"
-	g.GanttSections = []*ir.GanttSection{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Gantt
+	graph.GanttTitle = "Project"
+	graph.GanttDateFormat = "YYYY-MM-DD"
+	graph.GanttSections = []*ir.GanttSection{
 		{
 			Title: "Dev",
 			Tasks: []*ir.GanttTask{
@@ -27,7 +27,7 @@ func TestRenderGantt(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "<svg") {

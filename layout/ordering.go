@@ -21,16 +21,16 @@ func orderRankNodes(
 
 	// Determine the maximum rank.
 	maxRank := 0
-	for _, r := range ranks {
-		if r > maxRank {
-			maxRank = r
+	for _, rank := range ranks {
+		if rank > maxRank {
+			maxRank = rank
 		}
 	}
 
 	// Group nodes by rank.
 	layers := make([][]string, maxRank+1)
-	for id, r := range ranks {
-		layers[r] = append(layers[r], id)
+	for id, rank := range ranks {
+		layers[rank] = append(layers[rank], id)
 	}
 
 	// Sort each layer alphabetically as a stable starting point.
@@ -43,31 +43,31 @@ func orderRankNodes(
 	// predecessors[node] = list of nodes in the previous rank
 	successors := make(map[string][]string)
 	prevs := make(map[string][]string)
-	for _, e := range edges {
-		fromRank, fromOK := ranks[e.From]
-		toRank, toOK := ranks[e.To]
+	for _, edge := range edges {
+		fromRank, fromOK := ranks[edge.From]
+		toRank, toOK := ranks[edge.To]
 		if !fromOK || !toOK {
 			continue
 		}
 		if toRank == fromRank+1 {
-			successors[e.From] = append(successors[e.From], e.To)
-			prevs[e.To] = append(prevs[e.To], e.From)
+			successors[edge.From] = append(successors[edge.From], edge.To)
+			prevs[edge.To] = append(prevs[edge.To], edge.From)
 		}
 	}
 
 	// Crossing minimization: median heuristic.
-	for pass := 0; pass < passes; pass++ {
+	for pass := range passes {
 		if pass%2 == 0 {
 			// Forward sweep: use predecessors to order each rank.
-			for r := 1; r <= maxRank; r++ {
-				posInPrev := positionMap(layers[r-1])
-				sortByMedian(layers[r], prevs, posInPrev)
+			for rank := 1; rank <= maxRank; rank++ {
+				posInPrev := positionMap(layers[rank-1])
+				sortByMedian(layers[rank], prevs, posInPrev)
 			}
 		} else {
 			// Backward sweep: use successors to order each rank.
-			for r := maxRank - 1; r >= 0; r-- {
-				posInNext := positionMap(layers[r+1])
-				sortByMedian(layers[r], successors, posInNext)
+			for rank := maxRank - 1; rank >= 0; rank-- {
+				posInNext := positionMap(layers[rank+1])
+				sortByMedian(layers[rank], successors, posInNext)
 			}
 		}
 	}
@@ -77,11 +77,11 @@ func orderRankNodes(
 
 // positionMap builds a map from node ID to its index within a layer.
 func positionMap(layer []string) map[string]int {
-	m := make(map[string]int, len(layer))
-	for i, id := range layer {
-		m[id] = i
+	positions := make(map[string]int, len(layer))
+	for idx, id := range layer {
+		positions[id] = idx
 	}
-	return m
+	return positions
 }
 
 // sortByMedian sorts a layer's nodes by the median position of their
@@ -99,8 +99,8 @@ func sortByMedian(layer []string, neighbors map[string][]string, refPos map[stri
 
 		// Collect positions of neighbors in the reference layer.
 		positions := make([]int, 0, len(nbrs))
-		for _, n := range nbrs {
-			if pos, ok := refPos[n]; ok {
+		for _, nbr := range nbrs {
+			if pos, ok := refPos[nbr]; ok {
 				positions = append(positions, pos)
 			}
 		}
@@ -112,25 +112,25 @@ func sortByMedian(layer []string, neighbors map[string][]string, refPos map[stri
 		sort.Ints(positions)
 		mid := len(positions) / 2
 		if len(positions)%2 == 0 {
-			medians[id] = float32(positions[mid-1]+positions[mid]) / 2.0
+			medians[id] = float32(positions[mid-1]+positions[mid]) / 2
 		} else {
 			medians[id] = float32(positions[mid])
 		}
 	}
 
 	// Stable sort: nodes without neighbors keep their relative order.
-	sort.SliceStable(layer, func(i, j int) bool {
-		mi := medians[layer[i]]
-		mj := medians[layer[j]]
-		if mi < 0 && mj < 0 {
+	sort.SliceStable(layer, func(idxA, idxB int) bool {
+		medianA := medians[layer[idxA]]
+		medianB := medians[layer[idxB]]
+		if medianA < 0 && medianB < 0 {
 			return false // both have no neighbors, keep original order
 		}
-		if mi < 0 {
+		if medianA < 0 {
 			return false // push unconnected nodes after connected
 		}
-		if mj < 0 {
+		if medianB < 0 {
 			return true
 		}
-		return mi < mj
+		return medianA < medianB
 	})
 }

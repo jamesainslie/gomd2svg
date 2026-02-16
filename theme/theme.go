@@ -1,5 +1,47 @@
 package theme
 
+// Theme-related constants for font sizes, stroke widths, and opacity values.
+const (
+	// FontSizeDefault is the standard body font size used by most themes.
+	FontSizeDefault float32 = 14
+
+	// FontSizeClassic is the slightly larger font size used by the classic mermaid theme.
+	FontSizeClassic float32 = 16
+
+	// PieTitleSizeDefault is the pie chart title font size for modern-style themes.
+	PieTitleSizeDefault float32 = 18
+
+	// PieTitleSizeClassic is the pie chart title font size for the classic theme.
+	PieTitleSizeClassic float32 = 25
+
+	// PieSectionSizeDefault is the pie chart section label font size for modern-style themes.
+	PieSectionSizeDefault float32 = 14
+
+	// PieSectionSizeClassic is the pie chart section label font size for the classic theme.
+	PieSectionSizeClassic float32 = 17
+
+	// PieStrokeWidthDefault is the stroke width for pie chart borders.
+	PieStrokeWidthDefault float32 = 2
+
+	// PieOpacityDefault is the fill opacity for pie chart sections in modern-style themes.
+	PieOpacityDefault float32 = 0.85
+
+	// PieOpacityClassic is the fill opacity for pie chart sections in the classic theme.
+	PieOpacityClassic float32 = 0.7
+
+	// RadarCurveOpacityDefault is the fill opacity for radar chart curves.
+	RadarCurveOpacityDefault float32 = 0.3
+
+	// SankeyLinkOpacityLight is the link opacity for lighter Sankey themes (Forest, Neutral).
+	SankeyLinkOpacityLight float32 = 0.35
+
+	// SankeyLinkOpacityDefault is the link opacity for standard Sankey themes (Modern, MermaidDefault).
+	SankeyLinkOpacityDefault float32 = 0.4
+
+	// SankeyLinkOpacityDark is the link opacity for the dark Sankey theme.
+	SankeyLinkOpacityDark float32 = 0.3
+)
+
 // Theme defines the visual appearance for rendering Mermaid diagrams.
 // All color fields are CSS color strings (hex, hsl, etc.).
 type Theme struct {
@@ -162,10 +204,12 @@ type Theme struct {
 }
 
 // Modern returns a theme with a clean, modern color palette using the Inter font.
+//
+//nolint:dupl,funlen // each theme preset is intentionally distinct; flat declaration
 func Modern() *Theme {
 	return &Theme{
 		FontFamily: "Inter, sans-serif",
-		FontSize:   14,
+		FontSize:   FontSizeDefault,
 		Background: "#FFFFFF",
 
 		PrimaryColor:       "#4C78A8",
@@ -206,15 +250,15 @@ func Modern() *Theme {
 		LabelTextColor:      "#333344",
 		LoopTextColor:       "#333344",
 
-		PieTitleTextSize:    18,
+		PieTitleTextSize:    PieTitleSizeDefault,
 		PieTitleTextColor:   "#333344",
-		PieSectionTextSize:  14,
+		PieSectionTextSize:  PieSectionSizeDefault,
 		PieSectionTextColor: "#FFFFFF",
 		PieStrokeColor:      "#FFFFFF",
-		PieStrokeWidth:      2,
-		PieOuterStrokeWidth: 2,
+		PieStrokeWidth:      PieStrokeWidthDefault,
+		PieOuterStrokeWidth: PieStrokeWidthDefault,
 		PieOuterStrokeColor: "#3B6492",
-		PieOpacity:          0.85,
+		PieOpacity:          PieOpacityDefault,
 		PieColors: []string{
 			"#4C78A8", "#72B7B2", "#EECA3B", "#F58518",
 			"#E45756", "#54A24B", "#B279A2", "#FF9DA6",
@@ -277,7 +321,7 @@ func Modern() *Theme {
 		},
 		RadarAxisColor:      "#6E7B8B",
 		RadarGraticuleColor: "#E0E0E0",
-		RadarCurveOpacity:   0.3,
+		RadarCurveOpacity:   RadarCurveOpacityDefault,
 
 		MindmapBranchColors: []string{
 			"#4C78A8", "#72B7B2", "#EECA3B", "#F58518",
@@ -291,7 +335,7 @@ func Modern() *Theme {
 			"#E45756", "#54A24B", "#B279A2", "#FF9DA6",
 		},
 		SankeyLinkColor:   "#6E7B8B",
-		SankeyLinkOpacity: 0.4,
+		SankeyLinkOpacity: SankeyLinkOpacityDefault,
 
 		TreemapColors: []string{
 			"#4C78A8", "#72B7B2", "#EECA3B", "#F58518",
@@ -335,10 +379,12 @@ func Modern() *Theme {
 }
 
 // MermaidDefault returns the classic mermaid.js default theme.
+//
+//nolint:dupl,funlen // each theme preset is intentionally distinct; flat declaration
 func MermaidDefault() *Theme {
 	return &Theme{
 		FontFamily: "trebuchet ms, verdana, arial, sans-serif",
-		FontSize:   16,
+		FontSize:   FontSizeClassic,
 		Background: "#FFFFFF",
 
 		PrimaryColor:       "#ECECFF",
@@ -379,15 +425,15 @@ func MermaidDefault() *Theme {
 		LabelTextColor:      "#333",
 		LoopTextColor:       "#333",
 
-		PieTitleTextSize:    25,
+		PieTitleTextSize:    PieTitleSizeClassic,
 		PieTitleTextColor:   "#333",
-		PieSectionTextSize:  17,
+		PieSectionTextSize:  PieSectionSizeClassic,
 		PieSectionTextColor: "#333",
 		PieStrokeColor:      "#ccc",
-		PieStrokeWidth:      2,
-		PieOuterStrokeWidth: 2,
+		PieStrokeWidth:      PieStrokeWidthDefault,
+		PieOuterStrokeWidth: PieStrokeWidthDefault,
 		PieOuterStrokeColor: "#999",
-		PieOpacity:          0.7,
+		PieOpacity:          PieOpacityClassic,
 		PieColors: []string{
 			"#4C78A8", "#48A9A6", "#E4E36A", "#F4A261",
 			"#E76F51", "#7FB069", "#D08AC0", "#F7B7A3",
@@ -450,7 +496,7 @@ func MermaidDefault() *Theme {
 		},
 		RadarAxisColor:      "#888",
 		RadarGraticuleColor: "#ddd",
-		RadarCurveOpacity:   0.3,
+		RadarCurveOpacity:   RadarCurveOpacityDefault,
 
 		MindmapBranchColors: []string{
 			"#9370DB", "#E76F51", "#7FB069", "#F4A261",
@@ -464,7 +510,7 @@ func MermaidDefault() *Theme {
 			"#E76F51", "#7FB069", "#D08AC0", "#F7B7A3",
 		},
 		SankeyLinkColor:   "#888",
-		SankeyLinkOpacity: 0.4,
+		SankeyLinkOpacity: SankeyLinkOpacityDefault,
 
 		TreemapColors: []string{
 			"#4C78A8", "#48A9A6", "#E4E36A", "#F4A261",

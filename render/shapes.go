@@ -5,24 +5,42 @@ import (
 	"github.com/jamesainslie/gomd2svg/layout"
 )
 
+// Shape rendering constants.
+const (
+	roundRectRadius     float32 = 10
+	defaultRectRadius   float32 = 3
+	fallbackRectRadius  float32 = 6
+	doubleCircleInset   float32 = 4
+	cylinderMinRY       float32 = 6
+	cylinderMaxRY       float32 = 14
+	cylinderEllipseRate float32 = 0.12
+	subroutineInset     float32 = 6
+	asymmetricSlant     float32 = 0.22
+	parallelogramSkew   float32 = 0.18
+	lineHeightScale     float32 = 1.2
+	textBaselineOffset  float32 = 0.75
+	hexagonLeft         float32 = 0.25
+	hexagonRight        float32 = 0.75
+)
+
 // renderNodeShape renders the SVG shape for a node and its centered text label.
 // The node's X, Y are the center of the node.
-func renderNodeShape(b *svgBuilder, n *layout.NodeLayout, fill, stroke, textColor string) {
+func renderNodeShape(builder *svgBuilder, node *layout.NodeLayout, fill, stroke, textColor string) {
 	strokeWidth := "1"
-	if n.Style.StrokeWidth != nil {
-		strokeWidth = fmtFloat(*n.Style.StrokeWidth)
+	if node.Style.StrokeWidth != nil {
+		strokeWidth = fmtFloat(*node.Style.StrokeWidth)
 	}
 
 	dash := ""
-	if n.Style.StrokeDasharray != nil {
-		dash = *n.Style.StrokeDasharray
+	if node.Style.StrokeDasharray != nil {
+		dash = *node.Style.StrokeDasharray
 	}
 
 	// Compute top-left corner from center coordinates.
-	x := n.X - n.Width/2
-	y := n.Y - n.Height/2
-	w := n.Width
-	h := n.Height
+	posX := node.X - node.Width/2
+	posY := node.Y - node.Height/2
+	width := node.Width
+	height := node.Height
 
 	join := "round"
 
@@ -37,125 +55,152 @@ func renderNodeShape(b *svgBuilder, n *layout.NodeLayout, fill, stroke, textColo
 		baseAttrs = append(baseAttrs, "stroke-dasharray", dash)
 	}
 
-	switch n.Shape {
+	switch node.Shape {
 	case ir.Rectangle, ir.ForkJoin, ir.ActorBox:
-		renderRectangle(b, x, y, w, h, 3, baseAttrs)
+		renderRectangle(builder, posX, posY, width, height, defaultRectRadius, baseAttrs)
 
 	case ir.RoundRect:
-		renderRectangle(b, x, y, w, h, 10, baseAttrs)
+		renderRectangle(builder, posX, posY, width, height, roundRectRadius, baseAttrs)
 
 	case ir.Stadium:
-		renderRectangle(b, x, y, w, h, h/2, baseAttrs)
+		renderRectangle(builder, posX, posY, width, height, height/2, baseAttrs)
 
 	case ir.Diamond:
-		renderDiamond(b, x, y, w, h, baseAttrs)
+		renderDiamond(builder, posX, posY, width, height, baseAttrs)
 
 	case ir.Hexagon:
-		renderHexagon(b, x, y, w, h, baseAttrs)
+		renderHexagon(builder, posX, posY, width, height, baseAttrs)
 
 	case ir.Circle, ir.DoubleCircle:
-		renderCircle(b, n, x, y, w, h, baseAttrs, fill, stroke)
+		renderCircleFromParams(renderCircleParams{
+			builder: builder, node: node,
+			posX: posX, posY: posY, width: width, height: height,
+			attrs: baseAttrs, fill: fill, stroke: stroke,
+		})
 
 	case ir.Cylinder:
-		renderCylinder(b, x, y, w, h, fill, stroke, strokeWidth, dash)
+		renderCylinderFromParams(renderCylinderParams{
+			builder: builder, posX: posX, posY: posY, width: width, height: height,
+			fill: fill, stroke: stroke, strokeWidth: strokeWidth, dash: dash,
+		})
 
 	case ir.Subroutine:
-		renderSubroutine(b, x, y, w, h, stroke, strokeWidth, baseAttrs)
+		renderSubroutineFromParams(renderSubroutineParams{
+			builder: builder, posX: posX, posY: posY, width: width, height: height,
+			stroke: stroke, strokeWidth: strokeWidth, attrs: baseAttrs,
+		})
 
 	case ir.Asymmetric:
-		renderAsymmetric(b, x, y, w, h, baseAttrs)
+		renderAsymmetric(builder, posX, posY, width, height, baseAttrs)
 
 	case ir.Parallelogram:
-		renderParallelogram(b, x, y, w, h, false, baseAttrs)
+		renderParallelogram(builder, posX, posY, width, height, false, baseAttrs)
 
 	case ir.ParallelogramAlt:
-		renderParallelogram(b, x, y, w, h, true, baseAttrs)
+		renderParallelogram(builder, posX, posY, width, height, true, baseAttrs)
 
 	case ir.Trapezoid:
-		renderTrapezoid(b, x, y, w, h, false, baseAttrs)
+		renderTrapezoid(builder, posX, posY, width, height, false, baseAttrs)
 
 	case ir.TrapezoidAlt:
-		renderTrapezoid(b, x, y, w, h, true, baseAttrs)
+		renderTrapezoid(builder, posX, posY, width, height, true, baseAttrs)
 
 	default:
 		// Fallback to rectangle.
-		renderRectangle(b, x, y, w, h, 6, baseAttrs)
+		renderRectangle(builder, posX, posY, width, height, fallbackRectRadius, baseAttrs)
 	}
 
 	// Render text label centered in the node.
-	renderNodeLabel(b, n, textColor)
+	renderNodeLabel(builder, node, textColor)
 }
 
 // renderRectangle renders a <rect> with given corner radius.
-func renderRectangle(b *svgBuilder, x, y, w, h, rx float32, attrs []string) {
-	all := []string{
-		"x", fmtFloat(x),
-		"y", fmtFloat(y),
-		"width", fmtFloat(w),
-		"height", fmtFloat(h),
+func renderRectangle(builder *svgBuilder, posX, posY, width, height, rx float32, attrs []string) {
+	all := make([]string, 0, 12+len(attrs)) //nolint:mnd // base capacity for rect attrs
+	all = append(all,
+		"x", fmtFloat(posX),
+		"y", fmtFloat(posY),
+		"width", fmtFloat(width),
+		"height", fmtFloat(height),
 		"rx", fmtFloat(rx),
 		"ry", fmtFloat(rx),
-	}
+	)
 	all = append(all, attrs...)
-	b.selfClose("rect", all...)
+	builder.selfClose("rect", all...)
 }
 
 // renderDiamond renders a <polygon> rotated square for Diamond shape.
-func renderDiamond(b *svgBuilder, x, y, w, h float32, attrs []string) {
-	cx := x + w/2
-	cy := y + h/2
+func renderDiamond(builder *svgBuilder, posX, posY, width, height float32, attrs []string) {
+	cx := posX + width/2
+	cy := posY + height/2
 	pts := [][2]float32{
-		{cx, y},
-		{x + w, cy},
-		{cx, y + h},
-		{x, cy},
+		{cx, posY},
+		{posX + width, cy},
+		{cx, posY + height},
+		{posX, cy},
 	}
-	all := []string{"points", formatPoints(pts)}
+	all := make([]string, 0, 2+len(attrs))
+	all = append(all, "points", formatPoints(pts))
 	all = append(all, attrs...)
-	b.selfClose("polygon", all...)
+	builder.selfClose("polygon", all...)
 }
 
 // renderHexagon renders a <polygon> with 6 vertices.
-func renderHexagon(b *svgBuilder, x, y, w, h float32, attrs []string) {
-	x1 := x + w*0.25
-	x2 := x + w*0.75
-	yMid := y + h/2
+func renderHexagon(builder *svgBuilder, posX, posY, width, height float32, attrs []string) {
+	leftX := posX + width*hexagonLeft
+	rightX := posX + width*hexagonRight
+	yMid := posY + height/2
 	pts := [][2]float32{
-		{x1, y},
-		{x2, y},
-		{x + w, yMid},
-		{x2, y + h},
-		{x1, y + h},
-		{x, yMid},
+		{leftX, posY},
+		{rightX, posY},
+		{posX + width, yMid},
+		{rightX, posY + height},
+		{leftX, posY + height},
+		{posX, yMid},
 	}
-	all := []string{"points", formatPoints(pts)}
+	all := make([]string, 0, 2+len(attrs))
+	all = append(all, "points", formatPoints(pts))
 	all = append(all, attrs...)
-	b.selfClose("polygon", all...)
+	builder.selfClose("polygon", all...)
 }
 
-// renderCircle renders a <circle> and optionally an inner circle for DoubleCircle.
-func renderCircle(b *svgBuilder, n *layout.NodeLayout, x, y, w, h float32, attrs []string, fill, stroke string) {
-	cx := x + w/2
-	cy := y + h/2
-	r := min(w, h) / 2
+// renderCircleParams holds the parameters for rendering a circle shape to reduce argument count.
+type renderCircleParams struct {
+	builder *svgBuilder
+	node    *layout.NodeLayout
+	posX    float32
+	posY    float32
+	width   float32
+	height  float32
+	attrs   []string
+	fill    string
+	stroke  string
+}
 
-	all := []string{
+// renderCircleFromParams renders a <circle> and optionally an inner circle for DoubleCircle.
+func renderCircleFromParams(params renderCircleParams) {
+	cx := params.posX + params.width/2
+	cy := params.posY + params.height/2
+	radius := min(params.width, params.height) / 2
+
+	all := make([]string, 0, 6+len(params.attrs)) //nolint:mnd // base capacity for cx,cy,r pairs
+	all = append(all,
 		"cx", fmtFloat(cx),
 		"cy", fmtFloat(cy),
-		"r", fmtFloat(r),
-	}
-	all = append(all, attrs...)
-	b.selfClose("circle", all...)
+		"r", fmtFloat(radius),
+	)
+	all = append(all, params.attrs...)
+	params.builder.selfClose("circle", all...)
 
-	if n.Shape == ir.DoubleCircle {
-		r2 := r - 4
-		if r2 > 0 {
-			b.selfClose("circle",
+	if params.node.Shape == ir.DoubleCircle {
+		innerRadius := radius - doubleCircleInset
+		if innerRadius > 0 {
+			params.builder.selfClose("circle",
 				"cx", fmtFloat(cx),
 				"cy", fmtFloat(cy),
-				"r", fmtFloat(r2),
+				"r", fmtFloat(innerRadius),
 				"fill", "none",
-				"stroke", stroke,
+				"stroke", params.stroke,
 				"stroke-width", "1",
 				"stroke-linejoin", "round",
 				"stroke-linecap", "round",
@@ -164,179 +209,209 @@ func renderCircle(b *svgBuilder, n *layout.NodeLayout, x, y, w, h float32, attrs
 	}
 }
 
-// renderCylinder renders a cylinder shape using ellipses and a rect.
-func renderCylinder(b *svgBuilder, x, y, w, h float32, fill, stroke, strokeWidth, dash string) {
-	cx := x + w/2
-	ry := clamp(h*0.12, 6, 14)
-	rx := w / 2
+// renderCylinderParams holds parameters for cylinder rendering to reduce argument count.
+type renderCylinderParams struct {
+	builder     *svgBuilder
+	posX        float32
+	posY        float32
+	width       float32
+	height      float32
+	fill        string
+	stroke      string
+	strokeWidth string
+	dash        string
+}
+
+// renderCylinderFromParams renders a cylinder shape using ellipses and a rect.
+func renderCylinderFromParams(params renderCylinderParams) {
+	cx := params.posX + params.width/2
+	ry := clamp(params.height*cylinderEllipseRate, cylinderMinRY, cylinderMaxRY)
+	rx := params.width / 2
 
 	joinAttrs := []string{
-		"fill", fill,
-		"stroke", stroke,
-		"stroke-width", strokeWidth,
+		"fill", params.fill,
+		"stroke", params.stroke,
+		"stroke-width", params.strokeWidth,
 		"stroke-linejoin", "round",
 		"stroke-linecap", "round",
 	}
-	if dash != "" {
-		joinAttrs = append(joinAttrs, "stroke-dasharray", dash)
+	if params.dash != "" {
+		joinAttrs = append(joinAttrs, "stroke-dasharray", params.dash)
 	}
 
 	// Top ellipse (filled).
-	topAttrs := []string{
+	topAttrs := make([]string, 0, 8+len(joinAttrs)) //nolint:mnd // base capacity for ellipse attrs
+	topAttrs = append(topAttrs,
 		"cx", fmtFloat(cx),
-		"cy", fmtFloat(y + ry),
+		"cy", fmtFloat(params.posY+ry),
 		"rx", fmtFloat(rx),
 		"ry", fmtFloat(ry),
-	}
+	)
 	topAttrs = append(topAttrs, joinAttrs...)
-	b.selfClose("ellipse", topAttrs...)
+	params.builder.selfClose("ellipse", topAttrs...)
 
 	// Body rect.
-	bodyH := h - 2*ry
+	bodyH := params.height - 2*ry
 	if bodyH < 0 {
 		bodyH = 0
 	}
-	bodyAttrs := []string{
-		"x", fmtFloat(x),
-		"y", fmtFloat(y + ry),
-		"width", fmtFloat(w),
+	bodyAttrs := make([]string, 0, 8+len(joinAttrs)) //nolint:mnd // base capacity for rect attrs
+	bodyAttrs = append(bodyAttrs,
+		"x", fmtFloat(params.posX),
+		"y", fmtFloat(params.posY+ry),
+		"width", fmtFloat(params.width),
 		"height", fmtFloat(bodyH),
-	}
+	)
 	bodyAttrs = append(bodyAttrs, joinAttrs...)
-	b.selfClose("rect", bodyAttrs...)
+	params.builder.selfClose("rect", bodyAttrs...)
 
 	// Bottom ellipse (stroke only).
 	bottomAttrs := []string{
 		"cx", fmtFloat(cx),
-		"cy", fmtFloat(y + h - ry),
+		"cy", fmtFloat(params.posY + params.height - ry),
 		"rx", fmtFloat(rx),
 		"ry", fmtFloat(ry),
 		"fill", "none",
-		"stroke", stroke,
-		"stroke-width", strokeWidth,
+		"stroke", params.stroke,
+		"stroke-width", params.strokeWidth,
 		"stroke-linejoin", "round",
 		"stroke-linecap", "round",
 	}
-	if dash != "" {
-		bottomAttrs = append(bottomAttrs, "stroke-dasharray", dash)
+	if params.dash != "" {
+		bottomAttrs = append(bottomAttrs, "stroke-dasharray", params.dash)
 	}
-	b.selfClose("ellipse", bottomAttrs...)
+	params.builder.selfClose("ellipse", bottomAttrs...)
 }
 
-// renderSubroutine renders a rect with double vertical lines at the sides.
-func renderSubroutine(b *svgBuilder, x, y, w, h float32, stroke, strokeWidth string, attrs []string) {
+// renderSubroutineParams holds parameters for subroutine rendering to reduce argument count.
+type renderSubroutineParams struct {
+	builder     *svgBuilder
+	posX        float32
+	posY        float32
+	width       float32
+	height      float32
+	stroke      string
+	strokeWidth string
+	attrs       []string
+}
+
+// renderSubroutineFromParams renders a rect with double vertical lines at the sides.
+func renderSubroutineFromParams(params renderSubroutineParams) {
 	// Main rect.
-	all := []string{
-		"x", fmtFloat(x),
-		"y", fmtFloat(y),
-		"width", fmtFloat(w),
-		"height", fmtFloat(h),
+	all := make([]string, 0, 12+len(params.attrs)) //nolint:mnd // base capacity for rect attrs
+	all = append(all,
+		"x", fmtFloat(params.posX),
+		"y", fmtFloat(params.posY),
+		"width", fmtFloat(params.width),
+		"height", fmtFloat(params.height),
 		"rx", "6",
 		"ry", "6",
-	}
-	all = append(all, attrs...)
-	b.selfClose("rect", all...)
+	)
+	all = append(all, params.attrs...)
+	params.builder.selfClose("rect", all...)
 
 	// Inner vertical lines.
-	inset := float32(6)
-	y1 := y + 2
-	y2 := y + h - 2
-	x1 := x + inset
-	x2 := x + w - inset
+	lineTopY := params.posY + 2
+	lineBottomY := params.posY + params.height - 2
+	lineLeftX := params.posX + subroutineInset
+	lineRightX := params.posX + params.width - subroutineInset
 
 	lineAttrs := []string{
-		"stroke", stroke,
-		"stroke-width", strokeWidth,
+		"stroke", params.stroke,
+		"stroke-width", params.strokeWidth,
 		"stroke-linejoin", "round",
 		"stroke-linecap", "round",
 	}
 
-	b.line(x1, y1, x1, y2, lineAttrs...)
-	b.line(x2, y1, x2, y2, lineAttrs...)
+	params.builder.line(lineLeftX, lineTopY, lineLeftX, lineBottomY, lineAttrs...)
+	params.builder.line(lineRightX, lineTopY, lineRightX, lineBottomY, lineAttrs...)
 }
 
 // renderAsymmetric renders a flag-shaped polygon.
-func renderAsymmetric(b *svgBuilder, x, y, w, h float32, attrs []string) {
-	slant := w * 0.22
+func renderAsymmetric(builder *svgBuilder, posX, posY, width, height float32, attrs []string) {
+	slant := width * asymmetricSlant
 	pts := [][2]float32{
-		{x, y},
-		{x + w - slant, y},
-		{x + w, y + h/2},
-		{x + w - slant, y + h},
-		{x, y + h},
+		{posX, posY},
+		{posX + width - slant, posY},
+		{posX + width, posY + height/2},
+		{posX + width - slant, posY + height},
+		{posX, posY + height},
 	}
-	all := []string{"points", formatPoints(pts)}
+	all := make([]string, 0, 2+len(attrs))
+	all = append(all, "points", formatPoints(pts))
 	all = append(all, attrs...)
-	b.selfClose("polygon", all...)
+	builder.selfClose("polygon", all...)
 }
 
 // renderParallelogram renders a parallelogram polygon.
-func renderParallelogram(b *svgBuilder, x, y, w, h float32, alt bool, attrs []string) {
-	offset := w * 0.18
+func renderParallelogram(builder *svgBuilder, posX, posY, width, height float32, alt bool, attrs []string) {
+	offset := width * parallelogramSkew
 	var pts [][2]float32
 	if !alt {
 		pts = [][2]float32{
-			{x + offset, y},
-			{x + w, y},
-			{x + w - offset, y + h},
-			{x, y + h},
+			{posX + offset, posY},
+			{posX + width, posY},
+			{posX + width - offset, posY + height},
+			{posX, posY + height},
 		}
 	} else {
 		pts = [][2]float32{
-			{x, y},
-			{x + w - offset, y},
-			{x + w, y + h},
-			{x + offset, y + h},
+			{posX, posY},
+			{posX + width - offset, posY},
+			{posX + width, posY + height},
+			{posX + offset, posY + height},
 		}
 	}
-	all := []string{"points", formatPoints(pts)}
+	all := make([]string, 0, 2+len(attrs))
+	all = append(all, "points", formatPoints(pts))
 	all = append(all, attrs...)
-	b.selfClose("polygon", all...)
+	builder.selfClose("polygon", all...)
 }
 
 // renderTrapezoid renders a trapezoid polygon.
-func renderTrapezoid(b *svgBuilder, x, y, w, h float32, alt bool, attrs []string) {
-	offset := w * 0.18
+func renderTrapezoid(builder *svgBuilder, posX, posY, width, height float32, alt bool, attrs []string) {
+	offset := width * parallelogramSkew
 	var pts [][2]float32
 	if !alt {
 		pts = [][2]float32{
-			{x + offset, y},
-			{x + w - offset, y},
-			{x + w, y + h},
-			{x, y + h},
+			{posX + offset, posY},
+			{posX + width - offset, posY},
+			{posX + width, posY + height},
+			{posX, posY + height},
 		}
 	} else {
 		pts = [][2]float32{
-			{x, y},
-			{x + w, y},
-			{x + w - offset, y + h},
-			{x + offset, y + h},
+			{posX, posY},
+			{posX + width, posY},
+			{posX + width - offset, posY + height},
+			{posX + offset, posY + height},
 		}
 	}
-	all := []string{"points", formatPoints(pts)}
+	all := make([]string, 0, 2+len(attrs))
+	all = append(all, "points", formatPoints(pts))
 	all = append(all, attrs...)
-	b.selfClose("polygon", all...)
+	builder.selfClose("polygon", all...)
 }
 
 // renderNodeLabel renders text lines centered within a node.
-func renderNodeLabel(b *svgBuilder, n *layout.NodeLayout, textColor string) {
-	if len(n.Label.Lines) == 0 {
+func renderNodeLabel(builder *svgBuilder, node *layout.NodeLayout, textColor string) {
+	if len(node.Label.Lines) == 0 {
 		return
 	}
 
-	fontSize := n.Label.FontSize
+	fontSize := node.Label.FontSize
 	if fontSize <= 0 {
 		fontSize = 14
 	}
 
-	lineHeight := fontSize * 1.2
-	totalTextHeight := lineHeight * float32(len(n.Label.Lines))
+	lineHeight := fontSize * lineHeightScale
+	totalTextHeight := lineHeight * float32(len(node.Label.Lines))
 	// Start Y so that text block is vertically centered in node.
-	startY := n.Y - totalTextHeight/2 + lineHeight*0.75
+	startY := node.Y - totalTextHeight/2 + lineHeight*textBaselineOffset
 
-	for i, line := range n.Label.Lines {
-		ly := startY + float32(i)*lineHeight
-		b.text(n.X, ly, line,
+	for idx, line := range node.Label.Lines {
+		ly := startY + float32(idx)*lineHeight
+		builder.text(node.X, ly, line,
 			"text-anchor", "middle",
 			"dominant-baseline", "auto",
 			"fill", textColor,
@@ -345,13 +420,13 @@ func renderNodeLabel(b *svgBuilder, n *layout.NodeLayout, textColor string) {
 	}
 }
 
-// clamp restricts v to the range [lo, hi].
-func clamp(v, lo, hi float32) float32 {
-	if v < lo {
+// clamp restricts val to the range [lo, hi].
+func clamp(val, lo, hi float32) float32 {
+	if val < lo {
 		return lo
 	}
-	if v > hi {
+	if val > hi {
 		return hi
 	}
-	return v
+	return val
 }

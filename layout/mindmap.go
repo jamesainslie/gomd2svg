@@ -20,13 +20,16 @@ type mindmapLayoutNode struct {
 // computeMindmapLayout builds a radial tree layout for a mindmap diagram.
 // The root node is placed at the center and children are distributed radially
 // in concentric rings at increasing distances.
-func computeMindmapLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
-	if g.MindmapRoot == nil {
+// mindmapEmptySize is the default width/height for an empty mindmap layout.
+const mindmapEmptySize float32 = 100
+
+func computeMindmapLayout(graph *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
+	if graph.MindmapRoot == nil {
 		return &Layout{
-			Kind:    g.Kind,
+			Kind:    graph.Kind,
 			Nodes:   map[string]*NodeLayout{},
-			Width:   100,
-			Height:  100,
+			Width:   mindmapEmptySize,
+			Height:  mindmapEmptySize,
 			Diagram: MindmapData{},
 		}
 	}
@@ -39,7 +42,7 @@ func computeMindmapLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Lay
 	branchSpacing := cfg.Mindmap.BranchSpacing
 
 	// Phase 1: Build layout tree with measured node sizes.
-	root := mindmapBuildLayoutTree(g.MindmapRoot, measurer, th, cfg, nodePad, 0, 0)
+	root := mindmapBuildLayoutTree(graph.MindmapRoot, measurer, th, cfg, nodePad, 0, 0)
 
 	// Phase 2: Compute subtree angular spans bottom-up.
 	mindmapComputeSubtreeSize(root, branchSpacing)
@@ -49,17 +52,17 @@ func computeMindmapLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Lay
 	root.Y = 0
 	if len(root.children) > 0 {
 		var totalSpan float64
-		for _, c := range root.children {
-			totalSpan += float64(c.subtreeSpan)
+		for _, child := range root.children {
+			totalSpan += float64(child.subtreeSpan)
 		}
 		startAngle := -math.Pi / 2
-		for _, c := range root.children {
-			fraction := float64(c.subtreeSpan) / totalSpan
+		for _, child := range root.children {
+			fraction := float64(child.subtreeSpan) / totalSpan
 			midAngle := startAngle + fraction*math.Pi
-			dist := levelSpacing + root.Width/2 + c.Width/2
-			c.X = float32(math.Cos(midAngle)) * dist
-			c.Y = float32(math.Sin(midAngle)) * dist
-			mindmapPositionChildren(c, midAngle, levelSpacing, 2)
+			dist := levelSpacing + root.Width/2 + child.Width/2
+			child.X = float32(math.Cos(midAngle)) * dist
+			child.Y = float32(math.Sin(midAngle)) * dist
+			mindmapPositionChildren(child, midAngle, levelSpacing, 2)
 			startAngle += fraction * 2 * math.Pi
 		}
 	}
@@ -74,7 +77,7 @@ func computeMindmapLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Lay
 	totalH := (maxY - minY) + padY*2
 
 	return &Layout{
-		Kind:    g.Kind,
+		Kind:    graph.Kind,
 		Nodes:   map[string]*NodeLayout{},
 		Width:   totalW,
 		Height:  totalH,
@@ -128,9 +131,9 @@ func mindmapComputeSubtreeSize(node *mindmapLayoutNode, branchSpacing float32) {
 		return
 	}
 	var total float32
-	for _, c := range node.children {
-		mindmapComputeSubtreeSize(c, branchSpacing)
-		total += c.subtreeSpan
+	for _, child := range node.children {
+		mindmapComputeSubtreeSize(child, branchSpacing)
+		total += child.subtreeSpan
 	}
 	node.subtreeSpan = total
 }
@@ -146,48 +149,48 @@ func mindmapPositionChildren(parent *mindmapLayoutNode, parentAngle float64, lev
 	spreadAngle := math.Pi / float64(depth+1)
 
 	var totalSpan float64
-	for _, c := range parent.children {
-		totalSpan += float64(c.subtreeSpan)
+	for _, child := range parent.children {
+		totalSpan += float64(child.subtreeSpan)
 	}
 
 	startAngle := parentAngle - spreadAngle/2
-	for _, c := range parent.children {
-		fraction := float64(c.subtreeSpan) / totalSpan
+	for _, child := range parent.children {
+		fraction := float64(child.subtreeSpan) / totalSpan
 		midAngle := startAngle + fraction*spreadAngle/2
-		dist := levelSpacing + parent.Width/2 + c.Width/2
-		c.X = parent.X + float32(math.Cos(midAngle))*dist
-		c.Y = parent.Y + float32(math.Sin(midAngle))*dist
-		mindmapPositionChildren(c, midAngle, levelSpacing, depth+1)
+		dist := levelSpacing + parent.Width/2 + child.Width/2
+		child.X = parent.X + float32(math.Cos(midAngle))*dist
+		child.Y = parent.Y + float32(math.Sin(midAngle))*dist
+		mindmapPositionChildren(child, midAngle, levelSpacing, depth+1)
 		startAngle += fraction * spreadAngle
 	}
 }
 
 // mindmapBounds recursively computes the bounding box of the entire tree,
 // accounting for node half-widths and half-heights.
-func mindmapBounds(node *mindmapLayoutNode) (minX, minY, maxX, maxY float32) {
+func mindmapBounds(node *mindmapLayoutNode) (float32, float32, float32, float32) {
 	halfW := node.Width / 2
 	halfH := node.Height / 2
-	minX = node.X - halfW
-	minY = node.Y - halfH
-	maxX = node.X + halfW
-	maxY = node.Y + halfH
+	boundsMinX := node.X - halfW
+	boundsMinY := node.Y - halfH
+	boundsMaxX := node.X + halfW
+	boundsMaxY := node.Y + halfH
 
-	for _, c := range node.children {
-		cMinX, cMinY, cMaxX, cMaxY := mindmapBounds(c)
-		if cMinX < minX {
-			minX = cMinX
+	for _, child := range node.children {
+		cMinX, cMinY, cMaxX, cMaxY := mindmapBounds(child)
+		if cMinX < boundsMinX {
+			boundsMinX = cMinX
 		}
-		if cMinY < minY {
-			minY = cMinY
+		if cMinY < boundsMinY {
+			boundsMinY = cMinY
 		}
-		if cMaxX > maxX {
-			maxX = cMaxX
+		if cMaxX > boundsMaxX {
+			boundsMaxX = cMaxX
 		}
-		if cMaxY > maxY {
-			maxY = cMaxY
+		if cMaxY > boundsMaxY {
+			boundsMaxY = cMaxY
 		}
 	}
-	return
+	return boundsMinX, boundsMinY, boundsMaxX, boundsMaxY
 }
 
 // mindmapShift recursively offsets all node coordinates by (dx, dy), updating
@@ -196,7 +199,7 @@ func mindmapBounds(node *mindmapLayoutNode) (minX, minY, maxX, maxY float32) {
 func mindmapShift(node *mindmapLayoutNode, dx, dy float32) {
 	node.X += dx
 	node.Y += dy
-	for _, c := range node.children {
-		mindmapShift(c, dx, dy)
+	for _, child := range node.children {
+		mindmapShift(child, dx, dy)
 	}
 }

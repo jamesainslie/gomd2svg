@@ -143,6 +143,7 @@ func TestRenderClassDiagram(t *testing.T) {
 }
 
 func TestRenderStateDiagram(t *testing.T) {
+	//nolint:dupword // Mermaid diagram syntax repeats state names across transitions.
 	input := `stateDiagram-v2
     [*] --> Still
     Still --> Moving
@@ -198,6 +199,7 @@ func TestGoldenClassRelationships(t *testing.T) {
 }
 
 func TestGoldenStateComposite(t *testing.T) {
+	//nolint:dupword // Mermaid diagram syntax repeats state names across transitions.
 	input := `stateDiagram-v2
     [*] --> First
     state First {

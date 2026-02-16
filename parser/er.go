@@ -38,9 +38,9 @@ func parseKeyToken(token string) []ir.AttributeKey {
 	}
 	parts := strings.Split(token, ",")
 	var keys []ir.AttributeKey
-	for _, p := range parts {
-		p = strings.TrimSpace(p)
-		switch p {
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		switch part {
 		case "PK":
 			keys = append(keys, ir.KeyPrimary)
 		case "FK":
@@ -53,7 +53,7 @@ func parseKeyToken(token string) []ir.AttributeKey {
 }
 
 // parseERAttribute parses a single attribute line inside an entity block.
-// Format: type name [keys] ["comment"]
+// Format: type name [keys] ["comment"].
 func parseERAttribute(line string) ir.EntityAttribute {
 	attr := ir.EntityAttribute{}
 
@@ -86,23 +86,24 @@ func parseERAttribute(line string) ir.EntityAttribute {
 //	p["Person"] or entityName[Alias]
 //
 // Returns the ID and label (empty if no alias).
-func parseEntityID(token string) (id string, label string) {
+func parseEntityID(token string) (string, string) {
 	if bracketIdx := strings.Index(token, "["); bracketIdx >= 0 {
-		id = token[:bracketIdx]
+		id := token[:bracketIdx]
 		rest := token[bracketIdx+1:]
 		if strings.HasSuffix(rest, "]") {
-			label = rest[:len(rest)-1]
+			label := rest[:len(rest)-1]
 			label = stripQuotes(label)
+			return id, label
 		}
-		return id, label
+		return id, ""
 	}
 	return token, ""
 }
 
 // parseER parses an ER diagram from Mermaid syntax into a ParseOutput.
-func parseER(input string) (*ParseOutput, error) {
-	g := ir.NewGraph()
-	g.Kind = ir.Er
+func parseER(input string) (*ParseOutput, error) { //nolint:unparam // error return is part of the parser interface contract used by Parse().
+	graph := ir.NewGraph()
+	graph.Kind = ir.Er
 
 	lines := preprocessInput(input)
 
@@ -120,7 +121,7 @@ func parseER(input string) (*ParseOutput, error) {
 
 		// Handle direction.
 		if dir, ok := parseDirectionLine(line); ok {
-			g.Direction = dir
+			graph.Direction = dir
 			continue
 		}
 
@@ -144,32 +145,30 @@ func parseER(input string) (*ParseOutput, error) {
 			}
 			// Parse attribute line.
 			attr := parseERAttribute(trimmed)
-			if ent, ok := g.Entities[currentEntityID]; ok {
+			if ent, ok := graph.Entities[currentEntityID]; ok {
 				ent.Attributes = append(ent.Attributes, attr)
 			}
 			continue
 		}
 
 		// Try entity block opening: ENTITY_NAME { or ENTITY_NAME["Alias"] {
-		if m := erEntityOpenRe.FindStringSubmatch(line); m != nil {
-			rawID := m[1]
-			alias := m[2]
+		if match := erEntityOpenRe.FindStringSubmatch(line); match != nil {
+			rawID := match[1]
+			alias := match[2]
 			entityID, entityLabel := parseEntityID(rawID)
 			// If regex captured the alias in group 2, use that.
 			if alias != "" {
 				entityLabel = alias
 			}
-			if _, exists := g.Entities[entityID]; !exists {
-				g.Entities[entityID] = &ir.Entity{
+			if _, exists := graph.Entities[entityID]; !exists {
+				graph.Entities[entityID] = &ir.Entity{
 					ID:    entityID,
 					Label: entityLabel,
 				}
-			} else {
-				if entityLabel != "" {
-					g.Entities[entityID].Label = entityLabel
-				}
+			} else if entityLabel != "" {
+				graph.Entities[entityID].Label = entityLabel
 			}
-			g.EnsureNode(entityID, nil, nil)
+			graph.EnsureNode(entityID, nil, nil)
 			inEntity = true
 			currentEntityID = entityID
 			braceDepth = 1
@@ -177,24 +176,24 @@ func parseER(input string) (*ParseOutput, error) {
 		}
 
 		// Try relationship line.
-		if m := erRelRe.FindStringSubmatch(line); m != nil {
-			leftEntity := m[1]
-			leftCard := m[2]
-			lineStyle := m[3]
-			rightCard := m[4]
-			rightEntity := m[5]
-			label := strings.TrimSpace(m[6])
+		if match := erRelRe.FindStringSubmatch(line); match != nil {
+			leftEntity := match[1]
+			leftCard := match[2]
+			lineStyle := match[3]
+			rightCard := match[4]
+			rightEntity := match[5]
+			label := strings.TrimSpace(match[6])
 
 			// Ensure nodes exist.
-			g.EnsureNode(leftEntity, nil, nil)
-			g.EnsureNode(rightEntity, nil, nil)
+			graph.EnsureNode(leftEntity, nil, nil)
+			graph.EnsureNode(rightEntity, nil, nil)
 
 			// Ensure entities exist.
-			if _, ok := g.Entities[leftEntity]; !ok {
-				g.Entities[leftEntity] = &ir.Entity{ID: leftEntity}
+			if _, ok := graph.Entities[leftEntity]; !ok {
+				graph.Entities[leftEntity] = &ir.Entity{ID: leftEntity}
 			}
-			if _, ok := g.Entities[rightEntity]; !ok {
-				g.Entities[rightEntity] = &ir.Entity{ID: rightEntity}
+			if _, ok := graph.Entities[rightEntity]; !ok {
+				graph.Entities[rightEntity] = &ir.Entity{ID: rightEntity}
 			}
 
 			// Map cardinality.
@@ -218,7 +217,7 @@ func parseER(input string) (*ParseOutput, error) {
 				Style:           style,
 				Directed:        false,
 			}
-			g.Edges = append(g.Edges, edge)
+			graph.Edges = append(graph.Edges, edge)
 			continue
 		}
 
@@ -227,15 +226,15 @@ func parseER(input string) (*ParseOutput, error) {
 		trimmed := strings.TrimSpace(line)
 		if trimmed != "" && (!strings.Contains(trimmed, " ") || strings.Contains(trimmed, "[")) {
 			entityID, entityLabel := parseEntityID(strings.Fields(trimmed)[0])
-			if _, exists := g.Entities[entityID]; !exists {
-				g.Entities[entityID] = &ir.Entity{
+			if _, exists := graph.Entities[entityID]; !exists {
+				graph.Entities[entityID] = &ir.Entity{
 					ID:    entityID,
 					Label: entityLabel,
 				}
 			}
-			g.EnsureNode(entityID, nil, nil)
+			graph.EnsureNode(entityID, nil, nil)
 		}
 	}
 
-	return &ParseOutput{Graph: g}, nil
+	return &ParseOutput{Graph: graph}, nil
 }

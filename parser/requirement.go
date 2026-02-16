@@ -7,6 +7,9 @@ import (
 	"github.com/jamesainslie/gomd2svg/ir"
 )
 
+// reqTypeField is the field key for requirement type.
+const reqTypeField = "type"
+
 var (
 	reqBlockStartRe  = regexp.MustCompile(`^(requirement|functionalRequirement|interfaceRequirement|performanceRequirement|physicalRequirement|designConstraint)\s+(\w+)\s*\{?\s*$`)
 	elemBlockStartRe = regexp.MustCompile(`^element\s+(\w+)\s*\{?\s*$`)
@@ -14,10 +17,10 @@ var (
 	reqRelRe         = regexp.MustCompile(`^(\w+)\s+-\s+(contains|copies|derives|satisfies|verifies|refines|traces)\s+->\s+(\w+)\s*$`)
 )
 
-func parseRequirement(input string) (*ParseOutput, error) {
+func parseRequirement(input string) (*ParseOutput, error) { //nolint:unparam // error return is part of the parser interface contract used by Parse().
 	lines := preprocessInput(input)
-	g := ir.NewGraph()
-	g.Kind = ir.Requirement
+	graph := ir.NewGraph()
+	graph.Kind = ir.Requirement
 
 	if len(lines) > 0 {
 		lower := strings.ToLower(lines[0])
@@ -26,86 +29,86 @@ func parseRequirement(input string) (*ParseOutput, error) {
 		}
 	}
 
-	i := 0
-	for i < len(lines) {
-		line := lines[i]
+	idx := 0
+	for idx < len(lines) {
+		line := lines[idx]
 
-		if m := reqBlockStartRe.FindStringSubmatch(line); m != nil {
-			reqType := parseReqType(m[1])
-			name := m[2]
-			i++
+		if match := reqBlockStartRe.FindStringSubmatch(line); match != nil {
+			reqType := parseReqType(match[1])
+			name := match[2]
+			idx++
 			req := &ir.RequirementDef{Name: name, Type: reqType}
-			for i < len(lines) && lines[i] != "}" {
-				if fm := reqFieldRe.FindStringSubmatch(lines[i]); fm != nil {
-					switch strings.ToLower(fm[1]) {
+			for idx < len(lines) && lines[idx] != "}" {
+				if fieldMatch := reqFieldRe.FindStringSubmatch(lines[idx]); fieldMatch != nil {
+					switch strings.ToLower(fieldMatch[1]) {
 					case "id":
-						req.ID = fm[2]
+						req.ID = fieldMatch[2]
 					case "text":
-						req.Text = fm[2]
+						req.Text = fieldMatch[2]
 					case "risk":
-						req.Risk = parseRiskLevel(fm[2])
+						req.Risk = parseRiskLevel(fieldMatch[2])
 					case "verifymethod":
-						req.VerifyMethod = parseVerifyMethod(fm[2])
+						req.VerifyMethod = parseVerifyMethod(fieldMatch[2])
 					}
 				}
-				i++
+				idx++
 			}
-			g.Requirements = append(g.Requirements, req)
+			graph.Requirements = append(graph.Requirements, req)
 			label := name
-			g.EnsureNode(name, &label, nil)
-			i++
+			graph.EnsureNode(name, &label, nil)
+			idx++
 			continue
 		}
 
-		if m := elemBlockStartRe.FindStringSubmatch(line); m != nil {
-			name := m[1]
-			i++
+		if match := elemBlockStartRe.FindStringSubmatch(line); match != nil {
+			name := match[1]
+			idx++
 			elem := &ir.ElementDef{Name: name}
-			for i < len(lines) && lines[i] != "}" {
-				if fm := reqFieldRe.FindStringSubmatch(lines[i]); fm != nil {
-					switch strings.ToLower(fm[1]) {
-					case "type":
-						elem.Type = fm[2]
+			for idx < len(lines) && lines[idx] != "}" {
+				if fieldMatch := reqFieldRe.FindStringSubmatch(lines[idx]); fieldMatch != nil {
+					switch strings.ToLower(fieldMatch[1]) {
+					case reqTypeField:
+						elem.Type = fieldMatch[2]
 					case "docref":
-						elem.DocRef = fm[2]
+						elem.DocRef = fieldMatch[2]
 					}
 				}
-				i++
+				idx++
 			}
-			g.ReqElements = append(g.ReqElements, elem)
+			graph.ReqElements = append(graph.ReqElements, elem)
 			label := name
-			g.EnsureNode(name, &label, nil)
-			i++
+			graph.EnsureNode(name, &label, nil)
+			idx++
 			continue
 		}
 
-		if m := reqRelRe.FindStringSubmatch(line); m != nil {
+		if match := reqRelRe.FindStringSubmatch(line); match != nil {
 			rel := &ir.RequirementRel{
-				Source: m[1],
-				Target: m[3],
-				Type:   parseRelType(m[2]),
+				Source: match[1],
+				Target: match[3],
+				Type:   parseRelType(match[2]),
 			}
-			g.ReqRelationships = append(g.ReqRelationships, rel)
+			graph.ReqRelationships = append(graph.ReqRelationships, rel)
 			relLabel := rel.Type.String()
-			g.Edges = append(g.Edges, &ir.Edge{
+			graph.Edges = append(graph.Edges, &ir.Edge{
 				From:     rel.Source,
 				To:       rel.Target,
 				Label:    &relLabel,
 				Directed: true,
 				ArrowEnd: true,
 			})
-			i++
+			idx++
 			continue
 		}
 
-		i++
+		idx++
 	}
 
-	return &ParseOutput{Graph: g}, nil
+	return &ParseOutput{Graph: graph}, nil
 }
 
-func parseReqType(s string) ir.RequirementType {
-	switch strings.ToLower(s) {
+func parseReqType(str string) ir.RequirementType {
+	switch strings.ToLower(str) {
 	case "functionalrequirement":
 		return ir.ReqTypeFunctional
 	case "interfacerequirement":
@@ -121,8 +124,8 @@ func parseReqType(s string) ir.RequirementType {
 	}
 }
 
-func parseRiskLevel(s string) ir.RiskLevel {
-	switch strings.ToLower(strings.TrimSpace(s)) {
+func parseRiskLevel(str string) ir.RiskLevel {
+	switch strings.ToLower(strings.TrimSpace(str)) {
 	case "low":
 		return ir.RiskLow
 	case "medium":
@@ -134,8 +137,8 @@ func parseRiskLevel(s string) ir.RiskLevel {
 	}
 }
 
-func parseVerifyMethod(s string) ir.VerifyMethod {
-	switch strings.ToLower(strings.TrimSpace(s)) {
+func parseVerifyMethod(str string) ir.VerifyMethod {
+	switch strings.ToLower(strings.TrimSpace(str)) {
 	case "analysis":
 		return ir.VerifyAnalysis
 	case "inspection":
@@ -149,8 +152,8 @@ func parseVerifyMethod(s string) ir.VerifyMethod {
 	}
 }
 
-func parseRelType(s string) ir.RequirementRelType {
-	switch strings.ToLower(s) {
+func parseRelType(str string) ir.RequirementRelType {
+	switch strings.ToLower(str) {
 	case "contains":
 		return ir.ReqRelContains
 	case "copies":

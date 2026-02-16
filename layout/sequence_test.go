@@ -9,19 +9,19 @@ import (
 )
 
 func TestSequenceLayoutParticipantPositions(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Sequence
-	g.Participants = []*ir.SeqParticipant{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Sequence
+	graph.Participants = []*ir.SeqParticipant{
 		{ID: "A", Alias: "Alice"},
 		{ID: "B", Alias: "Bob"},
 		{ID: "C", Alias: "Charlie"},
 	}
-	g.Events = []*ir.SeqEvent{
+	graph.Events = []*ir.SeqEvent{
 		{Kind: ir.EvMessage, Message: &ir.SeqMessage{From: "A", To: "B", Text: "hello", Kind: ir.MsgSolid}},
 	}
 
-	l := ComputeLayout(g, theme.Modern(), config.DefaultLayout())
-	sd, ok := l.Diagram.(SequenceData)
+	lay := ComputeLayout(graph, theme.Modern(), config.DefaultLayout())
+	sd, ok := lay.Diagram.(SequenceData)
 	if !ok {
 		t.Fatal("expected SequenceData diagram type")
 	}
@@ -51,19 +51,19 @@ func TestSequenceLayoutParticipantPositions(t *testing.T) {
 }
 
 func TestSequenceLayoutMessagePositions(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Sequence
-	g.Participants = []*ir.SeqParticipant{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Sequence
+	graph.Participants = []*ir.SeqParticipant{
 		{ID: "A", Alias: "Alice"},
 		{ID: "B", Alias: "Bob"},
 	}
-	g.Events = []*ir.SeqEvent{
+	graph.Events = []*ir.SeqEvent{
 		{Kind: ir.EvMessage, Message: &ir.SeqMessage{From: "A", To: "B", Text: "first", Kind: ir.MsgSolid}},
 		{Kind: ir.EvMessage, Message: &ir.SeqMessage{From: "B", To: "A", Text: "second", Kind: ir.MsgDotted}},
 	}
 
-	l := ComputeLayout(g, theme.Modern(), config.DefaultLayout())
-	sd, ok := l.Diagram.(SequenceData)
+	lay := ComputeLayout(graph, theme.Modern(), config.DefaultLayout())
+	sd, ok := lay.Diagram.(SequenceData)
 	if !ok {
 		t.Fatal("expected SequenceData diagram type")
 	}
@@ -79,17 +79,17 @@ func TestSequenceLayoutMessagePositions(t *testing.T) {
 }
 
 func TestSequenceLayoutSelfMessage(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Sequence
-	g.Participants = []*ir.SeqParticipant{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Sequence
+	graph.Participants = []*ir.SeqParticipant{
 		{ID: "A", Alias: "Alice"},
 	}
-	g.Events = []*ir.SeqEvent{
+	graph.Events = []*ir.SeqEvent{
 		{Kind: ir.EvMessage, Message: &ir.SeqMessage{From: "A", To: "A", Text: "self", Kind: ir.MsgSolid}},
 	}
 
-	l := ComputeLayout(g, theme.Modern(), config.DefaultLayout())
-	sd, ok := l.Diagram.(SequenceData)
+	lay := ComputeLayout(graph, theme.Modern(), config.DefaultLayout())
+	sd, ok := lay.Diagram.(SequenceData)
 	if !ok {
 		t.Fatal("expected SequenceData diagram type")
 	}
@@ -105,20 +105,20 @@ func TestSequenceLayoutSelfMessage(t *testing.T) {
 }
 
 func TestSequenceLayoutActivations(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Sequence
-	g.Participants = []*ir.SeqParticipant{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Sequence
+	graph.Participants = []*ir.SeqParticipant{
 		{ID: "A", Alias: "Alice"},
 		{ID: "B", Alias: "Bob"},
 	}
-	g.Events = []*ir.SeqEvent{
+	graph.Events = []*ir.SeqEvent{
 		{Kind: ir.EvActivate, Target: "B"},
 		{Kind: ir.EvMessage, Message: &ir.SeqMessage{From: "A", To: "B", Text: "call", Kind: ir.MsgSolid}},
 		{Kind: ir.EvDeactivate, Target: "B"},
 	}
 
-	l := ComputeLayout(g, theme.Modern(), config.DefaultLayout())
-	sd, ok := l.Diagram.(SequenceData)
+	lay := ComputeLayout(graph, theme.Modern(), config.DefaultLayout())
+	sd, ok := lay.Diagram.(SequenceData)
 	if !ok {
 		t.Fatal("expected SequenceData diagram type")
 	}
@@ -137,20 +137,20 @@ func TestSequenceLayoutActivations(t *testing.T) {
 }
 
 func TestSequenceLayoutFrames(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Sequence
-	g.Participants = []*ir.SeqParticipant{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Sequence
+	graph.Participants = []*ir.SeqParticipant{
 		{ID: "A", Alias: "Alice"},
 		{ID: "B", Alias: "Bob"},
 	}
-	g.Events = []*ir.SeqEvent{
+	graph.Events = []*ir.SeqEvent{
 		{Kind: ir.EvFrameStart, Frame: &ir.SeqFrame{Kind: ir.FrameLoop, Label: "retry"}},
 		{Kind: ir.EvMessage, Message: &ir.SeqMessage{From: "A", To: "B", Text: "ping", Kind: ir.MsgSolid}},
 		{Kind: ir.EvFrameEnd},
 	}
 
-	l := ComputeLayout(g, theme.Modern(), config.DefaultLayout())
-	sd, ok := l.Diagram.(SequenceData)
+	lay := ComputeLayout(graph, theme.Modern(), config.DefaultLayout())
+	sd, ok := lay.Diagram.(SequenceData)
 	if !ok {
 		t.Fatal("expected SequenceData diagram type")
 	}
@@ -172,20 +172,20 @@ func TestSequenceLayoutFrames(t *testing.T) {
 }
 
 func TestSequenceLayoutCreatedParticipant(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Sequence
-	g.Participants = []*ir.SeqParticipant{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Sequence
+	graph.Participants = []*ir.SeqParticipant{
 		{ID: "A", Alias: "Alice"},
 		{ID: "B", Alias: "Bob", IsCreated: true},
 	}
-	g.Events = []*ir.SeqEvent{
+	graph.Events = []*ir.SeqEvent{
 		{Kind: ir.EvMessage, Message: &ir.SeqMessage{From: "A", To: "A", Text: "init", Kind: ir.MsgSolid}},
 		{Kind: ir.EvCreate, Target: "B"},
 		{Kind: ir.EvMessage, Message: &ir.SeqMessage{From: "A", To: "B", Text: "new", Kind: ir.MsgSolid}},
 	}
 
-	l := ComputeLayout(g, theme.Modern(), config.DefaultLayout())
-	sd, ok := l.Diagram.(SequenceData)
+	lay := ComputeLayout(graph, theme.Modern(), config.DefaultLayout())
+	sd, ok := lay.Diagram.(SequenceData)
 	if !ok {
 		t.Fatal("expected SequenceData diagram type")
 	}

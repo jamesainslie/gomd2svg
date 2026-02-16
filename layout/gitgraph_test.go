@@ -9,10 +9,10 @@ import (
 )
 
 func TestGitGraphLayout(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.GitGraph
-	g.GitMainBranch = "main"
-	g.GitActions = []ir.GitAction{
+	graph := ir.NewGraph()
+	graph.Kind = ir.GitGraph
+	graph.GitMainBranch = "main"
+	graph.GitActions = []ir.GitAction{
 		&ir.GitCommit{ID: "c1"},
 		&ir.GitBranch{Name: "develop"},
 		&ir.GitCheckout{Branch: "develop"},
@@ -23,18 +23,18 @@ func TestGitGraphLayout(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	if l.Kind != ir.GitGraph {
-		t.Errorf("Kind = %v, want GitGraph", l.Kind)
+	if lay.Kind != ir.GitGraph {
+		t.Errorf("Kind = %v, want GitGraph", lay.Kind)
 	}
-	if l.Width <= 0 || l.Height <= 0 {
-		t.Errorf("dimensions = %f x %f", l.Width, l.Height)
+	if lay.Width <= 0 || lay.Height <= 0 {
+		t.Errorf("dimensions = %f x %f", lay.Width, lay.Height)
 	}
 
-	ggd, ok := l.Diagram.(GitGraphData)
+	ggd, ok := lay.Diagram.(GitGraphData)
 	if !ok {
-		t.Fatalf("Diagram type = %T, want GitGraphData", l.Diagram)
+		t.Fatalf("Diagram type = %T, want GitGraphData", lay.Diagram)
 	}
 	if len(ggd.Commits) < 3 {
 		t.Errorf("Commits = %d, want >= 3", len(ggd.Commits))
@@ -45,10 +45,10 @@ func TestGitGraphLayout(t *testing.T) {
 }
 
 func TestGitGraphLayoutBranchLanes(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.GitGraph
-	g.GitMainBranch = "main"
-	g.GitActions = []ir.GitAction{
+	graph := ir.NewGraph()
+	graph.Kind = ir.GitGraph
+	graph.GitMainBranch = "main"
+	graph.GitActions = []ir.GitAction{
 		&ir.GitCommit{ID: "c1"},
 		&ir.GitBranch{Name: "dev"},
 		&ir.GitCheckout{Branch: "dev"},
@@ -57,8 +57,12 @@ func TestGitGraphLayoutBranchLanes(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
-	ggd := l.Diagram.(GitGraphData)
+	lay := ComputeLayout(graph, th, cfg)
+
+	ggd, ok := lay.Diagram.(GitGraphData)
+	if !ok {
+		t.Fatal("expected GitGraphData")
+	}
 
 	// main and dev should be on different Y lanes.
 	var mainY, devY float32
@@ -76,10 +80,10 @@ func TestGitGraphLayoutBranchLanes(t *testing.T) {
 }
 
 func TestGitGraphLayoutCommitOrder(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.GitGraph
-	g.GitMainBranch = "main"
-	g.GitActions = []ir.GitAction{
+	graph := ir.NewGraph()
+	graph.Kind = ir.GitGraph
+	graph.GitMainBranch = "main"
+	graph.GitActions = []ir.GitAction{
 		&ir.GitCommit{ID: "c1"},
 		&ir.GitCommit{ID: "c2"},
 		&ir.GitCommit{ID: "c3"},
@@ -87,8 +91,12 @@ func TestGitGraphLayoutCommitOrder(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
-	ggd := l.Diagram.(GitGraphData)
+	lay := ComputeLayout(graph, th, cfg)
+
+	ggd, ok := lay.Diagram.(GitGraphData)
+	if !ok {
+		t.Fatal("expected GitGraphData")
+	}
 
 	// Commits should be left-to-right.
 	if len(ggd.Commits) != 3 {

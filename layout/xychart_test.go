@@ -9,32 +9,32 @@ import (
 )
 
 func TestXYChartLayout(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.XYChart
-	g.XYTitle = "Sales"
-	g.XYXAxis = &ir.XYAxis{
+	graph := ir.NewGraph()
+	graph.Kind = ir.XYChart
+	graph.XYTitle = "Sales"
+	graph.XYXAxis = &ir.XYAxis{
 		Mode:       ir.XYAxisBand,
 		Categories: []string{"Jan", "Feb", "Mar"},
 	}
-	g.XYYAxis = &ir.XYAxis{
+	graph.XYYAxis = &ir.XYAxis{
 		Mode: ir.XYAxisNumeric,
 		Min:  0,
 		Max:  100,
 	}
-	g.XYSeries = []*ir.XYSeries{
+	graph.XYSeries = []*ir.XYSeries{
 		{Type: ir.XYSeriesBar, Values: []float64{30, 60, 90}},
 		{Type: ir.XYSeriesLine, Values: []float64{20, 50, 80}},
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	if l.Width <= 0 || l.Height <= 0 {
-		t.Errorf("invalid dimensions: %v x %v", l.Width, l.Height)
+	if lay.Width <= 0 || lay.Height <= 0 {
+		t.Errorf("invalid dimensions: %v x %v", lay.Width, lay.Height)
 	}
 
-	xyd, ok := l.Diagram.(XYChartData)
+	xyd, ok := lay.Diagram.(XYChartData)
 	if !ok {
 		t.Fatal("Diagram is not XYChartData")
 	}
@@ -59,17 +59,17 @@ func TestXYChartLayout(t *testing.T) {
 }
 
 func TestXYChartAutoRange(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.XYChart
-	g.XYSeries = []*ir.XYSeries{
+	graph := ir.NewGraph()
+	graph.Kind = ir.XYChart
+	graph.XYSeries = []*ir.XYSeries{
 		{Type: ir.XYSeriesBar, Values: []float64{10, 50, 30}},
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	xyd, ok := l.Diagram.(XYChartData)
+	xyd, ok := lay.Diagram.(XYChartData)
 	if !ok {
 		t.Fatal("Diagram is not XYChartData")
 	}

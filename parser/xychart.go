@@ -14,19 +14,19 @@ var (
 	xyBandAxisRe = regexp.MustCompile(`^(?:"([^"]*)"?\s+)?\[([^\]]+)\]$`)
 )
 
-func parseXYChart(input string) (*ParseOutput, error) {
-	g := ir.NewGraph()
-	g.Kind = ir.XYChart
+func parseXYChart(input string) (*ParseOutput, error) { //nolint:unparam // error return is part of the parser interface contract used by Parse().
+	graph := ir.NewGraph()
+	graph.Kind = ir.XYChart
 
 	lines := preprocessInput(input)
 	if len(lines) == 0 {
-		return &ParseOutput{Graph: g}, nil
+		return &ParseOutput{Graph: graph}, nil
 	}
 
 	// Check for horizontal orientation on the first line.
 	first := strings.ToLower(lines[0])
 	if strings.Contains(first, "horizontal") {
-		g.XYHorizontal = true
+		graph.XYHorizontal = true
 	}
 
 	for _, line := range lines[1:] {
@@ -35,17 +35,17 @@ func parseXYChart(input string) (*ParseOutput, error) {
 
 		switch {
 		case strings.HasPrefix(lower, "title"):
-			g.XYTitle = extractQuotedText(trimmed[5:])
+			graph.XYTitle = extractQuotedText(trimmed[5:])
 
 		case strings.HasPrefix(lower, "x-axis"):
-			g.XYXAxis = parseXYAxis(strings.TrimSpace(trimmed[6:]))
+			graph.XYXAxis = parseXYAxis(strings.TrimSpace(trimmed[6:]))
 
 		case strings.HasPrefix(lower, "y-axis"):
-			g.XYYAxis = parseXYAxis(strings.TrimSpace(trimmed[6:]))
+			graph.XYYAxis = parseXYAxis(strings.TrimSpace(trimmed[6:]))
 
 		case strings.HasPrefix(lower, "bar"):
 			if vals := parseXYValues(trimmed); vals != nil {
-				g.XYSeries = append(g.XYSeries, &ir.XYSeries{
+				graph.XYSeries = append(graph.XYSeries, &ir.XYSeries{
 					Type:   ir.XYSeriesBar,
 					Values: vals,
 				})
@@ -53,7 +53,7 @@ func parseXYChart(input string) (*ParseOutput, error) {
 
 		case strings.HasPrefix(lower, "line"):
 			if vals := parseXYValues(trimmed); vals != nil {
-				g.XYSeries = append(g.XYSeries, &ir.XYSeries{
+				graph.XYSeries = append(graph.XYSeries, &ir.XYSeries{
 					Type:   ir.XYSeriesLine,
 					Values: vals,
 				})
@@ -61,41 +61,41 @@ func parseXYChart(input string) (*ParseOutput, error) {
 		}
 	}
 
-	return &ParseOutput{Graph: g}, nil
+	return &ParseOutput{Graph: graph}, nil
 }
 
-func parseXYAxis(s string) *ir.XYAxis {
-	// Try numeric range: "Title" min --> max  or  min --> max
-	if m := xyNumAxisRe.FindStringSubmatch(s); m != nil {
-		axis := &ir.XYAxis{Mode: ir.XYAxisNumeric, Title: m[1]}
-		axis.Min, _ = strconv.ParseFloat(m[2], 64) // regex guarantees digits
-		axis.Max, _ = strconv.ParseFloat(m[3], 64) // regex guarantees digits
+func parseXYAxis(str string) *ir.XYAxis {
+	// Try numeric range: "Title" min --> max  or  min --> max.
+	if match := xyNumAxisRe.FindStringSubmatch(str); match != nil {
+		axis := &ir.XYAxis{Mode: ir.XYAxisNumeric, Title: match[1]}
+		axis.Min, _ = strconv.ParseFloat(match[2], 64) //nolint:errcheck // regex guarantees digits.
+		axis.Max, _ = strconv.ParseFloat(match[3], 64) //nolint:errcheck // regex guarantees digits.
 		return axis
 	}
-	// Try band/categorical: "Title" [a, b, c]  or  [a, b, c]
-	if m := xyBandAxisRe.FindStringSubmatch(s); m != nil {
-		cats := splitAndTrimCommas(m[2])
-		return &ir.XYAxis{Mode: ir.XYAxisBand, Title: m[1], Categories: cats}
+	// Try band/categorical: "Title" [a, b, c]  or  [a, b, c].
+	if match := xyBandAxisRe.FindStringSubmatch(str); match != nil {
+		cats := splitAndTrimCommas(match[2])
+		return &ir.XYAxis{Mode: ir.XYAxisBand, Title: match[1], Categories: cats}
 	}
 	// Title only (auto-range).
-	title := extractQuotedText(s)
+	title := extractQuotedText(str)
 	if title == "" {
-		title = strings.TrimSpace(s)
+		title = strings.TrimSpace(str)
 	}
 	return &ir.XYAxis{Mode: ir.XYAxisNumeric, Title: title}
 }
 
 func parseXYValues(line string) []float64 {
-	m := xyValuesRe.FindStringSubmatch(line)
-	if m == nil {
+	match := xyValuesRe.FindStringSubmatch(line)
+	if match == nil {
 		return nil
 	}
-	parts := splitAndTrimCommas(m[1])
+	parts := splitAndTrimCommas(match[1])
 	vals := make([]float64, 0, len(parts))
-	for _, p := range parts {
-		v, err := strconv.ParseFloat(p, 64)
-		if err == nil {
-			vals = append(vals, v)
+	for _, part := range parts {
+		val, parseErr := strconv.ParseFloat(part, 64)
+		if parseErr == nil {
+			vals = append(vals, val)
 		}
 	}
 	return vals

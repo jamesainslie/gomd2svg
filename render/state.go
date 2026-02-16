@@ -10,43 +10,58 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
+// State diagram rendering constants.
+const (
+	stateEndInnerScale    float32 = 0.6
+	stateCompositeRadius  float32 = 8
+	stateLabelOffsetX     float32 = 10
+	stateLabelPadY        float32 = 4
+	stateRegularRadius    float32 = 10
+	stateLineHeightScale  float32 = 1.2
+	stateNamePadY         float32 = 4
+	stateDividerPadY      float32 = 6
+	stateDividerInsetX    float32 = 4
+	stateDescFontScale    float32 = 0.9
+	stateNodeBorderRadius float32 = 6
+)
+
 // renderState renders all state diagram elements: edges, then nodes.
-func renderState(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.Layout) {
-	sd, ok := l.Diagram.(layout.StateData)
+func renderState(builder *svgBuilder, computed *layout.Layout, th *theme.Theme, cfg *config.Layout) {
+	sd, ok := computed.Diagram.(layout.StateData)
 	if !ok {
 		return
 	}
 
-	renderStateEdges(b, l, th)
-	renderStateNodes(b, l, th, cfg, &sd)
+	renderStateEdges(builder, computed, th)
+	renderStateNodes(builder, computed, th, cfg, &sd)
 }
 
 // renderStateEdges renders state transitions. Reuses the same edge rendering
 // logic as the flowchart renderer.
-func renderStateEdges(b *svgBuilder, l *layout.Layout, th *theme.Theme) {
-	renderEdges(b, l, th)
+func renderStateEdges(builder *svgBuilder, computed *layout.Layout, th *theme.Theme) {
+	renderEdges(builder, computed, th)
 }
 
 // renderStateNodes renders state nodes sorted by ID for deterministic output.
-func renderStateNodes(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.Layout, sd *layout.StateData) {
-	ids := make([]string, 0, len(l.Nodes))
-	for id := range l.Nodes {
+func renderStateNodes(builder *svgBuilder, computed *layout.Layout, th *theme.Theme, cfg *config.Layout, sd *layout.StateData) {
+	ids := make([]string, 0, len(computed.Nodes))
+	for id := range computed.Nodes {
 		ids = append(ids, id)
 	}
 	sort.Strings(ids)
 
 	for _, id := range ids {
-		n := l.Nodes[id]
+		node := computed.Nodes[id]
 
 		// Start pseudo-state: filled black circle.
 		if strings.HasPrefix(id, "__start__") {
-			renderStartState(b, n, th)
+			renderStartState(builder, node, th)
 			continue
 		}
 
 		// End pseudo-state: bullseye (outer ring + inner filled circle).
 		if strings.HasPrefix(id, "__end__") {
-			renderEndState(b, n, th)
+			renderEndState(builder, node, th)
 			continue
 		}
 
@@ -54,10 +69,10 @@ func renderStateNodes(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *con
 		if ann, ok := sd.Annotations[id]; ok {
 			switch ann {
 			case ir.StateFork, ir.StateJoin:
-				renderForkJoinState(b, n, th)
+				renderForkJoinState(builder, node, th)
 				continue
 			case ir.StateChoice:
-				renderChoiceState(b, n, th)
+				renderChoiceState(builder, node, th)
 				continue
 			}
 		}
@@ -65,23 +80,23 @@ func renderStateNodes(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *con
 		// Composite state: outer container with inner layout.
 		if cs, ok := sd.CompositeStates[id]; ok {
 			if innerLayout, hasInner := sd.InnerLayouts[id]; hasInner {
-				renderCompositeState(b, n, innerLayout, cs.Label, th, cfg)
+				renderCompositeState(builder, node, innerLayout, cs.Label, th, cfg)
 				continue
 			}
 		}
 
 		// Regular state.
 		desc := sd.Descriptions[id]
-		renderRegularState(b, n, desc, th)
+		renderRegularState(builder, node, desc, th)
 	}
 }
 
 // renderStartState renders a filled black circle for the start pseudo-state.
-func renderStartState(b *svgBuilder, n *layout.NodeLayout, th *theme.Theme) {
-	cx := n.X
-	cy := n.Y
-	r := n.Width / 2
-	b.circle(cx, cy, r,
+func renderStartState(builder *svgBuilder, node *layout.NodeLayout, th *theme.Theme) {
+	cx := node.X
+	cy := node.Y
+	radius := node.Width / 2
+	builder.circle(cx, cy, radius,
 		"fill", th.StateStartEnd,
 		"stroke", th.StateStartEnd,
 		"stroke-width", "1",
@@ -90,21 +105,21 @@ func renderStartState(b *svgBuilder, n *layout.NodeLayout, th *theme.Theme) {
 
 // renderEndState renders a bullseye for the end pseudo-state:
 // an outer circle with stroke only and an inner filled circle.
-func renderEndState(b *svgBuilder, n *layout.NodeLayout, th *theme.Theme) {
-	cx := n.X
-	cy := n.Y
-	outerR := n.Width / 2
-	innerR := outerR * 0.6
+func renderEndState(builder *svgBuilder, node *layout.NodeLayout, th *theme.Theme) {
+	cx := node.X
+	cy := node.Y
+	outerR := node.Width / 2
+	innerR := outerR * stateEndInnerScale
 
 	// Outer circle (stroke only).
-	b.circle(cx, cy, outerR,
+	builder.circle(cx, cy, outerR,
 		"fill", "none",
 		"stroke", th.StateStartEnd,
 		"stroke-width", "1.5",
 	)
 
 	// Inner filled circle.
-	b.circle(cx, cy, innerR,
+	builder.circle(cx, cy, innerR,
 		"fill", th.StateStartEnd,
 		"stroke", th.StateStartEnd,
 		"stroke-width", "1",
@@ -112,10 +127,10 @@ func renderEndState(b *svgBuilder, n *layout.NodeLayout, th *theme.Theme) {
 }
 
 // renderForkJoinState renders a filled horizontal bar for fork/join pseudo-states.
-func renderForkJoinState(b *svgBuilder, n *layout.NodeLayout, th *theme.Theme) {
-	x := n.X - n.Width/2
-	y := n.Y - n.Height/2
-	b.rect(x, y, n.Width, n.Height, 2,
+func renderForkJoinState(builder *svgBuilder, node *layout.NodeLayout, th *theme.Theme) {
+	posX := node.X - node.Width/2
+	posY := node.Y - node.Height/2
+	builder.rect(posX, posY, node.Width, node.Height, 2,
 		"fill", th.StateStartEnd,
 		"stroke", th.StateStartEnd,
 		"stroke-width", "1",
@@ -123,18 +138,18 @@ func renderForkJoinState(b *svgBuilder, n *layout.NodeLayout, th *theme.Theme) {
 }
 
 // renderChoiceState renders a diamond polygon for choice pseudo-states.
-func renderChoiceState(b *svgBuilder, n *layout.NodeLayout, th *theme.Theme) {
-	cx := n.X
-	cy := n.Y
-	hw := n.Width / 2
-	hh := n.Height / 2
+func renderChoiceState(builder *svgBuilder, node *layout.NodeLayout, th *theme.Theme) {
+	cx := node.X
+	cy := node.Y
+	hw := node.Width / 2
+	hh := node.Height / 2
 	pts := [][2]float32{
 		{cx, cy - hh},
 		{cx + hw, cy},
 		{cx, cy + hh},
 		{cx - hw, cy},
 	}
-	b.polygon(pts,
+	builder.polygon(pts,
 		"fill", th.StateFill,
 		"stroke", th.StateBorder,
 		"stroke-width", "1.5",
@@ -144,12 +159,12 @@ func renderChoiceState(b *svgBuilder, n *layout.NodeLayout, th *theme.Theme) {
 // renderCompositeState renders a composite state as a rounded rect container
 // with a label at top, then recursively renders the inner layout offset to
 // fit inside the container.
-func renderCompositeState(b *svgBuilder, n *layout.NodeLayout, innerLayout *layout.Layout, label string, th *theme.Theme, cfg *config.Layout) {
-	x := n.X - n.Width/2
-	y := n.Y - n.Height/2
+func renderCompositeState(builder *svgBuilder, node *layout.NodeLayout, innerLayout *layout.Layout, label string, th *theme.Theme, cfg *config.Layout) {
+	posX := node.X - node.Width/2
+	posY := node.Y - node.Height/2
 
 	// Outer rounded rect (dashed border like subgraph).
-	b.rect(x, y, n.Width, n.Height, 8,
+	builder.rect(posX, posY, node.Width, node.Height, stateCompositeRadius,
 		"fill", th.ClusterBackground,
 		"stroke", th.StateBorder,
 		"stroke-width", "1.5",
@@ -157,9 +172,9 @@ func renderCompositeState(b *svgBuilder, n *layout.NodeLayout, innerLayout *layo
 	)
 
 	// Label at top-left inside the container.
-	labelX := x + 10
-	labelY := y + th.FontSize + 4
-	b.text(labelX, labelY, label,
+	labelX := posX + stateLabelOffsetX
+	labelY := posY + th.FontSize + stateLabelPadY
+	builder.text(labelX, labelY, label,
 		"fill", th.TextColor,
 		"font-size", fmtFloat(th.FontSize),
 		"font-weight", "bold",
@@ -168,60 +183,60 @@ func renderCompositeState(b *svgBuilder, n *layout.NodeLayout, innerLayout *layo
 	// Render inner layout offset to fit inside the container.
 	// The inner content starts below the label area.
 	labelAreaH := th.FontSize*cfg.LabelLineHeight + cfg.Padding.NodeVertical
-	offsetX := x + cfg.Padding.NodeHorizontal
-	offsetY := y + labelAreaH
+	offsetX := posX + cfg.Padding.NodeHorizontal
+	offsetY := posY + labelAreaH
 
-	renderInnerLayout(b, innerLayout, th, cfg, offsetX, offsetY)
+	renderInnerLayout(builder, innerLayout, th, cfg, offsetX, offsetY)
 }
 
 // renderInnerLayout renders a nested layout at a given offset by translating
 // all node and edge coordinates.
-func renderInnerLayout(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.Layout, offsetX, offsetY float32) {
-	b.openTag("g",
+func renderInnerLayout(builder *svgBuilder, computed *layout.Layout, th *theme.Theme, cfg *config.Layout, offsetX, offsetY float32) {
+	builder.openTag("g",
 		"transform", "translate("+fmtFloat(offsetX)+","+fmtFloat(offsetY)+")",
 	)
 
 	// Render edges.
-	renderEdges(b, l, th)
+	renderEdges(builder, computed, th)
 
 	// Render nodes — delegate to appropriate renderer based on diagram type.
-	switch d := l.Diagram.(type) {
+	switch diag := computed.Diagram.(type) {
 	case layout.StateData:
-		renderStateNodes(b, l, th, cfg, &d)
+		renderStateNodes(builder, computed, th, cfg, &diag)
 	default:
-		renderNodes(b, l, th)
+		renderNodes(builder, computed, th)
 	}
 
-	b.closeTag("g")
+	builder.closeTag("g")
 }
 
 // renderRegularState renders a regular state node as a rounded rect with
 // the state name centered. If a description is present, a divider line
 // separates the name from the description text below.
-func renderRegularState(b *svgBuilder, n *layout.NodeLayout, description string, th *theme.Theme) {
-	x := n.X - n.Width/2
-	y := n.Y - n.Height/2
+func renderRegularState(builder *svgBuilder, node *layout.NodeLayout, description string, th *theme.Theme) {
+	posX := node.X - node.Width/2
+	posY := node.Y - node.Height/2
 
 	// Rounded rect background.
-	b.rect(x, y, n.Width, n.Height, 10,
+	builder.rect(posX, posY, node.Width, node.Height, stateRegularRadius,
 		"fill", th.StateFill,
 		"stroke", th.StateBorder,
 		"stroke-width", "1.5",
 	)
 
-	fontSize := n.Label.FontSize
+	fontSize := node.Label.FontSize
 	if fontSize <= 0 {
 		fontSize = th.FontSize
 	}
-	lineHeight := fontSize * 1.2
+	lineHeight := fontSize * stateLineHeightScale
 
 	if description == "" {
 		// No description: center the label vertically.
-		renderNodeLabel(b, n, th.TextColor)
+		renderNodeLabel(builder, node, th.TextColor)
 	} else {
 		// With description: name at top, divider, description below.
-		nameY := y + lineHeight + 4
-		b.text(n.X, nameY, n.Label.Lines[0],
+		nameY := posY + lineHeight + stateNamePadY
+		builder.text(node.X, nameY, node.Label.Lines[0],
 			"text-anchor", "middle",
 			"dominant-baseline", "auto",
 			"fill", th.TextColor,
@@ -230,19 +245,19 @@ func renderRegularState(b *svgBuilder, n *layout.NodeLayout, description string,
 		)
 
 		// Divider line.
-		dividerY := nameY + 6
-		b.line(x+4, dividerY, x+n.Width-4, dividerY,
+		dividerY := nameY + stateDividerPadY
+		builder.line(posX+stateDividerInsetX, dividerY, posX+node.Width-stateDividerInsetX, dividerY,
 			"stroke", th.StateBorder,
 			"stroke-width", "0.5",
 		)
 
 		// Description text below divider.
 		descY := dividerY + lineHeight
-		b.text(n.X, descY, description,
+		builder.text(node.X, descY, description,
 			"text-anchor", "middle",
 			"dominant-baseline", "auto",
 			"fill", th.TextColor,
-			"font-size", fmtFloat(fontSize*0.9),
+			"font-size", fmtFloat(fontSize*stateDescFontScale),
 		)
 	}
 }

@@ -9,13 +9,13 @@ import (
 )
 
 func TestComputeClassLayout(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Class
-	g.Direction = ir.TopDown
+	graph := ir.NewGraph()
+	graph.Kind = ir.Class
+	graph.Direction = ir.TopDown
 
-	g.EnsureNode("Animal", nil, nil)
-	g.EnsureNode("Dog", nil, nil)
-	g.Members["Animal"] = &ir.ClassMembers{
+	graph.EnsureNode("Animal", nil, nil)
+	graph.EnsureNode("Dog", nil, nil)
+	graph.Members["Animal"] = &ir.ClassMembers{
 		Attributes: []ir.ClassMember{
 			{Name: "name", Type: "String", Visibility: ir.VisPublic},
 		},
@@ -23,27 +23,27 @@ func TestComputeClassLayout(t *testing.T) {
 			{Name: "speak", IsMethod: true, Visibility: ir.VisPublic, Type: "void"},
 		},
 	}
-	g.Edges = append(g.Edges, &ir.Edge{From: "Dog", To: "Animal", Directed: true, ArrowEnd: true})
+	graph.Edges = append(graph.Edges, &ir.Edge{From: "Dog", To: "Animal", Directed: true, ArrowEnd: true})
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	if l.Kind != ir.Class {
-		t.Errorf("Kind = %v, want Class", l.Kind)
+	if lay.Kind != ir.Class {
+		t.Errorf("Kind = %v, want Class", lay.Kind)
 	}
-	if len(l.Nodes) != 2 {
-		t.Errorf("nodes = %d, want 2", len(l.Nodes))
+	if len(lay.Nodes) != 2 {
+		t.Errorf("nodes = %d, want 2", len(lay.Nodes))
 	}
-	if len(l.Edges) != 1 {
-		t.Errorf("edges = %d, want 1", len(l.Edges))
+	if len(lay.Edges) != 1 {
+		t.Errorf("edges = %d, want 1", len(lay.Edges))
 	}
-	animal := l.Nodes["Animal"]
-	dog := l.Nodes["Dog"]
+	animal := lay.Nodes["Animal"]
+	dog := lay.Nodes["Dog"]
 	if animal.Height <= dog.Height {
 		t.Errorf("Animal height (%f) should be > Dog height (%f)", animal.Height, dog.Height)
 	}
-	if _, ok := l.Diagram.(ClassData); !ok {
-		t.Errorf("Diagram data type = %T, want ClassData", l.Diagram)
+	if _, ok := lay.Diagram.(ClassData); !ok {
+		t.Errorf("Diagram data type = %T, want ClassData", lay.Diagram)
 	}
 }

@@ -17,18 +17,19 @@ type Options struct {
 }
 
 func (o Options) resolveTheme(dir parser.Directive) *theme.Theme {
+	switch {
 	// CLI ThemeName takes highest precedence.
-	if o.ThemeName != "" {
+	case o.ThemeName != "":
 		return theme.ByName(o.ThemeName)
-	}
 	// Directive theme is second.
-	if dir.Theme != "" || dir.ThemeVariables != (parser.ThemeVariables{}) {
+	case dir.Theme != "" || dir.ThemeVariables != (parser.ThemeVariables{}):
 		var th *theme.Theme
-		if dir.Theme != "" {
+		switch {
+		case dir.Theme != "":
 			th = theme.ByName(dir.Theme)
-		} else if o.Theme != nil {
+		case o.Theme != nil:
 			th = o.Theme
-		} else {
+		default:
 			th = theme.Modern()
 		}
 		if dir.ThemeVariables != (parser.ThemeVariables{}) {
@@ -51,11 +52,11 @@ func (o Options) resolveTheme(dir parser.Directive) *theme.Theme {
 			th = theme.WithOverrides(th, ov)
 		}
 		return th
-	}
-	if o.Theme != nil {
+	case o.Theme != nil:
 		return o.Theme
+	default:
+		return theme.Modern()
 	}
-	return theme.Modern()
 }
 
 func (o Options) layoutOrDefault() *config.Layout {
@@ -80,5 +81,6 @@ func (r *Result) TotalUs() int64 {
 
 // TotalMs returns the total rendering time in milliseconds.
 func (r *Result) TotalMs() float64 {
-	return float64(r.TotalUs()) / 1000.0
+	const usPerMs = 1000.0
+	return float64(r.TotalUs()) / usPerMs
 }

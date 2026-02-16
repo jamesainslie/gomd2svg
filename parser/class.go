@@ -19,33 +19,35 @@ var (
 			`(?:\s*:\s*(.+))?$`, // optional label
 	)
 
-	// classAnnotationRe matches <<annotation>> ClassName
+	// classAnnotationRe matches <<annotation>> ClassName.
 	classAnnotationRe = regexp.MustCompile(`^<<(\w+)>>\s+(\w+)$`)
 
-	// classBodyDeclRe matches "class ClassName {" or "class ClassName"
+	// classBodyDeclRe matches "class ClassName {" or "class ClassName".
 	classBodyDeclRe = regexp.MustCompile(`^class\s+(\w+(?:~[^~]+~)?)\s*(\{?)$`)
 
-	// classColonMemberRe matches "ClassName : memberDef"
+	// classColonMemberRe matches "ClassName : memberDef".
 	classColonMemberRe = regexp.MustCompile(`^(\w+)\s*:\s*(.+)$`)
 
-	// classNoteForRe matches "note for ClassName "text""
+	// classNoteForRe matches "note for ClassName text".
 	classNoteForRe = regexp.MustCompile(`^note\s+for\s+(\w+)\s+"([^"]+)"$`)
 
-	// classNoteRe matches "note "text""
+	// classNoteRe matches standalone "note text".
 	classNoteRe = regexp.MustCompile(`^note\s+"([^"]+)"$`)
 
-	// classNamespaceRe matches "namespace Name {"
+	// classNamespaceRe matches "namespace Name {".
 	classNamespaceRe = regexp.MustCompile(`^namespace\s+(\w+)\s*\{$`)
 
-	// classGenericRe extracts class name and generic param from "ClassName~T~"
+	// classGenericRe extracts class name and generic param from "ClassName~T~".
 	classGenericRe = regexp.MustCompile(`^(\w+)~([^~]+)~$`)
 
-	// classDirectiveSkipRe matches lines to skip (classDef, style, etc.)
+	// classDirectiveSkipRe matches lines to skip (classDef, style, etc.).
 	classDirectiveSkipRe = regexp.MustCompile(`(?i)^(classdef|style|cssclass|click|callback|link)\b`)
 )
 
 // parseClass parses a Mermaid class diagram.
-func parseClass(input string) (*ParseOutput, error) {
+//
+//nolint:gocognit,funlen // class diagrams have inherent complexity from namespace/body/relationship parsing.
+func parseClass(input string) (*ParseOutput, error) { //nolint:unparam // error return is part of the parser interface contract used by Parse().
 	graph := ir.NewGraph()
 	graph.Kind = ir.Class
 
@@ -57,8 +59,8 @@ func parseClass(input string) (*ParseOutput, error) {
 	var currentNamespace *ir.Namespace
 	namespaceBraceDepth := 0
 
-	for i := 0; i < len(lines); i++ {
-		line := lines[i]
+	for idx := range lines {
+		line := lines[idx]
 
 		// Skip header line.
 		lower := strings.ToLower(line)

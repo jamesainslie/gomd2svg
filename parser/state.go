@@ -66,15 +66,17 @@ func parseState(input string) (*ParseOutput, error) {
 }
 
 // parseStateBody parses the body lines of a state diagram into the given graph.
+//
+//nolint:gocognit // state parsing has inherent complexity from composite states, notes, annotations, and transitions.
 func parseStateBody(lines []string, graph *ir.Graph) {
-	i := 0
-	for i < len(lines) {
-		line := lines[i]
+	idx := 0
+	for idx < len(lines) {
+		line := lines[idx]
 
 		// Direction
 		if dir, ok := parseDirectionLine(line); ok {
 			graph.Direction = dir
-			i++
+			idx++
 			continue
 		}
 
@@ -85,7 +87,7 @@ func parseStateBody(lines []string, graph *ir.Graph) {
 				Target:   caps[2],
 				Text:     strings.TrimSpace(caps[3]),
 			})
-			i++
+			idx++
 			continue
 		}
 
@@ -94,14 +96,14 @@ func parseStateBody(lines []string, graph *ir.Graph) {
 			position := caps[1]
 			target := caps[2]
 			var noteLines []string
-			i++
-			for i < len(lines) {
-				if strings.TrimSpace(lines[i]) == "end note" {
-					i++
+			idx++
+			for idx < len(lines) {
+				if strings.TrimSpace(lines[idx]) == "end note" {
+					idx++
 					break
 				}
-				noteLines = append(noteLines, lines[i])
-				i++
+				noteLines = append(noteLines, lines[idx])
+				idx++
 			}
 			graph.Notes = append(graph.Notes, &ir.DiagramNote{
 				Position: position,
@@ -119,7 +121,7 @@ func parseStateBody(lines []string, graph *ir.Graph) {
 				graph.StateAnnotations[name] = ann
 				graph.EnsureNode(name, nil, nil)
 			}
-			i++
+			idx++
 			continue
 		}
 
@@ -131,7 +133,7 @@ func parseStateBody(lines []string, graph *ir.Graph) {
 				graph.StateAnnotations[name] = ann
 				graph.EnsureNode(name, nil, nil)
 			}
-			i++
+			idx++
 			continue
 		}
 
@@ -139,8 +141,8 @@ func parseStateBody(lines []string, graph *ir.Graph) {
 		if caps := stateCompositeRe.FindStringSubmatch(line); caps != nil {
 			stateName := caps[1]
 			// Collect inner lines until matching }
-			innerLines, endIdx := collectBraceBlock(lines, i+1)
-			i = endIdx
+			innerLines, endIdx := collectBraceBlock(lines, idx+1)
+			idx = endIdx
 
 			// Check for concurrent regions (lines that are just "--")
 			regions := splitRegions(innerLines)
@@ -180,7 +182,7 @@ func parseStateBody(lines []string, graph *ir.Graph) {
 			alias := caps[2]
 			graph.EnsureNode(alias, nil, nil)
 			graph.StateDescriptions[alias] = desc
-			i++
+			idx++
 			continue
 		}
 
@@ -201,7 +203,7 @@ func parseStateBody(lines []string, graph *ir.Graph) {
 			graph.EnsureNode(from, nil, nil)
 			graph.EnsureNode(to, nil, nil)
 			graph.Edges = append(graph.Edges, edge)
-			i++
+			idx++
 			continue
 		}
 
@@ -213,7 +215,7 @@ func parseStateBody(lines []string, graph *ir.Graph) {
 			if stateID != "state" && stateID != "note" {
 				graph.StateDescriptions[stateID] = desc
 				graph.EnsureNode(stateID, nil, nil)
-				i++
+				idx++
 				continue
 			}
 		}
@@ -224,7 +226,7 @@ func parseStateBody(lines []string, graph *ir.Graph) {
 			graph.EnsureNode(trimmed, nil, nil)
 		}
 
-		i++
+		idx++
 	}
 }
 
@@ -258,9 +260,9 @@ func parseAnnotationType(annType string) (ir.StateAnnotation, bool) {
 func collectBraceBlock(lines []string, startIdx int) ([]string, int) {
 	depth := 1
 	var inner []string
-	i := startIdx
-	for i < len(lines) {
-		line := lines[i]
+	idx := startIdx
+	for idx < len(lines) {
+		line := lines[idx]
 		trimmed := strings.TrimSpace(line)
 
 		// Count braces
@@ -276,7 +278,7 @@ func collectBraceBlock(lines []string, startIdx int) ([]string, int) {
 					if beforeBrace != "" {
 						inner = append(inner, beforeBrace)
 					}
-					return inner, i + 1
+					return inner, idx + 1
 				}
 			}
 		}
@@ -284,9 +286,9 @@ func collectBraceBlock(lines []string, startIdx int) ([]string, int) {
 		if depth > 0 {
 			inner = append(inner, line)
 		}
-		i++
+		idx++
 	}
-	return inner, i
+	return inner, idx
 }
 
 // splitRegions splits lines by the "--" separator into concurrent regions.

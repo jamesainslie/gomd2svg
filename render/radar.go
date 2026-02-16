@@ -11,8 +11,20 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
-func renderRadar(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.Layout) {
-	rd, ok := l.Diagram.(layout.RadarData)
+// Radar diagram rendering constants.
+const (
+	radarTitleOffsetY      float32 = 20
+	radarLegendWidth       float32 = 100
+	radarLegendRowHeight   float32 = 20
+	radarLegendSwatchW     float32 = 12
+	radarLegendSwatchH     float32 = 12
+	radarLegendTextOff     float32 = 16
+	radarLegendBaselineOff float32 = 10
+	radarFallbackColor             = "#4C78A8"
+)
+
+func renderRadar(builder *svgBuilder, lay *layout.Layout, th *theme.Theme, cfg *config.Layout) {
+	rd, ok := lay.Diagram.(layout.RadarData)
 	if !ok {
 		return
 	}
@@ -23,7 +35,7 @@ func renderRadar(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.L
 
 	// Title.
 	if rd.Title != "" {
-		b.text(l.Width/2, 20, rd.Title,
+		builder.text(lay.Width/2, radarTitleOffsetY, rd.Title,
 			"text-anchor", "middle",
 			"font-family", th.FontFamily,
 			"font-size", "16",
@@ -42,18 +54,18 @@ func renderRadar(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.L
 	}
 
 	// Graticule (concentric rings).
-	for _, r := range rd.GraticuleRadii {
+	for _, radius := range rd.GraticuleRadii {
 		if rd.GraticuleType == ir.RadarGraticulePolygon && numAxes >= 3 {
 			// Polygon graticule.
 			var points []string
 			angleStep := 2 * math.Pi / float64(numAxes)
-			for i := range numAxes {
-				angle := -math.Pi/2 + float64(i)*angleStep
-				px := cx + r*float32(math.Cos(angle))
-				py := cy + r*float32(math.Sin(angle))
+			for idx := range numAxes {
+				angle := -math.Pi/2 + float64(idx)*angleStep
+				px := cx + radius*float32(math.Cos(angle))
+				py := cy + radius*float32(math.Sin(angle))
 				points = append(points, fmt.Sprintf("%s,%s", fmtFloat(px), fmtFloat(py)))
 			}
-			b.selfClose("polygon",
+			builder.selfClose("polygon",
 				"points", strings.Join(points, " "),
 				"fill", "none",
 				"stroke", graticuleColor,
@@ -61,7 +73,7 @@ func renderRadar(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.L
 			)
 		} else {
 			// Circle graticule.
-			b.circle(cx, cy, r,
+			builder.circle(cx, cy, radius,
 				"fill", "none",
 				"stroke", graticuleColor,
 				"stroke-width", "0.5",
@@ -71,7 +83,7 @@ func renderRadar(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.L
 
 	// Axis lines.
 	for _, ax := range rd.Axes {
-		b.line(cx, cy, ax.EndX, ax.EndY,
+		builder.line(cx, cy, ax.EndX, ax.EndY,
 			"stroke", axisColor, "stroke-width", "1")
 		// Axis label.
 		anchor := "middle"
@@ -80,7 +92,7 @@ func renderRadar(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.L
 		} else if ax.LabelX < cx-5 {
 			anchor = "end"
 		}
-		b.text(ax.LabelX, ax.LabelY, ax.Label,
+		builder.text(ax.LabelX, ax.LabelY, ax.Label,
 			"text-anchor", anchor,
 			"dominant-baseline", "middle",
 			"font-family", th.FontFamily,
@@ -96,17 +108,17 @@ func renderRadar(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.L
 	}
 	curveOpacity := fmt.Sprintf("%.2f", opacity)
 	for _, curve := range rd.Curves {
-		color := "#4C78A8" // fallback
+		color := radarFallbackColor
 		if len(th.RadarCurveColors) > 0 {
 			color = th.RadarCurveColors[curve.ColorIndex%len(th.RadarCurveColors)]
 		}
 
 		var points []string
-		for _, p := range curve.Points {
-			points = append(points, fmt.Sprintf("%s,%s", fmtFloat(p[0]), fmtFloat(p[1])))
+		for _, pt := range curve.Points {
+			points = append(points, fmt.Sprintf("%s,%s", fmtFloat(pt[0]), fmtFloat(pt[1])))
 		}
 		if len(points) > 0 {
-			b.selfClose("polygon",
+			builder.selfClose("polygon",
 				"points", strings.Join(points, " "),
 				"fill", color,
 				"fill-opacity", curveOpacity,
@@ -118,16 +130,16 @@ func renderRadar(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.L
 
 	// Legend.
 	if rd.ShowLegend && len(rd.Curves) > 0 {
-		legendX := l.Width - cfg.Radar.PaddingX - 100
+		legendX := lay.Width - cfg.Radar.PaddingX - radarLegendWidth
 		legendY := cfg.Radar.PaddingY
-		for i, curve := range rd.Curves {
-			color := "#4C78A8"
+		for idx, curve := range rd.Curves {
+			color := radarFallbackColor
 			if len(th.RadarCurveColors) > 0 {
 				color = th.RadarCurveColors[curve.ColorIndex%len(th.RadarCurveColors)]
 			}
-			y := legendY + float32(i)*20
-			b.rect(legendX, y, 12, 12, 0, "fill", color)
-			b.text(legendX+16, y+10, curve.Label,
+			posY := legendY + float32(idx)*radarLegendRowHeight
+			builder.rect(legendX, posY, radarLegendSwatchW, radarLegendSwatchH, 0, "fill", color)
+			builder.text(legendX+radarLegendTextOff, posY+radarLegendBaselineOff, curve.Label,
 				"font-family", th.FontFamily,
 				"font-size", "12",
 				"fill", th.TextColor,

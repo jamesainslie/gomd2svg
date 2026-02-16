@@ -11,11 +11,11 @@ import (
 )
 
 func TestRenderClassCompartments(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Class
-	g.Direction = ir.TopDown
-	g.EnsureNode("Animal", nil, nil)
-	g.Members["Animal"] = &ir.ClassMembers{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Class
+	graph.Direction = ir.TopDown
+	graph.EnsureNode("Animal", nil, nil)
+	graph.Members["Animal"] = &ir.ClassMembers{
 		Attributes: []ir.ClassMember{
 			{Name: "name", Type: "String", Visibility: ir.VisPublic},
 		},
@@ -26,7 +26,7 @@ func TestRenderClassCompartments(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "Animal") {
@@ -41,20 +41,20 @@ func TestRenderClassCompartments(t *testing.T) {
 }
 
 func TestRenderClassRelationshipMarkers(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Class
-	g.Direction = ir.TopDown
-	g.EnsureNode("A", nil, nil)
-	g.EnsureNode("B", nil, nil)
+	graph := ir.NewGraph()
+	graph.Kind = ir.Class
+	graph.Direction = ir.TopDown
+	graph.EnsureNode("A", nil, nil)
+	graph.EnsureNode("B", nil, nil)
 	closedTri := ir.ClosedTriangle
-	g.Edges = append(g.Edges, &ir.Edge{
+	graph.Edges = append(graph.Edges, &ir.Edge{
 		From: "A", To: "B", Directed: true, ArrowEnd: true,
 		ArrowEndKind: &closedTri,
 	})
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "url(#marker-closed-triangle)") {

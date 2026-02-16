@@ -8,15 +8,18 @@ import (
 	"github.com/jamesainslie/gomd2svg/ir"
 )
 
+// maxJourneyScore is the maximum valid score for a journey task.
+const maxJourneyScore = 5
+
 var (
 	journeyTitleRe   = regexp.MustCompile(`(?i)^\s*title\s+(.+)$`)
 	journeySectionRe = regexp.MustCompile(`(?i)^\s*section\s+(.+)$`)
 	journeyTaskRe    = regexp.MustCompile(`^\s*(.+?):\s*(\d+)\s*(?::\s*(.*))?$`)
 )
 
-func parseJourney(input string) (*ParseOutput, error) {
-	g := ir.NewGraph()
-	g.Kind = ir.Journey
+func parseJourney(input string) (*ParseOutput, error) { //nolint:unparam // error return is part of the parser interface contract used by Parse().
+	graph := ir.NewGraph()
+	graph.Kind = ir.Journey
 
 	lines := preprocessInput(input)
 	var currentSection string
@@ -27,52 +30,52 @@ func parseJourney(input string) (*ParseOutput, error) {
 			continue
 		}
 
-		if m := journeyTitleRe.FindStringSubmatch(line); m != nil {
-			g.JourneyTitle = strings.TrimSpace(m[1])
+		if match := journeyTitleRe.FindStringSubmatch(line); match != nil {
+			graph.JourneyTitle = strings.TrimSpace(match[1])
 			continue
 		}
 
-		if m := journeySectionRe.FindStringSubmatch(line); m != nil {
-			currentSection = strings.TrimSpace(m[1])
-			g.JourneySections = append(g.JourneySections, &ir.JourneySection{
+		if match := journeySectionRe.FindStringSubmatch(line); match != nil {
+			currentSection = strings.TrimSpace(match[1])
+			graph.JourneySections = append(graph.JourneySections, &ir.JourneySection{
 				Name: currentSection,
 			})
 			continue
 		}
 
-		if m := journeyTaskRe.FindStringSubmatch(line); m != nil {
-			name := strings.TrimSpace(m[1])
-			score, _ := strconv.Atoi(m[2]) // regex guarantees \d+
+		if match := journeyTaskRe.FindStringSubmatch(line); match != nil {
+			name := strings.TrimSpace(match[1])
+			score, _ := strconv.Atoi(match[2]) //nolint:errcheck // regex guarantees \d+.
 			if score < 1 {
 				score = 1
 			}
-			if score > 5 {
-				score = 5
+			if score > maxJourneyScore {
+				score = maxJourneyScore
 			}
 			var actors []string
-			if m[3] != "" {
-				for _, a := range strings.Split(m[3], ",") {
-					a = strings.TrimSpace(a)
-					if a != "" {
-						actors = append(actors, a)
+			if match[3] != "" {
+				for _, actor := range strings.Split(match[3], ",") {
+					actor = strings.TrimSpace(actor)
+					if actor != "" {
+						actors = append(actors, actor)
 					}
 				}
 			}
-			taskIdx := len(g.JourneyTasks)
-			g.JourneyTasks = append(g.JourneyTasks, &ir.JourneyTask{
+			taskIdx := len(graph.JourneyTasks)
+			graph.JourneyTasks = append(graph.JourneyTasks, &ir.JourneyTask{
 				Name:    name,
 				Score:   score,
 				Actors:  actors,
 				Section: currentSection,
 			})
 			// Add task index to current section.
-			if len(g.JourneySections) > 0 {
-				sec := g.JourneySections[len(g.JourneySections)-1]
+			if len(graph.JourneySections) > 0 {
+				sec := graph.JourneySections[len(graph.JourneySections)-1]
 				sec.Tasks = append(sec.Tasks, taskIdx)
 			}
 			continue
 		}
 	}
 
-	return &ParseOutput{Graph: g}, nil
+	return &ParseOutput{Graph: graph}, nil
 }

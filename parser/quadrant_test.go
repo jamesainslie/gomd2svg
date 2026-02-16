@@ -23,29 +23,29 @@ func TestParseQuadrantBasic(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
-	g := out.Graph
-	if g.Kind != ir.Quadrant {
-		t.Errorf("Kind = %v, want Quadrant", g.Kind)
+	graph := out.Graph
+	if graph.Kind != ir.Quadrant {
+		t.Errorf("Kind = %v, want Quadrant", graph.Kind)
 	}
-	if g.QuadrantTitle != "Reach and engagement of campaigns" {
-		t.Errorf("Title = %q", g.QuadrantTitle)
+	if graph.QuadrantTitle != "Reach and engagement of campaigns" {
+		t.Errorf("Title = %q", graph.QuadrantTitle)
 	}
-	if g.XAxisLeft != "Low Reach" || g.XAxisRight != "High Reach" {
-		t.Errorf("XAxis = %q / %q", g.XAxisLeft, g.XAxisRight)
+	if graph.XAxisLeft != "Low Reach" || graph.XAxisRight != "High Reach" {
+		t.Errorf("XAxis = %q / %q", graph.XAxisLeft, graph.XAxisRight)
 	}
-	if g.YAxisBottom != "Low Engagement" || g.YAxisTop != "High Engagement" {
-		t.Errorf("YAxis = %q / %q", g.YAxisBottom, g.YAxisTop)
+	if graph.YAxisBottom != "Low Engagement" || graph.YAxisTop != "High Engagement" {
+		t.Errorf("YAxis = %q / %q", graph.YAxisBottom, graph.YAxisTop)
 	}
-	if g.QuadrantLabels[0] != "We should expand" {
-		t.Errorf("Q1 = %q", g.QuadrantLabels[0])
+	if graph.QuadrantLabels[0] != "We should expand" {
+		t.Errorf("Q1 = %q", graph.QuadrantLabels[0])
 	}
-	if g.QuadrantLabels[2] != "Re-evaluate" {
-		t.Errorf("Q3 = %q", g.QuadrantLabels[2])
+	if graph.QuadrantLabels[2] != "Re-evaluate" {
+		t.Errorf("Q3 = %q", graph.QuadrantLabels[2])
 	}
-	if len(g.QuadrantPoints) != 3 {
-		t.Fatalf("Points = %d, want 3", len(g.QuadrantPoints))
+	if len(graph.QuadrantPoints) != 3 {
+		t.Fatalf("Points = %d, want 3", len(graph.QuadrantPoints))
 	}
-	p := g.QuadrantPoints[0]
+	p := graph.QuadrantPoints[0]
 	if p.Label != "Campaign A" || p.X != 0.3 || p.Y != 0.6 {
 		t.Errorf("point[0] = %+v", p)
 	}
@@ -61,12 +61,12 @@ func TestParseQuadrantSingleAxisLabel(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
-	g := out.Graph
-	if g.XAxisLeft != "Effort" || g.XAxisRight != "" {
-		t.Errorf("XAxis = %q / %q", g.XAxisLeft, g.XAxisRight)
+	graph := out.Graph
+	if graph.XAxisLeft != "Effort" || graph.XAxisRight != "" {
+		t.Errorf("XAxis = %q / %q", graph.XAxisLeft, graph.XAxisRight)
 	}
-	if g.YAxisBottom != "Impact" || g.YAxisTop != "" {
-		t.Errorf("YAxis = %q / %q", g.YAxisBottom, g.YAxisTop)
+	if graph.YAxisBottom != "Impact" || graph.YAxisTop != "" {
+		t.Errorf("YAxis = %q / %q", graph.YAxisBottom, graph.YAxisTop)
 	}
 }
 

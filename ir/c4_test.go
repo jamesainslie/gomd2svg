@@ -51,35 +51,35 @@ func TestC4ElementTypePredicates(t *testing.T) {
 }
 
 func TestC4GraphFields(t *testing.T) {
-	g := NewGraph()
-	g.Kind = C4
-	g.C4SubKind = C4Container
-	g.C4Elements = append(g.C4Elements, &C4Element{
+	graph := NewGraph()
+	graph.Kind = C4
+	graph.C4SubKind = C4Container
+	graph.C4Elements = append(graph.C4Elements, &C4Element{
 		ID:    "user",
 		Label: "User",
 		Type:  C4Person,
 	})
-	g.C4Boundaries = append(g.C4Boundaries, &C4Boundary{
+	graph.C4Boundaries = append(graph.C4Boundaries, &C4Boundary{
 		ID:       "system",
 		Label:    "My System",
 		Type:     "Software System",
 		Children: []string{"webapp"},
 	})
-	g.C4Rels = append(g.C4Rels, &C4Rel{
+	graph.C4Rels = append(graph.C4Rels, &C4Rel{
 		From:  "user",
 		To:    "webapp",
 		Label: "Uses",
 	})
-	if g.C4SubKind != C4Container {
-		t.Errorf("C4SubKind = %v", g.C4SubKind)
+	if graph.C4SubKind != C4Container {
+		t.Errorf("C4SubKind = %v", graph.C4SubKind)
 	}
-	if len(g.C4Elements) != 1 {
-		t.Errorf("C4Elements = %d", len(g.C4Elements))
+	if len(graph.C4Elements) != 1 {
+		t.Errorf("C4Elements = %d", len(graph.C4Elements))
 	}
-	if len(g.C4Boundaries) != 1 {
-		t.Errorf("C4Boundaries = %d", len(g.C4Boundaries))
+	if len(graph.C4Boundaries) != 1 {
+		t.Errorf("C4Boundaries = %d", len(graph.C4Boundaries))
 	}
-	if len(g.C4Rels) != 1 {
-		t.Errorf("C4Rels = %d", len(g.C4Rels))
+	if len(graph.C4Rels) != 1 {
+		t.Errorf("C4Rels = %d", len(graph.C4Rels))
 	}
 }

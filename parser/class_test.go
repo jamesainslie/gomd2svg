@@ -140,15 +140,15 @@ Customer "1" --> "*" Order : places`
 	if len(out.Graph.Edges) != 1 {
 		t.Fatalf("Edges = %d, want 1", len(out.Graph.Edges))
 	}
-	e := out.Graph.Edges[0]
-	if e.StartLabel == nil || *e.StartLabel != "1" {
-		t.Errorf("StartLabel = %v, want %q", e.StartLabel, "1")
+	edge := out.Graph.Edges[0]
+	if edge.StartLabel == nil || *edge.StartLabel != "1" {
+		t.Errorf("StartLabel = %v, want %q", edge.StartLabel, "1")
 	}
-	if e.EndLabel == nil || *e.EndLabel != "*" {
-		t.Errorf("EndLabel = %v, want %q", e.EndLabel, "*")
+	if edge.EndLabel == nil || *edge.EndLabel != "*" {
+		t.Errorf("EndLabel = %v, want %q", edge.EndLabel, "*")
 	}
-	if e.Label == nil || *e.Label != "places" {
-		t.Errorf("Label = %v, want %q", e.Label, "places")
+	if edge.Label == nil || *edge.Label != "places" {
+		t.Errorf("Label = %v, want %q", edge.Label, "places")
 	}
 }
 

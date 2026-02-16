@@ -10,10 +10,29 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
+// Architecture diagram rendering constants.
+const (
+	archGroupBorderRadius   float32 = 8
+	archGroupLabelOffsetX   float32 = 10
+	archGroupLabelOffsetY   float32 = 18
+	archGroupFontScale      float32 = 0.9
+	archGroupIconOffsetX    float32 = 20
+	archGroupIconOffsetY    float32 = 14
+	archGroupIconSize       float32 = 10
+	archServiceBorderRadius float32 = 6
+	archServiceIconOffsetY  float32 = 10
+	archServiceIconSize     float32 = 12
+	archLabelOffsetY        float32 = 8
+	archLabelIconOffsetY    float32 = 14
+	archEllipseYScale       float32 = 0.6
+	archCloudXScale         float32 = 1.2
+	archCloudYScale         float32 = 0.7
+)
+
 // renderArchitecture renders all architecture diagram elements: groups,
 // edges, service nodes, and junctions.
-func renderArchitecture(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *config.Layout) {
-	data, ok := l.Diagram.(layout.ArchitectureData)
+func renderArchitecture(builder *svgBuilder, lay *layout.Layout, th *theme.Theme, _ *config.Layout) {
+	data, ok := lay.Diagram.(layout.ArchitectureData)
 	if !ok {
 		return
 	}
@@ -24,7 +43,7 @@ func renderArchitecture(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *con
 			continue
 		}
 		// Dashed border group rectangle.
-		b.rect(grp.X, grp.Y, grp.Width, grp.Height, 8,
+		builder.rect(grp.X, grp.Y, grp.Width, grp.Height, archGroupBorderRadius,
 			"fill", th.ArchGroupFill,
 			"stroke", th.ArchGroupBorder,
 			"stroke-width", "1",
@@ -32,28 +51,28 @@ func renderArchitecture(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *con
 		)
 		// Group label at top-left.
 		if grp.Label != "" {
-			b.text(grp.X+10, grp.Y+18, grp.Label,
+			builder.text(grp.X+archGroupLabelOffsetX, grp.Y+archGroupLabelOffsetY, grp.Label,
 				"text-anchor", "start",
 				"font-family", th.FontFamily,
-				"font-size", fmtFloat(th.FontSize*0.9),
+				"font-size", fmtFloat(th.FontSize*archGroupFontScale),
 				"font-weight", "bold",
 				"fill", th.ArchGroupText,
 			)
 		}
 		// Simple icon next to label at top-right corner.
 		if grp.Icon != "" {
-			renderArchIcon(b, grp.Icon, grp.X+grp.Width-20, grp.Y+14, 10)
+			renderArchIcon(builder, grp.Icon, grp.X+grp.Width-archGroupIconOffsetX, grp.Y+archGroupIconOffsetY, archGroupIconSize)
 		}
 	}
 
 	// 2. Render edges using architecture-specific edge color.
-	for i, edge := range l.Edges {
+	for idx, edge := range lay.Edges {
 		if len(edge.Points) < 2 {
 			continue
 		}
 
-		d := pointsToPath(edge.Points)
-		edgeID := fmt.Sprintf("edge-%d", i)
+		pathData := pointsToPath(edge.Points)
+		edgeID := fmt.Sprintf("edge-%d", idx)
 
 		strokeColor := th.ArchEdgeColor
 		strokeWidth := "1.5"
@@ -61,7 +80,7 @@ func renderArchitecture(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *con
 		attrs := []string{
 			"id", edgeID,
 			"class", "edgePath",
-			"d", d,
+			"d", pathData,
 			"fill", "none",
 			"stroke", strokeColor,
 			"stroke-width", strokeWidth,
@@ -85,11 +104,11 @@ func renderArchitecture(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *con
 			attrs = append(attrs, "marker-start", "url(#arrowhead-start)")
 		}
 
-		b.selfClose("path", attrs...)
+		builder.selfClose("path", attrs...)
 
 		// Render edge label if present.
 		if edge.Label != nil && len(edge.Label.Lines) > 0 {
-			renderEdgeLabel(b, edge, th)
+			renderEdgeLabel(builder, edge, th)
 		}
 	}
 
@@ -99,8 +118,8 @@ func renderArchitecture(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *con
 		junctionSet[junc.ID] = true
 	}
 
-	ids := make([]string, 0, len(l.Nodes))
-	for id := range l.Nodes {
+	ids := make([]string, 0, len(lay.Nodes))
+	for id := range lay.Nodes {
 		ids = append(ids, id)
 	}
 	sort.Strings(ids)
@@ -110,12 +129,12 @@ func renderArchitecture(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *con
 			continue
 		}
 
-		n := l.Nodes[id]
+		node := lay.Nodes[id]
 
 		// Service rectangle.
-		nx := n.X - n.Width/2
-		ny := n.Y - n.Height/2
-		b.rect(nx, ny, n.Width, n.Height, 6,
+		nx := node.X - node.Width/2
+		ny := node.Y - node.Height/2
+		builder.rect(nx, ny, node.Width, node.Height, archServiceBorderRadius,
 			"fill", th.ArchServiceFill,
 			"stroke", th.ArchServiceBorder,
 			"stroke-width", "1.5",
@@ -124,16 +143,16 @@ func renderArchitecture(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *con
 		// Render icon above label if available.
 		svcInfo, hasSvcInfo := data.Services[id]
 		if hasSvcInfo && svcInfo.Icon != "" {
-			renderArchIcon(b, svcInfo.Icon, n.X, n.Y-10, 12)
+			renderArchIcon(builder, svcInfo.Icon, node.X, node.Y-archServiceIconOffsetY, archServiceIconSize)
 		}
 
 		// Render label centered in the service box.
-		labelY := n.Y + 8
+		labelY := node.Y + archLabelOffsetY
 		if hasSvcInfo && svcInfo.Icon != "" {
-			labelY = n.Y + 14 // shift down when icon is present
+			labelY = node.Y + archLabelIconOffsetY // shift down when icon is present
 		}
-		if len(n.Label.Lines) > 0 {
-			b.text(n.X, labelY, n.Label.Lines[0],
+		if len(node.Label.Lines) > 0 {
+			builder.text(node.X, labelY, node.Label.Lines[0],
 				"text-anchor", "middle",
 				"dominant-baseline", "auto",
 				"font-family", th.FontFamily,
@@ -145,73 +164,73 @@ func renderArchitecture(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *con
 
 	// 4. Render junctions as small filled circles.
 	for _, junc := range data.Junctions {
-		b.circle(junc.X, junc.Y, junc.Size/2,
+		builder.circle(junc.X, junc.Y, junc.Size/2,
 			"fill", th.ArchJunctionFill,
 		)
 	}
 }
 
 // renderArchIcon renders a simple SVG icon shape at the given center position.
-func renderArchIcon(b *svgBuilder, icon string, cx, cy, size float32) {
+func renderArchIcon(builder *svgBuilder, icon string, cx, cy, size float32) {
 	half := size / 2
 	switch icon {
 	case "database":
 		// Simple cylinder representation: ellipse.
-		b.ellipse(cx, cy, half, half*0.6,
+		builder.ellipse(cx, cy, half, half*archEllipseYScale,
 			"fill", "#78909C",
 			"stroke", "none",
 		)
 	case "server":
 		// Simple box.
-		b.rect(cx-half, cy-half, size, size, 2,
+		builder.rect(cx-half, cy-half, size, size, 2,
 			"fill", "#78909C",
 			"stroke", "none",
 		)
 		// Two horizontal lines inside the box.
 		third := size / 3
-		b.line(cx-half+2, cy-half+third, cx+half-2, cy-half+third,
+		builder.line(cx-half+2, cy-half+third, cx+half-2, cy-half+third,
 			"stroke", "#fff",
 			"stroke-width", "1",
 		)
-		b.line(cx-half+2, cy-half+2*third, cx+half-2, cy-half+2*third,
+		builder.line(cx-half+2, cy-half+2*third, cx+half-2, cy-half+2*third,
 			"stroke", "#fff",
 			"stroke-width", "1",
 		)
 	case "cloud":
 		// Cloud-like ellipse.
-		b.ellipse(cx, cy, half*1.2, half*0.7,
+		builder.ellipse(cx, cy, half*archCloudXScale, half*archCloudYScale,
 			"fill", "#78909C",
 			"stroke", "none",
 		)
 	case "internet":
 		// Globe: circle with a vertical and horizontal cross line.
-		b.circle(cx, cy, half,
+		builder.circle(cx, cy, half,
 			"fill", "none",
 			"stroke", "#78909C",
 			"stroke-width", "1.5",
 		)
-		b.line(cx-half, cy, cx+half, cy,
+		builder.line(cx-half, cy, cx+half, cy,
 			"stroke", "#78909C",
 			"stroke-width", "1",
 		)
-		b.line(cx, cy-half, cx, cy+half,
+		builder.line(cx, cy-half, cx, cy+half,
 			"stroke", "#78909C",
 			"stroke-width", "1",
 		)
 		// Curved arc approximation for globe effect.
-		d := fmt.Sprintf("M %s,%s Q %s,%s %s,%s",
+		pathData := fmt.Sprintf("M %s,%s Q %s,%s %s,%s",
 			fmtFloat(cx), fmtFloat(cy-half),
 			fmtFloat(cx+half*0.5), fmtFloat(cy),
 			fmtFloat(cx), fmtFloat(cy+half),
 		)
-		b.path(d,
+		builder.path(pathData,
 			"fill", "none",
 			"stroke", "#78909C",
 			"stroke-width", "1",
 		)
 	case "disk":
 		// Filled circle.
-		b.circle(cx, cy, half,
+		builder.circle(cx, cy, half,
 			"fill", "#78909C",
 			"stroke", "none",
 		)

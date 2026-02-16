@@ -42,46 +42,46 @@ func positionLR(
 	// First pass: compute X positions per rank (cumulative width + spacing).
 	rankX := make([]float32, len(layers))
 	var cumX float32
-	for r, layer := range layers {
+	for rankIdx, layer := range layers {
 		// Find the widest node in this rank.
 		var maxWidth float32
 		for _, id := range layer {
-			if n, ok := nodes[id]; ok && n.Width > maxWidth {
-				maxWidth = n.Width
+			if node, ok := nodes[id]; ok && node.Width > maxWidth {
+				maxWidth = node.Width
 			}
 		}
-		rankX[r] = cumX + maxWidth/2
+		rankX[rankIdx] = cumX + maxWidth/2
 		cumX += maxWidth + rankSpacing
 	}
 
 	// Second pass: assign coordinates.
-	for r, layer := range layers {
+	for rankIdx, layer := range layers {
 		// Compute total height of this rank's column.
 		var totalHeight float32
-		for i, id := range layer {
-			if n, ok := nodes[id]; ok {
-				totalHeight += n.Height
-				if i > 0 {
+		for idx, id := range layer {
+			if node, ok := nodes[id]; ok {
+				totalHeight += node.Height
+				if idx > 0 {
 					totalHeight += nodeSpacing
 				}
 			}
 		}
 
 		// Center column vertically around 0, then shift by boundary padding.
-		y := -totalHeight/2 + layoutBoundaryPad
+		posY := -totalHeight/2 + layoutBoundaryPad
 
 		for _, id := range layer {
-			n, ok := nodes[id]
+			node, ok := nodes[id]
 			if !ok {
 				continue
 			}
-			x := rankX[r] + layoutBoundaryPad
+			posX := rankX[rankIdx] + layoutBoundaryPad
 			if reverse {
-				x = cumX - rankX[r] + layoutBoundaryPad
+				posX = cumX - rankX[rankIdx] + layoutBoundaryPad
 			}
-			n.X = x
-			n.Y = y + n.Height/2
-			y += n.Height + nodeSpacing
+			node.X = posX
+			node.Y = posY + node.Height/2
+			posY += node.Height + nodeSpacing
 		}
 	}
 }
@@ -97,43 +97,43 @@ func positionTD(
 	// First pass: compute Y positions per rank.
 	rankY := make([]float32, len(layers))
 	var cumY float32
-	for r, layer := range layers {
+	for rankIdx, layer := range layers {
 		var maxHeight float32
 		for _, id := range layer {
-			if n, ok := nodes[id]; ok && n.Height > maxHeight {
-				maxHeight = n.Height
+			if node, ok := nodes[id]; ok && node.Height > maxHeight {
+				maxHeight = node.Height
 			}
 		}
-		rankY[r] = cumY + maxHeight/2
+		rankY[rankIdx] = cumY + maxHeight/2
 		cumY += maxHeight + rankSpacing
 	}
 
 	// Second pass: assign coordinates.
-	for r, layer := range layers {
+	for rankIdx, layer := range layers {
 		var totalWidth float32
-		for i, id := range layer {
-			if n, ok := nodes[id]; ok {
-				totalWidth += n.Width
-				if i > 0 {
+		for idx, id := range layer {
+			if node, ok := nodes[id]; ok {
+				totalWidth += node.Width
+				if idx > 0 {
 					totalWidth += nodeSpacing
 				}
 			}
 		}
 
-		x := -totalWidth/2 + layoutBoundaryPad
+		posX := -totalWidth/2 + layoutBoundaryPad
 
 		for _, id := range layer {
-			n, ok := nodes[id]
+			node, ok := nodes[id]
 			if !ok {
 				continue
 			}
-			y := rankY[r] + layoutBoundaryPad
+			posY := rankY[rankIdx] + layoutBoundaryPad
 			if reverse {
-				y = cumY - rankY[r] + layoutBoundaryPad
+				posY = cumY - rankY[rankIdx] + layoutBoundaryPad
 			}
-			n.X = x + n.Width/2
-			n.Y = y
-			x += n.Width + nodeSpacing
+			node.X = posX + node.Width/2
+			node.Y = posY
+			posX += node.Width + nodeSpacing
 		}
 	}
 }

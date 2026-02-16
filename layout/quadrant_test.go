@@ -9,15 +9,15 @@ import (
 )
 
 func TestQuadrantLayout(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Quadrant
-	g.QuadrantTitle = "Campaigns"
-	g.XAxisLeft = "Low"
-	g.XAxisRight = "High"
-	g.YAxisBottom = "Low"
-	g.YAxisTop = "High"
-	g.QuadrantLabels = [4]string{"Q1", "Q2", "Q3", "Q4"}
-	g.QuadrantPoints = []*ir.QuadrantPoint{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Quadrant
+	graph.QuadrantTitle = "Campaigns"
+	graph.XAxisLeft = "Low"
+	graph.XAxisRight = "High"
+	graph.YAxisBottom = "Low"
+	graph.YAxisTop = "High"
+	graph.QuadrantLabels = [4]string{"Q1", "Q2", "Q3", "Q4"}
+	graph.QuadrantPoints = []*ir.QuadrantPoint{
 		{Label: "A", X: 0.0, Y: 0.0},
 		{Label: "B", X: 1.0, Y: 1.0},
 		{Label: "C", X: 0.5, Y: 0.5},
@@ -25,18 +25,18 @@ func TestQuadrantLayout(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	if l.Kind != ir.Quadrant {
-		t.Errorf("Kind = %v, want Quadrant", l.Kind)
+	if lay.Kind != ir.Quadrant {
+		t.Errorf("Kind = %v, want Quadrant", lay.Kind)
 	}
-	if l.Width <= 0 || l.Height <= 0 {
-		t.Errorf("dimensions = %f x %f", l.Width, l.Height)
+	if lay.Width <= 0 || lay.Height <= 0 {
+		t.Errorf("dimensions = %f x %f", lay.Width, lay.Height)
 	}
 
-	qd, ok := l.Diagram.(QuadrantData)
+	qd, ok := lay.Diagram.(QuadrantData)
 	if !ok {
-		t.Fatalf("Diagram type = %T, want QuadrantData", l.Diagram)
+		t.Fatalf("Diagram type = %T, want QuadrantData", lay.Diagram)
 	}
 	if len(qd.Points) != 3 {
 		t.Fatalf("Points = %d, want 3", len(qd.Points))
@@ -63,20 +63,23 @@ func TestQuadrantLayout(t *testing.T) {
 }
 
 func TestQuadrantLayoutNoPoints(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Quadrant
-	g.QuadrantLabels = [4]string{"Q1", "Q2", "Q3", "Q4"}
+	graph := ir.NewGraph()
+	graph.Kind = ir.Quadrant
+	graph.QuadrantLabels = [4]string{"Q1", "Q2", "Q3", "Q4"}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	qd := l.Diagram.(QuadrantData)
+	qd, ok := lay.Diagram.(QuadrantData)
+	if !ok {
+		t.Fatal("expected QuadrantData")
+	}
 	if len(qd.Points) != 0 {
 		t.Errorf("Points = %d, want 0", len(qd.Points))
 	}
-	if l.Width <= 0 || l.Height <= 0 {
-		t.Errorf("dimensions = %f x %f", l.Width, l.Height)
+	if lay.Width <= 0 || lay.Height <= 0 {
+		t.Errorf("dimensions = %f x %f", lay.Width, lay.Height)
 	}
 }
 

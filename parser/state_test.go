@@ -7,6 +7,7 @@ import (
 )
 
 func TestParseStateSimple(t *testing.T) {
+	//nolint:dupword // mermaid syntax
 	input := `stateDiagram-v2
     [*] --> First
     First --> Second
@@ -17,23 +18,23 @@ func TestParseStateSimple(t *testing.T) {
 		t.Fatalf("parseState() error: %v", err)
 	}
 
-	g := out.Graph
-	if g.Kind != ir.State {
-		t.Errorf("Kind = %v, want State", g.Kind)
+	graph := out.Graph
+	if graph.Kind != ir.State {
+		t.Errorf("Kind = %v, want State", graph.Kind)
 	}
-	if len(g.Edges) != 3 {
-		t.Errorf("Edges = %d, want 3", len(g.Edges))
+	if len(graph.Edges) != 3 {
+		t.Errorf("Edges = %d, want 3", len(graph.Edges))
 	}
 
 	// Verify start/end node mapping
-	if g.Edges[0].From != "__start__" {
-		t.Errorf("Edge[0].From = %q, want __start__", g.Edges[0].From)
+	if graph.Edges[0].From != "__start__" {
+		t.Errorf("Edge[0].From = %q, want __start__", graph.Edges[0].From)
 	}
-	if g.Edges[0].To != "First" {
-		t.Errorf("Edge[0].To = %q, want First", g.Edges[0].To)
+	if graph.Edges[0].To != "First" {
+		t.Errorf("Edge[0].To = %q, want First", graph.Edges[0].To)
 	}
-	if g.Edges[2].To != "__end__" {
-		t.Errorf("Edge[2].To = %q, want __end__", g.Edges[2].To)
+	if graph.Edges[2].To != "__end__" {
+		t.Errorf("Edge[2].To = %q, want __end__", graph.Edges[2].To)
 	}
 }
 
@@ -46,8 +47,8 @@ func TestParseStateDescription(t *testing.T) {
 		t.Fatalf("parseState() error: %v", err)
 	}
 
-	g := out.Graph
-	desc, ok := g.StateDescriptions["s1"]
+	graph := out.Graph
+	desc, ok := graph.StateDescriptions["s1"]
 	if !ok {
 		t.Fatal("StateDescriptions missing key s1")
 	}
@@ -65,11 +66,11 @@ func TestParseStateAsKeyword(t *testing.T) {
 		t.Fatalf("parseState() error: %v", err)
 	}
 
-	g := out.Graph
-	if _, ok := g.Nodes["s1"]; !ok {
+	graph := out.Graph
+	if _, ok := graph.Nodes["s1"]; !ok {
 		t.Fatal("expected node s1 to exist")
 	}
-	desc, ok := g.StateDescriptions["s1"]
+	desc, ok := graph.StateDescriptions["s1"]
 	if !ok {
 		t.Fatal("StateDescriptions missing key s1")
 	}
@@ -79,6 +80,7 @@ func TestParseStateAsKeyword(t *testing.T) {
 }
 
 func TestParseStateComposite(t *testing.T) {
+	//nolint:dupword // mermaid syntax
 	input := `stateDiagram-v2
     state First {
         [*] --> fir
@@ -90,8 +92,8 @@ func TestParseStateComposite(t *testing.T) {
 		t.Fatalf("parseState() error: %v", err)
 	}
 
-	g := out.Graph
-	cs, ok := g.CompositeStates["First"]
+	graph := out.Graph
+	cs, ok := graph.CompositeStates["First"]
 	if !ok {
 		t.Fatal("CompositeStates missing key First")
 	}
@@ -112,8 +114,8 @@ func TestParseStateChoice(t *testing.T) {
 		t.Fatalf("parseState() error: %v", err)
 	}
 
-	g := out.Graph
-	ann, ok := g.StateAnnotations["if_state"]
+	graph := out.Graph
+	ann, ok := graph.StateAnnotations["if_state"]
 	if !ok {
 		t.Fatal("StateAnnotations missing key if_state")
 	}
@@ -132,9 +134,9 @@ func TestParseStateForkJoin(t *testing.T) {
 		t.Fatalf("parseState() error: %v", err)
 	}
 
-	g := out.Graph
+	graph := out.Graph
 
-	forkAnn, ok := g.StateAnnotations["fork_state"]
+	forkAnn, ok := graph.StateAnnotations["fork_state"]
 	if !ok {
 		t.Fatal("StateAnnotations missing key fork_state")
 	}
@@ -142,7 +144,7 @@ func TestParseStateForkJoin(t *testing.T) {
 		t.Errorf("StateAnnotations[fork_state] = %v, want StateFork", forkAnn)
 	}
 
-	joinAnn, ok := g.StateAnnotations["join_state"]
+	joinAnn, ok := graph.StateAnnotations["join_state"]
 	if !ok {
 		t.Fatal("StateAnnotations missing key join_state")
 	}
@@ -164,8 +166,8 @@ func TestParseStateConcurrent(t *testing.T) {
 		t.Fatalf("parseState() error: %v", err)
 	}
 
-	g := out.Graph
-	cs, ok := g.CompositeStates["First"]
+	graph := out.Graph
+	cs, ok := graph.CompositeStates["First"]
 	if !ok {
 		t.Fatal("CompositeStates missing key First")
 	}
@@ -189,22 +191,22 @@ func TestParseStateTransitionLabel(t *testing.T) {
 		t.Fatalf("parseState() error: %v", err)
 	}
 
-	g := out.Graph
-	if len(g.Edges) != 1 {
-		t.Fatalf("Edges = %d, want 1", len(g.Edges))
+	graph := out.Graph
+	if len(graph.Edges) != 1 {
+		t.Fatalf("Edges = %d, want 1", len(graph.Edges))
 	}
-	e := g.Edges[0]
-	if e.From != "s1" {
-		t.Errorf("Edge.From = %q, want s1", e.From)
+	edge := graph.Edges[0]
+	if edge.From != "s1" {
+		t.Errorf("Edge.From = %q, want s1", edge.From)
 	}
-	if e.To != "s2" {
-		t.Errorf("Edge.To = %q, want s2", e.To)
+	if edge.To != "s2" {
+		t.Errorf("Edge.To = %q, want s2", edge.To)
 	}
-	if e.Label == nil {
+	if edge.Label == nil {
 		t.Fatal("Edge.Label is nil, want 'A transition'")
 	}
-	if *e.Label != "A transition" {
-		t.Errorf("Edge.Label = %q, want %q", *e.Label, "A transition")
+	if *edge.Label != "A transition" {
+		t.Errorf("Edge.Label = %q, want %q", *edge.Label, "A transition")
 	}
 }
 
@@ -217,9 +219,9 @@ func TestParseStateDirection(t *testing.T) {
 		t.Fatalf("parseState() error: %v", err)
 	}
 
-	g := out.Graph
-	if g.Direction != ir.LeftRight {
-		t.Errorf("Direction = %v, want LeftRight", g.Direction)
+	graph := out.Graph
+	if graph.Direction != ir.LeftRight {
+		t.Errorf("Direction = %v, want LeftRight", graph.Direction)
 	}
 }
 
@@ -233,19 +235,19 @@ func TestParseStateNote(t *testing.T) {
 		t.Fatalf("parseState() error: %v", err)
 	}
 
-	g := out.Graph
-	if len(g.Notes) != 1 {
-		t.Fatalf("Notes = %d, want 1", len(g.Notes))
+	graph := out.Graph
+	if len(graph.Notes) != 1 {
+		t.Fatalf("Notes = %d, want 1", len(graph.Notes))
 	}
-	n := g.Notes[0]
-	if n.Position != "right of" {
-		t.Errorf("Note.Position = %q, want %q", n.Position, "right of")
+	note := graph.Notes[0]
+	if note.Position != "right of" {
+		t.Errorf("Note.Position = %q, want %q", note.Position, "right of")
 	}
-	if n.Target != "State1" {
-		t.Errorf("Note.Target = %q, want %q", n.Target, "State1")
+	if note.Target != "State1" {
+		t.Errorf("Note.Target = %q, want %q", note.Target, "State1")
 	}
-	if n.Text != "Important info" {
-		t.Errorf("Note.Text = %q, want %q", n.Text, "Important info")
+	if note.Text != "Important info" {
+		t.Errorf("Note.Text = %q, want %q", note.Text, "Important info")
 	}
 }
 
@@ -258,8 +260,8 @@ func TestParseStateBracketAnnotation(t *testing.T) {
 		t.Fatalf("parseState() error: %v", err)
 	}
 
-	g := out.Graph
-	ann, ok := g.StateAnnotations["fork_state"]
+	graph := out.Graph
+	ann, ok := graph.StateAnnotations["fork_state"]
 	if !ok {
 		t.Fatal("StateAnnotations missing key fork_state")
 	}

@@ -17,6 +17,7 @@ func BenchmarkRenderSimple(b *testing.B) {
 }
 
 func BenchmarkRenderMedium(b *testing.B) {
+	//nolint:dupword // Mermaid diagram syntax repeats node names across edges.
 	input := `flowchart TD
     A[Start] --> B{Decision}
     B -->|Yes| C[Process]
@@ -56,6 +57,7 @@ func BenchmarkRenderClassSimple(b *testing.B) {
 }
 
 func BenchmarkRenderStateDiagram(b *testing.B) {
+	//nolint:dupword // Mermaid diagram syntax repeats state names across transitions.
 	input := `stateDiagram-v2
     [*] --> Still
     Still --> Moving

@@ -16,18 +16,18 @@ d["D"]:2 e["E"]`
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
-	g := out.Graph
-	if g.Kind != ir.Block {
-		t.Fatalf("Kind = %v, want Block", g.Kind)
+	graph := out.Graph
+	if graph.Kind != ir.Block {
+		t.Fatalf("Kind = %v, want Block", graph.Kind)
 	}
-	if g.BlockColumns != 3 {
-		t.Fatalf("BlockColumns = %d, want 3", g.BlockColumns)
+	if graph.BlockColumns != 3 {
+		t.Fatalf("BlockColumns = %d, want 3", graph.BlockColumns)
 	}
-	if len(g.Blocks) != 5 {
-		t.Fatalf("Blocks = %d, want 5", len(g.Blocks))
+	if len(graph.Blocks) != 5 {
+		t.Fatalf("Blocks = %d, want 5", len(graph.Blocks))
 	}
-	if g.Blocks[3].Width != 2 {
-		t.Errorf("d width = %d, want 2", g.Blocks[3].Width)
+	if graph.Blocks[3].Width != 2 {
+		t.Errorf("d width = %d, want 2", graph.Blocks[3].Width)
 	}
 }
 

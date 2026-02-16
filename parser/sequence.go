@@ -8,8 +8,13 @@ import (
 	"github.com/jamesainslie/gomd2svg/ir"
 )
 
+// seqActorKeyword is the keyword used to declare actor participants.
+const seqActorKeyword = "actor"
+
 // arrowEntry maps a literal arrow token to its SeqMessageKind.
 // Ordered longest-first so scanning finds the right match.
+//
+//nolint:gochecknoglobals // package-level lookup table is idiomatic for constant sets.
 var arrowTable = []struct {
 	token string
 	kind  ir.SeqMessageKind
@@ -27,51 +32,53 @@ var arrowTable = []struct {
 }
 
 var (
-	// participant A as Alice  OR  actor B as Bob
+	// participantRe matches "participant A as Alice" or "actor B as Bob".
 	participantRe = regexp.MustCompile(
 		`^(participant|actor)\s+(\S+?)(?:\s+as\s+(.+))?$`,
 	)
 
-	// participant API@{ "type": "boundary" } as Public API
+	// jsonParticipantRe matches JSON-typed participant annotations.
 	jsonParticipantRe = regexp.MustCompile(
 		`^(participant|actor)\s+(\S+?)@\{(.+?)\}(?:\s+as\s+(.+))?$`,
 	)
 
-	// Note right of Alice: text
+	// noteRe matches Note right of Alice: text.
 	noteRe = regexp.MustCompile(
 		`(?i)^Note\s+(right\s+of|left\s+of|over)\s+([^:]+):\s*(.+)$`,
 	)
 
-	// activate / deactivate
+	// activateRe and deactivateRe match activate/deactivate commands.
 	activateRe   = regexp.MustCompile(`^activate\s+(\S+)$`)
 	deactivateRe = regexp.MustCompile(`^deactivate\s+(\S+)$`)
 
-	// link Alice: Label @ URL
+	// linkRe matches link Alice: Label @ URL.
 	linkRe = regexp.MustCompile(`^link\s+(\S+)\s*:\s*(.+?)\s*@\s*(.+)$`)
 
-	// links Alice: {"Label": "URL", ...}
+	// linksRe matches links Alice: {"Label": "URL", ...}.
 	linksRe = regexp.MustCompile(`^links\s+(\S+)\s*:\s*(.+)$`)
 
-	// properties Alice: {"key": "value", ...}
+	// propertiesRe matches properties Alice: {"key": "value", ...}.
 	propertiesRe = regexp.MustCompile(`^properties\s+(\S+)\s*:\s*(.+)$`)
 
-	// create participant Carl  OR  create actor Carl as C
+	// createRe matches create participant Carl OR create actor Carl as C.
 	createRe = regexp.MustCompile(`^create\s+(participant|actor)\s+(\S+?)(?:\s+as\s+(.+))?$`)
 
-	// destroy Carl
+	// destroyRe matches destroy Carl.
 	destroyRe = regexp.MustCompile(`^destroy\s+(\S+)$`)
 
-	// rect rgb(...) or rect rgba(...)
+	// rectRe matches rect rgb(...) or rect rgba(...).
 	rectRe = regexp.MustCompile(`(?i)^rect\s+(.+)$`)
 
-	// box Purple Team A
+	// boxRe matches box Purple Team A.
 	boxRe = regexp.MustCompile(`(?i)^box\s+(.*)$`)
 )
 
 // parseSequence parses a Mermaid sequence diagram into a Graph.
+//
+//nolint:gocognit,funlen,maintidx // sequence parsing has inherent complexity from 15+ distinct line types.
 func parseSequence(input string) (*ParseOutput, error) {
-	g := ir.NewGraph()
-	g.Kind = ir.Sequence
+	graph := ir.NewGraph()
+	graph.Kind = ir.Sequence
 
 	lines := preprocessInput(input)
 
@@ -89,8 +96,8 @@ func parseSequence(input string) (*ParseOutput, error) {
 		if _, exists := participantIndex[id]; exists {
 			return
 		}
-		participantIndex[id] = len(g.Participants)
-		g.Participants = append(g.Participants, &ir.SeqParticipant{
+		participantIndex[id] = len(graph.Participants)
+		graph.Participants = append(graph.Participants, &ir.SeqParticipant{
 			ID:   id,
 			Kind: ir.ParticipantBox,
 		})
@@ -101,7 +108,7 @@ func parseSequence(input string) (*ParseOutput, error) {
 
 	findParticipant := func(id string) *ir.SeqParticipant {
 		if idx, ok := participantIndex[id]; ok {
-			return g.Participants[idx]
+			return graph.Participants[idx]
 		}
 		return nil
 	}
@@ -116,20 +123,21 @@ func parseSequence(input string) (*ParseOutput, error) {
 
 		// autonumber
 		if lower == "autonumber" {
-			g.Autonumber = true
+			graph.Autonumber = true
 			continue
 		}
 
 		// end — closes frame or box
 		if lower == "end" {
-			if inBox {
-				g.Boxes = append(g.Boxes, currentBox)
+			switch {
+			case inBox:
+				graph.Boxes = append(graph.Boxes, currentBox)
 				currentBox = nil
 				inBox = false
-			} else if frameDepth > 0 {
+			case frameDepth > 0:
 				frameDepth--
-				g.Events = append(g.Events, &ir.SeqEvent{Kind: ir.EvFrameEnd})
-			} else {
+				graph.Events = append(graph.Events, &ir.SeqEvent{Kind: ir.EvFrameEnd})
+			default:
 				return nil, &ParseError{
 					Diagram: "sequence",
 					Line:    line,
@@ -140,21 +148,21 @@ func parseSequence(input string) (*ParseOutput, error) {
 		}
 
 		// JSON-typed participant: participant API@{ "type": "boundary" } as Public API
-		if m := jsonParticipantRe.FindStringSubmatch(line); m != nil {
-			baseKind := strings.ToLower(m[1])
-			id := m[2]
-			jsonBody := strings.TrimSpace(m[3])
-			alias := strings.TrimSpace(m[4])
+		if match := jsonParticipantRe.FindStringSubmatch(line); match != nil {
+			baseKind := strings.ToLower(match[1])
+			id := match[2]
+			jsonBody := strings.TrimSpace(match[3])
+			alias := strings.TrimSpace(match[4])
 
 			ensureParticipant(id)
-			p := findParticipant(id)
+			participant := findParticipant(id)
 			if alias != "" {
-				p.Alias = alias
+				participant.Alias = alias
 			}
 
 			// Determine kind from base keyword.
-			if baseKind == "actor" {
-				p.Kind = ir.ActorStickFigure
+			if baseKind == seqActorKeyword {
+				participant.Kind = ir.ActorStickFigure
 			}
 
 			// Parse JSON to override kind if "type" is present.
@@ -167,45 +175,45 @@ func parseSequence(input string) (*ParseOutput, error) {
 					Message: "invalid JSON in participant annotation: " + err.Error(),
 				}
 			}
-			if t, ok := parsed["type"].(string); ok {
-				p.Kind = seqKindFromString(t)
+			if typeStr, ok := parsed["type"].(string); ok {
+				participant.Kind = seqKindFromString(typeStr)
 			}
 			continue
 		}
 
 		// participant / actor
-		if m := participantRe.FindStringSubmatch(line); m != nil {
-			kind := strings.ToLower(m[1])
-			id := m[2]
-			alias := strings.TrimSpace(m[3])
+		if match := participantRe.FindStringSubmatch(line); match != nil {
+			kind := strings.ToLower(match[1])
+			id := match[2]
+			alias := strings.TrimSpace(match[3])
 
 			ensureParticipant(id)
-			p := findParticipant(id)
+			participant := findParticipant(id)
 			if alias != "" {
-				p.Alias = alias
+				participant.Alias = alias
 			}
-			if kind == "actor" {
-				p.Kind = ir.ActorStickFigure
+			if kind == seqActorKeyword {
+				participant.Kind = ir.ActorStickFigure
 			}
 			continue
 		}
 
 		// create participant / create actor
-		if m := createRe.FindStringSubmatch(line); m != nil {
-			kind := strings.ToLower(m[1])
-			id := m[2]
-			alias := strings.TrimSpace(m[3])
+		if match := createRe.FindStringSubmatch(line); match != nil {
+			kind := strings.ToLower(match[1])
+			id := match[2]
+			alias := strings.TrimSpace(match[3])
 
 			ensureParticipant(id)
-			p := findParticipant(id)
-			p.IsCreated = true
+			participant := findParticipant(id)
+			participant.IsCreated = true
 			if alias != "" {
-				p.Alias = alias
+				participant.Alias = alias
 			}
-			if kind == "actor" {
-				p.Kind = ir.ActorStickFigure
+			if kind == seqActorKeyword {
+				participant.Kind = ir.ActorStickFigure
 			}
-			g.Events = append(g.Events, &ir.SeqEvent{
+			graph.Events = append(graph.Events, &ir.SeqEvent{
 				Kind:   ir.EvCreate,
 				Target: id,
 			})
@@ -213,12 +221,12 @@ func parseSequence(input string) (*ParseOutput, error) {
 		}
 
 		// destroy
-		if m := destroyRe.FindStringSubmatch(line); m != nil {
-			id := m[1]
+		if match := destroyRe.FindStringSubmatch(line); match != nil {
+			id := match[1]
 			ensureParticipant(id)
-			p := findParticipant(id)
-			p.IsDestroyed = true
-			g.Events = append(g.Events, &ir.SeqEvent{
+			participant := findParticipant(id)
+			participant.IsDestroyed = true
+			graph.Events = append(graph.Events, &ir.SeqEvent{
 				Kind:   ir.EvDestroy,
 				Target: id,
 			})
@@ -226,19 +234,19 @@ func parseSequence(input string) (*ParseOutput, error) {
 		}
 
 		// activate / deactivate
-		if m := activateRe.FindStringSubmatch(line); m != nil {
-			target := m[1]
+		if match := activateRe.FindStringSubmatch(line); match != nil {
+			target := match[1]
 			ensureParticipant(target)
-			g.Events = append(g.Events, &ir.SeqEvent{
+			graph.Events = append(graph.Events, &ir.SeqEvent{
 				Kind:   ir.EvActivate,
 				Target: target,
 			})
 			continue
 		}
-		if m := deactivateRe.FindStringSubmatch(line); m != nil {
-			target := m[1]
+		if match := deactivateRe.FindStringSubmatch(line); match != nil {
+			target := match[1]
 			ensureParticipant(target)
-			g.Events = append(g.Events, &ir.SeqEvent{
+			graph.Events = append(graph.Events, &ir.SeqEvent{
 				Kind:   ir.EvDeactivate,
 				Target: target,
 			})
@@ -246,10 +254,10 @@ func parseSequence(input string) (*ParseOutput, error) {
 		}
 
 		// Notes
-		if m := noteRe.FindStringSubmatch(line); m != nil {
-			posToken := strings.ToLower(strings.TrimSpace(m[1]))
-			participantsPart := strings.TrimSpace(m[2])
-			text := replaceBR(strings.TrimSpace(m[3]))
+		if match := noteRe.FindStringSubmatch(line); match != nil {
+			posToken := strings.ToLower(strings.TrimSpace(match[1]))
+			participantsPart := strings.TrimSpace(match[2])
+			text := replaceBR(strings.TrimSpace(match[3]))
 
 			var pos ir.SeqNotePosition
 			var participants []string
@@ -263,8 +271,8 @@ func parseSequence(input string) (*ParseOutput, error) {
 				participants = []string{strings.TrimSpace(participantsPart)}
 			case posToken == "over":
 				pos = ir.NoteOver
-				for _, p := range strings.Split(participantsPart, ",") {
-					trimmed := strings.TrimSpace(p)
+				for _, part := range strings.Split(participantsPart, ",") {
+					trimmed := strings.TrimSpace(part)
 					if trimmed != "" {
 						participants = append(participants, trimmed)
 					}
@@ -275,7 +283,7 @@ func parseSequence(input string) (*ParseOutput, error) {
 				ensureParticipant(pid)
 			}
 
-			g.Events = append(g.Events, &ir.SeqEvent{
+			graph.Events = append(graph.Events, &ir.SeqEvent{
 				Kind: ir.EvNote,
 				Note: &ir.SeqNote{
 					Position:     pos,
@@ -287,7 +295,7 @@ func parseSequence(input string) (*ParseOutput, error) {
 		}
 
 		// Frames: loop, alt, else, opt, par, and, critical, option, break
-		if handled, isStart := parseFrameLine(lower, line, g); handled {
+		if handled, isStart := parseFrameLine(lower, line, graph); handled {
 			if isStart {
 				frameDepth++
 			}
@@ -295,10 +303,10 @@ func parseSequence(input string) (*ParseOutput, error) {
 		}
 
 		// rect rgb(...)
-		if m := rectRe.FindStringSubmatch(line); m != nil {
-			color := strings.TrimSpace(m[1])
+		if match := rectRe.FindStringSubmatch(line); match != nil {
+			color := strings.TrimSpace(match[1])
 			frameDepth++
-			g.Events = append(g.Events, &ir.SeqEvent{
+			graph.Events = append(graph.Events, &ir.SeqEvent{
 				Kind: ir.EvFrameStart,
 				Frame: &ir.SeqFrame{
 					Kind:  ir.FrameRect,
@@ -309,8 +317,8 @@ func parseSequence(input string) (*ParseOutput, error) {
 		}
 
 		// box
-		if m := boxRe.FindStringSubmatch(line); m != nil {
-			label, color := parseBoxLabel(strings.TrimSpace(m[1]))
+		if match := boxRe.FindStringSubmatch(line); match != nil {
+			label, color := parseBoxLabel(strings.TrimSpace(match[1]))
 			currentBox = &ir.SeqBox{
 				Label: label,
 				Color: color,
@@ -320,22 +328,22 @@ func parseSequence(input string) (*ParseOutput, error) {
 		}
 
 		// link
-		if m := linkRe.FindStringSubmatch(line); m != nil {
-			id := m[1]
-			label := strings.TrimSpace(m[2])
-			url := strings.TrimSpace(m[3])
+		if match := linkRe.FindStringSubmatch(line); match != nil {
+			id := match[1]
+			label := strings.TrimSpace(match[2])
+			url := strings.TrimSpace(match[3])
 			ensureParticipant(id)
-			p := findParticipant(id)
-			p.Links = append(p.Links, ir.SeqLink{Label: label, URL: url})
+			participant := findParticipant(id)
+			participant.Links = append(participant.Links, ir.SeqLink{Label: label, URL: url})
 			continue
 		}
 
 		// links (JSON)
-		if m := linksRe.FindStringSubmatch(line); m != nil {
-			id := m[1]
-			body := strings.TrimSpace(m[2])
+		if match := linksRe.FindStringSubmatch(line); match != nil {
+			id := match[1]
+			body := strings.TrimSpace(match[2])
 			ensureParticipant(id)
-			p := findParticipant(id)
+			participant := findParticipant(id)
 			var parsed map[string]string
 			if err := json.Unmarshal([]byte(body), &parsed); err != nil {
 				return nil, &ParseError{
@@ -345,17 +353,17 @@ func parseSequence(input string) (*ParseOutput, error) {
 				}
 			}
 			for lbl, url := range parsed {
-				p.Links = append(p.Links, ir.SeqLink{Label: lbl, URL: url})
+				participant.Links = append(participant.Links, ir.SeqLink{Label: lbl, URL: url})
 			}
 			continue
 		}
 
 		// properties (JSON)
-		if m := propertiesRe.FindStringSubmatch(line); m != nil {
-			id := m[1]
-			body := strings.TrimSpace(m[2])
+		if match := propertiesRe.FindStringSubmatch(line); match != nil {
+			id := match[1]
+			body := strings.TrimSpace(match[2])
 			ensureParticipant(id)
-			p := findParticipant(id)
+			participant := findParticipant(id)
 			var parsed map[string]string
 			if err := json.Unmarshal([]byte(body), &parsed); err != nil {
 				return nil, &ParseError{
@@ -364,11 +372,11 @@ func parseSequence(input string) (*ParseOutput, error) {
 					Message: "invalid JSON in properties: " + err.Error(),
 				}
 			}
-			if p.Properties == nil {
-				p.Properties = make(map[string]string)
+			if participant.Properties == nil {
+				participant.Properties = make(map[string]string)
 			}
 			for k, v := range parsed {
-				p.Properties[k] = v
+				participant.Properties[k] = v
 			}
 			continue
 		}
@@ -387,19 +395,19 @@ func parseSequence(input string) (*ParseOutput, error) {
 				DeactivateSource: deactivateSource,
 			}
 
-			g.Events = append(g.Events, &ir.SeqEvent{
+			graph.Events = append(graph.Events, &ir.SeqEvent{
 				Kind:    ir.EvMessage,
 				Message: msg,
 			})
 
 			if activateTarget {
-				g.Events = append(g.Events, &ir.SeqEvent{
+				graph.Events = append(graph.Events, &ir.SeqEvent{
 					Kind:   ir.EvActivate,
 					Target: to,
 				})
 			}
 			if deactivateSource {
-				g.Events = append(g.Events, &ir.SeqEvent{
+				graph.Events = append(graph.Events, &ir.SeqEvent{
 					Kind:   ir.EvDeactivate,
 					Target: from,
 				})
@@ -422,11 +430,13 @@ func parseSequence(input string) (*ParseOutput, error) {
 		}
 	}
 
-	return &ParseOutput{Graph: g}, nil
+	return &ParseOutput{Graph: graph}, nil
 }
 
 // parseSeqMessage scans a line for a sequence message arrow using
 // longest-match-first scanning. Returns the parsed components.
+//
+//nolint:nonamedreturns,revive // named returns clarify multi-value return; 7 return values needed for backward compatibility.
 func parseSeqMessage(line string) (from, to, text string, kind ir.SeqMessageKind, activateTarget, deactivateSource bool, ok bool) {
 	for _, entry := range arrowTable {
 		idx := strings.Index(line, entry.token)
@@ -474,7 +484,7 @@ func parseSeqMessage(line string) (from, to, text string, kind ir.SeqMessageKind
 
 // parseFrameLine checks if a line is a frame keyword (loop, alt, etc.) and
 // appends the appropriate event. Returns (handled, isFrameStart).
-func parseFrameLine(lower, original string, g *ir.Graph) (bool, bool) {
+func parseFrameLine(lower, original string, graph *ir.Graph) (bool, bool) {
 	type frameMatch struct {
 		prefix string
 		kind   ir.SeqFrameKind
@@ -490,13 +500,13 @@ func parseFrameLine(lower, original string, g *ir.Graph) (bool, bool) {
 		{"break ", ir.FrameBreak, ir.EvFrameStart},
 	}
 
-	for _, f := range frames {
-		if strings.HasPrefix(lower, f.prefix) {
-			label := strings.TrimSpace(original[len(f.prefix):])
-			g.Events = append(g.Events, &ir.SeqEvent{
-				Kind: f.event,
+	for _, frame := range frames {
+		if strings.HasPrefix(lower, frame.prefix) {
+			label := strings.TrimSpace(original[len(frame.prefix):])
+			graph.Events = append(graph.Events, &ir.SeqEvent{
+				Kind: frame.event,
 				Frame: &ir.SeqFrame{
-					Kind:  f.kind,
+					Kind:  frame.kind,
 					Label: label,
 				},
 			})
@@ -514,10 +524,10 @@ func parseFrameLine(lower, original string, g *ir.Graph) (bool, bool) {
 		{"option "},
 	}
 
-	for _, m := range middles {
-		if strings.HasPrefix(lower, m.prefix) {
-			label := strings.TrimSpace(original[len(m.prefix):])
-			g.Events = append(g.Events, &ir.SeqEvent{
+	for _, mid := range middles {
+		if strings.HasPrefix(lower, mid.prefix) {
+			label := strings.TrimSpace(original[len(mid.prefix):])
+			graph.Events = append(graph.Events, &ir.SeqEvent{
 				Kind: ir.EvFrameMiddle,
 				Frame: &ir.SeqFrame{
 					Label: label,
@@ -537,7 +547,7 @@ func parseFrameLine(lower, original string, g *ir.Graph) (bool, bool) {
 		"break":    ir.FrameBreak,
 	}
 	if kind, found := bareFrames[lower]; found {
-		g.Events = append(g.Events, &ir.SeqEvent{
+		graph.Events = append(graph.Events, &ir.SeqEvent{
 			Kind: ir.EvFrameStart,
 			Frame: &ir.SeqFrame{
 				Kind: kind,
@@ -549,7 +559,7 @@ func parseFrameLine(lower, original string, g *ir.Graph) (bool, bool) {
 	bareMiddles := []string{"else", "and", "option"}
 	for _, bm := range bareMiddles {
 		if lower == bm {
-			g.Events = append(g.Events, &ir.SeqEvent{
+			graph.Events = append(graph.Events, &ir.SeqEvent{
 				Kind:  ir.EvFrameMiddle,
 				Frame: &ir.SeqFrame{},
 			})
@@ -567,6 +577,8 @@ func parseFrameLine(lower, original string, g *ir.Graph) (bool, bool) {
 //	"rgb(33,66,99) Group"   -> label="Group", color="rgb(33,66,99)"
 //	"transparent Name"      -> label="Name", color="transparent"
 //	"Team A"                -> label="Team A", color=""
+//
+//nolint:nonamedreturns // named returns clarify the multi-value return.
 func parseBoxLabel(input string) (label, color string) {
 	input = strings.TrimSpace(input)
 	if input == "" {
@@ -595,16 +607,16 @@ func parseBoxLabel(input string) (label, color string) {
 	}
 
 	lowerInput := strings.ToLower(input)
-	for _, c := range knownColors {
-		if strings.HasPrefix(lowerInput, c) {
+	for _, colorName := range knownColors {
+		if strings.HasPrefix(lowerInput, colorName) {
 			// Check that the color word is followed by a space or end of string.
-			rest := input[len(c):]
+			rest := input[len(colorName):]
 			if rest == "" {
 				// Color only, no label.
 				return "", input
 			}
 			if rest[0] == ' ' {
-				return strings.TrimSpace(rest), input[:len(c)]
+				return strings.TrimSpace(rest), input[:len(colorName)]
 			}
 		}
 	}
@@ -623,11 +635,11 @@ func parseBoxLabel(input string) (label, color string) {
 }
 
 // seqKindFromString converts a type string to SeqParticipantKind.
-func seqKindFromString(t string) ir.SeqParticipantKind {
-	switch strings.ToLower(t) {
+func seqKindFromString(typeStr string) ir.SeqParticipantKind {
+	switch strings.ToLower(typeStr) {
 	case "participant":
 		return ir.ParticipantBox
-	case "actor":
+	case seqActorKeyword:
 		return ir.ActorStickFigure
 	case "boundary":
 		return ir.ParticipantBoundary

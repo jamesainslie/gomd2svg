@@ -3,72 +3,72 @@ package ir
 import "testing"
 
 func TestNewGraph(t *testing.T) {
-	g := NewGraph()
-	if g.Kind != Flowchart {
-		t.Errorf("Kind = %v, want Flowchart", g.Kind)
+	graph := NewGraph()
+	if graph.Kind != Flowchart {
+		t.Errorf("Kind = %v, want Flowchart", graph.Kind)
 	}
-	if g.Direction != TopDown {
-		t.Errorf("Direction = %v, want TopDown", g.Direction)
+	if graph.Direction != TopDown {
+		t.Errorf("Direction = %v, want TopDown", graph.Direction)
 	}
-	if g.Nodes == nil {
+	if graph.Nodes == nil {
 		t.Error("Nodes is nil")
 	}
-	if g.Edges != nil {
+	if graph.Edges != nil {
 		t.Error("Edges should be nil (zero-value slice)")
 	}
 }
 
 func TestEnsureNode(t *testing.T) {
-	g := NewGraph()
-	g.EnsureNode("A", nil, nil)
-	if len(g.Nodes) != 1 {
-		t.Fatalf("Nodes = %d, want 1", len(g.Nodes))
+	graph := NewGraph()
+	graph.EnsureNode("A", nil, nil)
+	if len(graph.Nodes) != 1 {
+		t.Fatalf("Nodes = %d, want 1", len(graph.Nodes))
 	}
-	n := g.Nodes["A"]
-	if n.ID != "A" {
-		t.Errorf("ID = %q, want %q", n.ID, "A")
+	node := graph.Nodes["A"]
+	if node.ID != "A" {
+		t.Errorf("ID = %q, want %q", node.ID, "A")
 	}
-	if n.Label != "A" {
-		t.Errorf("Label = %q, want %q", n.Label, "A")
+	if node.Label != "A" {
+		t.Errorf("Label = %q, want %q", node.Label, "A")
 	}
-	if n.Shape != Rectangle {
-		t.Errorf("Shape = %v, want Rectangle", n.Shape)
+	if node.Shape != Rectangle {
+		t.Errorf("Shape = %v, want Rectangle", node.Shape)
 	}
 
 	// Update with label and shape
 	label := "Start"
 	shape := Stadium
-	g.EnsureNode("A", &label, &shape)
-	n = g.Nodes["A"]
-	if n.Label != "Start" {
-		t.Errorf("Label = %q, want %q", n.Label, "Start")
+	graph.EnsureNode("A", &label, &shape)
+	node = graph.Nodes["A"]
+	if node.Label != "Start" {
+		t.Errorf("Label = %q, want %q", node.Label, "Start")
 	}
-	if n.Shape != Stadium {
-		t.Errorf("Shape = %v, want Stadium", n.Shape)
+	if node.Shape != Stadium {
+		t.Errorf("Shape = %v, want Stadium", node.Shape)
 	}
-	if len(g.Nodes) != 1 {
-		t.Errorf("Nodes = %d, want 1 (should not duplicate)", len(g.Nodes))
+	if len(graph.Nodes) != 1 {
+		t.Errorf("Nodes = %d, want 1 (should not duplicate)", len(graph.Nodes))
 	}
 }
 
 func TestEnsureNodeOrder(t *testing.T) {
-	g := NewGraph()
-	g.EnsureNode("C", nil, nil)
-	g.EnsureNode("A", nil, nil)
-	g.EnsureNode("B", nil, nil)
-	if g.NodeOrder["C"] != 0 {
-		t.Errorf("C order = %d, want 0", g.NodeOrder["C"])
+	graph := NewGraph()
+	graph.EnsureNode("C", nil, nil)
+	graph.EnsureNode("A", nil, nil)
+	graph.EnsureNode("B", nil, nil)
+	if graph.NodeOrder["C"] != 0 {
+		t.Errorf("C order = %d, want 0", graph.NodeOrder["C"])
 	}
-	if g.NodeOrder["A"] != 1 {
-		t.Errorf("A order = %d, want 1", g.NodeOrder["A"])
+	if graph.NodeOrder["A"] != 1 {
+		t.Errorf("A order = %d, want 1", graph.NodeOrder["A"])
 	}
-	if g.NodeOrder["B"] != 2 {
-		t.Errorf("B order = %d, want 2", g.NodeOrder["B"])
+	if graph.NodeOrder["B"] != 2 {
+		t.Errorf("B order = %d, want 2", graph.NodeOrder["B"])
 	}
 	// Re-ensure does not change order
-	g.EnsureNode("C", nil, nil)
-	if g.NodeOrder["C"] != 0 {
-		t.Errorf("C order = %d after re-ensure, want 0", g.NodeOrder["C"])
+	graph.EnsureNode("C", nil, nil)
+	if graph.NodeOrder["C"] != 0 {
+		t.Errorf("C order = %d after re-ensure, want 0", graph.NodeOrder["C"])
 	}
 }
 

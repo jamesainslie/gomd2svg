@@ -8,26 +8,26 @@ import (
 )
 
 // RenderSVG produces an SVG string from a computed layout, theme, and config.
-func RenderSVG(l *layout.Layout, th *theme.Theme, cfg *config.Layout) string {
-	var b svgBuilder
+func RenderSVG(computed *layout.Layout, th *theme.Theme, cfg *config.Layout) string {
+	var builder svgBuilder
 
-	width := l.Width
+	width := computed.Width
 	if width < 1 {
 		width = 1
 	}
-	height := l.Height
+	height := computed.Height
 	if height < 1 {
 		height = 1
 	}
 
 	// Compute accessibility attributes.
-	ariaLabel := l.Title
+	ariaLabel := computed.Title
 	if ariaLabel == "" {
-		ariaLabel = l.Kind.String() + " diagram"
+		ariaLabel = computed.Kind.String() + " diagram"
 	}
 
 	// Open <svg> tag. Set font-family so all <text> elements inherit it.
-	b.openTag("svg",
+	builder.openTag("svg",
 		"xmlns", "http://www.w3.org/2000/svg",
 		"width", fmtFloat(width),
 		"height", fmtFloat(height),
@@ -38,138 +38,138 @@ func RenderSVG(l *layout.Layout, th *theme.Theme, cfg *config.Layout) string {
 	)
 
 	// Arrow marker definitions.
-	renderDefs(&b, th)
+	renderDefs(&builder, th)
 
 	// Background.
-	b.rect(0, 0, width, height, 0,
+	builder.rect(0, 0, width, height, 0,
 		"fill", th.Background,
 	)
 
 	// Title element for accessibility (only when a diagram title is set).
-	if l.Title != "" {
-		b.openTag("title")
-		b.content(l.Title)
-		b.closeTag("title")
+	if computed.Title != "" {
+		builder.openTag("title")
+		builder.content(computed.Title)
+		builder.closeTag("title")
 	}
 
 	// Dispatch based on diagram data type.
-	switch l.Diagram.(type) {
+	switch computed.Diagram.(type) {
 	case layout.GraphData:
-		renderGraph(&b, l, th, cfg)
+		renderGraph(&builder, computed, th, cfg)
 	case layout.ClassData:
-		renderClass(&b, l, th, cfg)
+		renderClass(&builder, computed, th, cfg)
 	case layout.ERData:
-		renderER(&b, l, th, cfg)
+		renderER(&builder, computed, th, cfg)
 	case layout.StateData:
-		renderState(&b, l, th, cfg)
+		renderState(&builder, computed, th, cfg)
 	case layout.SequenceData:
-		renderSequence(&b, l, th, cfg)
+		renderSequence(&builder, computed, th, cfg)
 	case layout.KanbanData:
-		renderKanban(&b, l, th, cfg)
+		renderKanban(&builder, computed, th, cfg)
 	case layout.PacketData:
-		renderPacket(&b, l, th, cfg)
+		renderPacket(&builder, computed, th, cfg)
 	case layout.PieData:
-		renderPie(&b, l, th, cfg)
+		renderPie(&builder, computed, th, cfg)
 	case layout.QuadrantData:
-		renderQuadrant(&b, l, th, cfg)
+		renderQuadrant(&builder, computed, th, cfg)
 	case layout.TimelineData:
-		renderTimeline(&b, l, th, cfg)
+		renderTimeline(&builder, computed, th, cfg)
 	case layout.GanttData:
-		renderGantt(&b, l, th, cfg)
+		renderGantt(&builder, computed, th, cfg)
 	case layout.GitGraphData:
-		renderGitGraph(&b, l, th, cfg)
+		renderGitGraph(&builder, computed, th, cfg)
 	case layout.XYChartData:
-		renderXYChart(&b, l, th, cfg)
+		renderXYChart(&builder, computed, th, cfg)
 	case layout.RadarData:
-		renderRadar(&b, l, th, cfg)
+		renderRadar(&builder, computed, th, cfg)
 	case layout.MindmapData:
-		renderMindmap(&b, l, th, cfg)
+		renderMindmap(&builder, computed, th, cfg)
 	case layout.SankeyData:
-		renderSankey(&b, l, th, cfg)
+		renderSankey(&builder, computed, th, cfg)
 	case layout.TreemapData:
-		renderTreemap(&b, l, th, cfg)
+		renderTreemap(&builder, computed, th, cfg)
 	case layout.RequirementData:
-		renderRequirement(&b, l, th, cfg)
+		renderRequirement(&builder, computed, th, cfg)
 	case layout.BlockData:
-		renderBlock(&b, l, th, cfg)
+		renderBlock(&builder, computed, th, cfg)
 	case layout.C4Data:
-		renderC4(&b, l, th, cfg)
+		renderC4(&builder, computed, th, cfg)
 	case layout.JourneyData:
-		renderJourney(&b, l, th, cfg)
+		renderJourney(&builder, computed, th, cfg)
 	case layout.ArchitectureData:
-		renderArchitecture(&b, l, th, cfg)
+		renderArchitecture(&builder, computed, th, cfg)
 	default:
 		// For other diagram types, still render graph as a fallback.
-		renderGraph(&b, l, th, cfg)
+		renderGraph(&builder, computed, th, cfg)
 	}
 
-	b.closeTag("svg")
-	return b.String()
+	builder.closeTag("svg")
+	return builder.String()
 }
 
 // renderDefs writes the <defs> block with reusable marker definitions.
-func renderDefs(b *svgBuilder, th *theme.Theme) {
-	b.openTag("defs")
+func renderDefs(builder *svgBuilder, th *theme.Theme) {
+	builder.openTag("defs")
 
 	// Forward arrowhead marker.
-	b.raw(`<marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto">`)
-	b.selfClose("path",
+	builder.raw(`<marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto">`)
+	builder.selfClose("path",
 		"d", "M 0 0 L 10 5 L 0 10 z",
 		"fill", th.LineColor,
 		"stroke", th.LineColor,
 		"stroke-width", "1",
 	)
-	b.closeTag("marker")
+	builder.closeTag("marker")
 
 	// Reverse arrowhead marker.
-	b.raw(`<marker id="arrowhead-start" viewBox="0 0 10 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto">`)
-	b.selfClose("path",
+	builder.raw(`<marker id="arrowhead-start" viewBox="0 0 10 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto">`)
+	builder.selfClose("path",
 		"d", "M 10 0 L 0 5 L 10 10 z",
 		"fill", th.LineColor,
 		"stroke", th.LineColor,
 		"stroke-width", "1",
 	)
-	b.closeTag("marker")
+	builder.closeTag("marker")
 
 	// Closed triangle (inheritance/realization) — forward
-	b.raw(`<marker id="marker-closed-triangle" viewBox="0 0 20 20" refX="18" refY="10" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto">`)
-	b.selfClose("path", "d", "M 0 0 L 20 10 L 0 20 z", "fill", th.Background, "stroke", th.LineColor, "stroke-width", "1")
-	b.closeTag("marker")
+	builder.raw(`<marker id="marker-closed-triangle" viewBox="0 0 20 20" refX="18" refY="10" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto">`)
+	builder.selfClose("path", "d", "M 0 0 L 20 10 L 0 20 z", "fill", th.Background, "stroke", th.LineColor, "stroke-width", "1")
+	builder.closeTag("marker")
 
 	// Closed triangle — reverse
-	b.raw(`<marker id="marker-closed-triangle-start" viewBox="0 0 20 20" refX="2" refY="10" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto">`)
-	b.selfClose("path", "d", "M 20 0 L 0 10 L 20 20 z", "fill", th.Background, "stroke", th.LineColor, "stroke-width", "1")
-	b.closeTag("marker")
+	builder.raw(`<marker id="marker-closed-triangle-start" viewBox="0 0 20 20" refX="2" refY="10" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto">`)
+	builder.selfClose("path", "d", "M 20 0 L 0 10 L 20 20 z", "fill", th.Background, "stroke", th.LineColor, "stroke-width", "1")
+	builder.closeTag("marker")
 
 	// Filled diamond (composition) — forward
-	b.raw(`<marker id="marker-filled-diamond" viewBox="0 0 20 20" refX="18" refY="10" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto">`)
-	b.selfClose("path", "d", "M 0 10 L 10 0 L 20 10 L 10 20 z", "fill", th.LineColor, "stroke", th.LineColor, "stroke-width", "1")
-	b.closeTag("marker")
+	builder.raw(`<marker id="marker-filled-diamond" viewBox="0 0 20 20" refX="18" refY="10" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto">`)
+	builder.selfClose("path", "d", "M 0 10 L 10 0 L 20 10 L 10 20 z", "fill", th.LineColor, "stroke", th.LineColor, "stroke-width", "1")
+	builder.closeTag("marker")
 
 	// Filled diamond — reverse
-	b.raw(`<marker id="marker-filled-diamond-start" viewBox="0 0 20 20" refX="2" refY="10" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto">`)
-	b.selfClose("path", "d", "M 0 10 L 10 0 L 20 10 L 10 20 z", "fill", th.LineColor, "stroke", th.LineColor, "stroke-width", "1")
-	b.closeTag("marker")
+	builder.raw(`<marker id="marker-filled-diamond-start" viewBox="0 0 20 20" refX="2" refY="10" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto">`)
+	builder.selfClose("path", "d", "M 0 10 L 10 0 L 20 10 L 10 20 z", "fill", th.LineColor, "stroke", th.LineColor, "stroke-width", "1")
+	builder.closeTag("marker")
 
 	// Open diamond (aggregation) — forward
-	b.raw(`<marker id="marker-open-diamond" viewBox="0 0 20 20" refX="18" refY="10" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto">`)
-	b.selfClose("path", "d", "M 0 10 L 10 0 L 20 10 L 10 20 z", "fill", th.Background, "stroke", th.LineColor, "stroke-width", "1")
-	b.closeTag("marker")
+	builder.raw(`<marker id="marker-open-diamond" viewBox="0 0 20 20" refX="18" refY="10" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto">`)
+	builder.selfClose("path", "d", "M 0 10 L 10 0 L 20 10 L 10 20 z", "fill", th.Background, "stroke", th.LineColor, "stroke-width", "1")
+	builder.closeTag("marker")
 
 	// Open diamond — reverse
-	b.raw(`<marker id="marker-open-diamond-start" viewBox="0 0 20 20" refX="2" refY="10" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto">`)
-	b.selfClose("path", "d", "M 0 10 L 10 0 L 20 10 L 10 20 z", "fill", th.Background, "stroke", th.LineColor, "stroke-width", "1")
-	b.closeTag("marker")
+	builder.raw(`<marker id="marker-open-diamond-start" viewBox="0 0 20 20" refX="2" refY="10" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto">`)
+	builder.selfClose("path", "d", "M 0 10 L 10 0 L 20 10 L 10 20 z", "fill", th.Background, "stroke", th.LineColor, "stroke-width", "1")
+	builder.closeTag("marker")
 
 	// Open arrowhead (async messages) — forward
-	b.raw(`<marker id="marker-open-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto">`)
-	b.selfClose("path", "d", "M 0 0 L 10 5 L 0 10", "fill", "none", "stroke", th.LineColor, "stroke-width", "1.5")
-	b.closeTag("marker")
+	builder.raw(`<marker id="marker-open-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto">`)
+	builder.selfClose("path", "d", "M 0 0 L 10 5 L 0 10", "fill", "none", "stroke", th.LineColor, "stroke-width", "1.5")
+	builder.closeTag("marker")
 
 	// Cross end (termination messages) — forward
-	b.raw(`<marker id="marker-cross" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto">`)
-	b.selfClose("path", "d", "M 2 2 L 8 8 M 8 2 L 2 8", "fill", "none", "stroke", th.LineColor, "stroke-width", "1.5")
-	b.closeTag("marker")
+	builder.raw(`<marker id="marker-cross" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto">`)
+	builder.selfClose("path", "d", "M 2 2 L 8 8 M 8 2 L 2 8", "fill", "none", "stroke", th.LineColor, "stroke-width", "1.5")
+	builder.closeTag("marker")
 
-	b.closeTag("defs")
+	builder.closeTag("defs")
 }

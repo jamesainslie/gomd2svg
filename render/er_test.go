@@ -11,11 +11,11 @@ import (
 )
 
 func TestRenderEREntities(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Er
-	g.Direction = ir.TopDown
-	g.EnsureNode("CUSTOMER", nil, nil)
-	g.Entities["CUSTOMER"] = &ir.Entity{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Er
+	graph.Direction = ir.TopDown
+	graph.EnsureNode("CUSTOMER", nil, nil)
+	graph.Entities["CUSTOMER"] = &ir.Entity{
 		ID: "CUSTOMER",
 		Attributes: []ir.EntityAttribute{
 			{Type: "string", Name: "name"},
@@ -25,7 +25,7 @@ func TestRenderEREntities(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "CUSTOMER") {
@@ -40,18 +40,18 @@ func TestRenderEREntities(t *testing.T) {
 }
 
 func TestRenderERRelationship(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Er
-	g.Direction = ir.TopDown
-	g.EnsureNode("A", nil, nil)
-	g.EnsureNode("B", nil, nil)
-	g.Entities["A"] = &ir.Entity{ID: "A"}
-	g.Entities["B"] = &ir.Entity{ID: "B"}
+	graph := ir.NewGraph()
+	graph.Kind = ir.Er
+	graph.Direction = ir.TopDown
+	graph.EnsureNode("A", nil, nil)
+	graph.EnsureNode("B", nil, nil)
+	graph.Entities["A"] = &ir.Entity{ID: "A"}
+	graph.Entities["B"] = &ir.Entity{ID: "B"}
 
 	startDec := ir.DecCrowsFootOne
 	endDec := ir.DecCrowsFootZeroMany
 	label := "has"
-	g.Edges = append(g.Edges, &ir.Edge{
+	graph.Edges = append(graph.Edges, &ir.Edge{
 		From: "A", To: "B",
 		StartDecoration: &startDec,
 		EndDecoration:   &endDec,
@@ -60,7 +60,7 @@ func TestRenderERRelationship(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "has") {

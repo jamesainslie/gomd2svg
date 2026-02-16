@@ -10,8 +10,17 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
-func renderMindmap(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.Layout) {
-	md, ok := l.Diagram.(layout.MindmapData)
+// Mindmap rendering constants.
+const (
+	mindmapRoundedRadius float32 = 8
+	mindmapDefaultRadius float32 = 4
+	mindmapHexagonSides  int     = 6
+	mindmapHexAngleDelta float64 = math.Pi / 6
+	mindmapCloudScale    float32 = 1.1
+)
+
+func renderMindmap(builder *svgBuilder, lay *layout.Layout, th *theme.Theme, _ *config.Layout) {
+	md, ok := lay.Diagram.(layout.MindmapData)
 	if !ok || md.Root == nil {
 		return
 	}
@@ -22,35 +31,35 @@ func renderMindmap(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config
 	}
 
 	// Draw connections first (behind nodes).
-	renderMindmapConnections(b, md.Root, branchColors, th)
+	renderMindmapConnections(builder, md.Root, branchColors)
 
 	// Draw nodes.
-	renderMindmapNode(b, md.Root, branchColors, th)
+	renderMindmapNode(builder, md.Root, branchColors, th)
 }
 
-func renderMindmapConnections(b *svgBuilder, node *layout.MindmapNodeLayout, colors []string, th *theme.Theme) {
+func renderMindmapConnections(builder *svgBuilder, node *layout.MindmapNodeLayout, colors []string) {
 	for _, child := range node.Children {
 		color := colors[child.ColorIndex%len(colors)]
 		// Draw a curved connection from parent center to child center
 		// using a cubic bezier with horizontal control points.
 		midX := (node.X + child.X) / 2
-		d := fmt.Sprintf("M %s %s C %s %s, %s %s, %s %s",
+		pathData := fmt.Sprintf("M %s %s C %s %s, %s %s, %s %s",
 			fmtFloat(node.X), fmtFloat(node.Y),
 			fmtFloat(midX), fmtFloat(node.Y),
 			fmtFloat(midX), fmtFloat(child.Y),
 			fmtFloat(child.X), fmtFloat(child.Y),
 		)
-		b.path(d,
+		builder.path(pathData,
 			"fill", "none",
 			"stroke", color,
 			"stroke-width", "2",
 			"opacity", "0.6",
 		)
-		renderMindmapConnections(b, child, colors, th)
+		renderMindmapConnections(builder, child, colors)
 	}
 }
 
-func renderMindmapNode(b *svgBuilder, node *layout.MindmapNodeLayout, colors []string, th *theme.Theme) {
+func renderMindmapNode(builder *svgBuilder, node *layout.MindmapNodeLayout, colors []string, th *theme.Theme) {
 	color := colors[node.ColorIndex%len(colors)]
 	cx := node.X
 	cy := node.Y
@@ -59,63 +68,63 @@ func renderMindmapNode(b *svgBuilder, node *layout.MindmapNodeLayout, colors []s
 
 	switch node.Shape {
 	case ir.MindmapSquare:
-		b.rect(cx-hw, cy-hh, node.Width, node.Height, 0,
+		builder.rect(cx-hw, cy-hh, node.Width, node.Height, 0,
 			"fill", th.MindmapNodeFill,
 			"stroke", color,
 			"stroke-width", "2",
 		)
 	case ir.MindmapRounded:
-		b.rect(cx-hw, cy-hh, node.Width, node.Height, 8,
+		builder.rect(cx-hw, cy-hh, node.Width, node.Height, mindmapRoundedRadius,
 			"fill", th.MindmapNodeFill,
 			"stroke", color,
 			"stroke-width", "2",
 		)
 	case ir.MindmapCircle:
-		r := hw
-		if hh > r {
-			r = hh
+		radius := hw
+		if hh > radius {
+			radius = hh
 		}
-		b.circle(cx, cy, r,
+		builder.circle(cx, cy, radius,
 			"fill", th.MindmapNodeFill,
 			"stroke", color,
 			"stroke-width", "2",
 		)
 	case ir.MindmapHexagon:
 		// Draw hexagon using polygon.
-		pts := make([][2]float32, 6)
-		for i := 0; i < 6; i++ {
-			angle := float64(i)*math.Pi/3 - math.Pi/6
-			pts[i] = [2]float32{
+		pts := make([][2]float32, mindmapHexagonSides)
+		for idx := range mindmapHexagonSides {
+			angle := float64(idx)*math.Pi/3 - mindmapHexAngleDelta
+			pts[idx] = [2]float32{
 				cx + hw*float32(math.Cos(angle)),
 				cy + hh*float32(math.Sin(angle)),
 			}
 		}
-		b.polygon(pts,
+		builder.polygon(pts,
 			"fill", th.MindmapNodeFill,
 			"stroke", color,
 			"stroke-width", "2",
 		)
 	case ir.MindmapBang:
 		// Star-burst shape using a larger circle with a thicker border.
-		r := hw
-		if hh > r {
-			r = hh
+		radius := hw
+		if hh > radius {
+			radius = hh
 		}
-		b.circle(cx, cy, r,
+		builder.circle(cx, cy, radius,
 			"fill", color,
 			"stroke", color,
 			"stroke-width", "4",
 		)
 	case ir.MindmapCloud:
 		// Cloud-like shape: ellipse with dashed stroke.
-		b.ellipse(cx, cy, hw*1.1, hh*1.1,
+		builder.ellipse(cx, cy, hw*mindmapCloudScale, hh*mindmapCloudScale,
 			"fill", th.MindmapNodeFill,
 			"stroke", color,
 			"stroke-width", "2",
 			"stroke-dasharray", "4 2",
 		)
 	default: // MindmapShapeDefault - no border, just text background.
-		b.rect(cx-hw, cy-hh, node.Width, node.Height, 4,
+		builder.rect(cx-hw, cy-hh, node.Width, node.Height, mindmapDefaultRadius,
 			"fill", th.MindmapNodeFill,
 			"stroke", "none",
 		)
@@ -126,7 +135,7 @@ func renderMindmapNode(b *svgBuilder, node *layout.MindmapNodeLayout, colors []s
 	if node.Shape == ir.MindmapBang {
 		textColor = "#FFFFFF"
 	}
-	b.text(cx, cy+th.FontSize/3, node.Label,
+	builder.text(cx, cy+th.FontSize/3, node.Label,
 		"text-anchor", "middle",
 		"font-family", th.FontFamily,
 		"font-size", fmtFloat(th.FontSize),
@@ -135,6 +144,6 @@ func renderMindmapNode(b *svgBuilder, node *layout.MindmapNodeLayout, colors []s
 
 	// Recursively render children.
 	for _, child := range node.Children {
-		renderMindmapNode(b, child, colors, th)
+		renderMindmapNode(builder, child, colors, th)
 	}
 }

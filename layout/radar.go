@@ -8,32 +8,38 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
-func computeRadarLayout(g *ir.Graph, _ *theme.Theme, cfg *config.Layout) *Layout {
+// Radar layout constants.
+const (
+	radarTitleHeight  float32 = 20
+	radarDefaultValue float64 = 100
+)
+
+func computeRadarLayout(graph *ir.Graph, _ *theme.Theme, cfg *config.Layout) *Layout {
 	radius := cfg.Radar.Radius
 	padX := cfg.Radar.PaddingX
 	padY := cfg.Radar.PaddingY
 	labelOffset := cfg.Radar.LabelOffset
 
-	numAxes := len(g.RadarAxes)
+	numAxes := len(graph.RadarAxes)
 	if numAxes == 0 {
 		numAxes = 1
 	}
 
 	// Title height.
 	var titleHeight float32
-	if g.RadarTitle != "" {
-		titleHeight = 20 + padY
+	if graph.RadarTitle != "" {
+		titleHeight = radarTitleHeight + padY
 	}
 
 	centerX := padX + radius + labelOffset
 	centerY := titleHeight + padY + radius + labelOffset
 
 	// Determine max value.
-	maxVal := g.RadarMax
+	maxVal := graph.RadarMax
 	if maxVal <= 0 {
-		maxVal = radarAutoMax(g)
+		maxVal = radarAutoMax(graph)
 	}
-	minVal := g.RadarMin
+	minVal := graph.RadarMin
 
 	valRange := maxVal - minVal
 	if valRange <= 0 {
@@ -44,8 +50,8 @@ func computeRadarLayout(g *ir.Graph, _ *theme.Theme, cfg *config.Layout) *Layout
 	angleStep := 2 * math.Pi / float64(numAxes)
 
 	// Build axis layouts.
-	axes := make([]RadarAxisLayout, len(g.RadarAxes))
-	for i, ax := range g.RadarAxes {
+	axes := make([]RadarAxisLayout, len(graph.RadarAxes))
+	for i, ax := range graph.RadarAxes {
 		angle := -math.Pi/2 + float64(i)*angleStep
 		cos := float32(math.Cos(angle))
 		sin := float32(math.Sin(angle))
@@ -59,11 +65,11 @@ func computeRadarLayout(g *ir.Graph, _ *theme.Theme, cfg *config.Layout) *Layout
 	}
 
 	// Build curve layouts.
-	curves := make([]RadarCurveLayout, len(g.RadarCurves))
-	for ci, curve := range g.RadarCurves {
+	curves := make([]RadarCurveLayout, len(graph.RadarCurves))
+	for ci, curve := range graph.RadarCurves {
 		var points [][2]float32
 		for i, v := range curve.Values {
-			if i >= len(g.RadarAxes) {
+			if i >= len(graph.RadarAxes) {
 				break
 			}
 			angle := -math.Pi/2 + float64(i)*angleStep
@@ -87,7 +93,7 @@ func computeRadarLayout(g *ir.Graph, _ *theme.Theme, cfg *config.Layout) *Layout
 	}
 
 	// Graticule radii (concentric rings).
-	ticks := g.RadarTicks
+	ticks := graph.RadarTicks
 	if ticks <= 0 {
 		ticks = cfg.Radar.DefaultTicks
 	}
@@ -100,7 +106,7 @@ func computeRadarLayout(g *ir.Graph, _ *theme.Theme, cfg *config.Layout) *Layout
 	totalH := titleHeight + (padY+labelOffset+radius)*2
 
 	return &Layout{
-		Kind:   g.Kind,
+		Kind:   graph.Kind,
 		Nodes:  map[string]*NodeLayout{},
 		Width:  totalW,
 		Height: totalH,
@@ -108,29 +114,29 @@ func computeRadarLayout(g *ir.Graph, _ *theme.Theme, cfg *config.Layout) *Layout
 			Axes:           axes,
 			Curves:         curves,
 			GraticuleRadii: graticuleRadii,
-			GraticuleType:  g.RadarGraticuleType,
+			GraticuleType:  graph.RadarGraticuleType,
 			CenterX:        centerX,
 			CenterY:        centerY,
 			Radius:         radius,
-			Title:          g.RadarTitle,
-			ShowLegend:     g.RadarShowLegend,
+			Title:          graph.RadarTitle,
+			ShowLegend:     graph.RadarShowLegend,
 			MaxValue:       maxVal,
 			MinValue:       minVal,
 		},
 	}
 }
 
-func radarAutoMax(g *ir.Graph) float64 {
-	max := 0.0
-	for _, c := range g.RadarCurves {
+func radarAutoMax(graph *ir.Graph) float64 {
+	maxValue := 0.0
+	for _, c := range graph.RadarCurves {
 		for _, v := range c.Values {
-			if v > max {
-				max = v
+			if v > maxValue {
+				maxValue = v
 			}
 		}
 	}
-	if max <= 0 {
-		return 100
+	if maxValue <= 0 {
+		return radarDefaultValue
 	}
-	return niceMax(max)
+	return niceMax(maxValue)
 }

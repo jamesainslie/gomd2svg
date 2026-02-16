@@ -11,10 +11,10 @@ import (
 )
 
 func TestRenderPie(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Pie
-	g.PieTitle = "Pets"
-	g.PieSlices = []*ir.PieSlice{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Pie
+	graph.PieTitle = "Pets"
+	graph.PieSlices = []*ir.PieSlice{
 		{Label: "Dogs", Value: 386},
 		{Label: "Cats", Value: 85},
 		{Label: "Rats", Value: 15},
@@ -22,7 +22,7 @@ func TestRenderPie(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "<svg") {
@@ -44,17 +44,17 @@ func TestRenderPie(t *testing.T) {
 }
 
 func TestRenderPieShowData(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Pie
-	g.PieShowData = true
-	g.PieSlices = []*ir.PieSlice{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Pie
+	graph.PieShowData = true
+	graph.PieSlices = []*ir.PieSlice{
 		{Label: "A", Value: 60},
 		{Label: "B", Value: 40},
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	// When showData is true, values should appear in the output.
@@ -64,15 +64,15 @@ func TestRenderPieShowData(t *testing.T) {
 }
 
 func TestRenderPieSingleSlice(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Pie
-	g.PieSlices = []*ir.PieSlice{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Pie
+	graph.PieSlices = []*ir.PieSlice{
 		{Label: "All", Value: 100},
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	// Single slice = full circle, should use <circle> element.

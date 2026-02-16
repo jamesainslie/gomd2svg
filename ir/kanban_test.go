@@ -29,6 +29,12 @@ func TestKanbanColumnCards(t *testing.T) {
 			{ID: "t2", Label: "Task 2", Assigned: "alice"},
 		},
 	}
+	if col.ID != "todo" {
+		t.Errorf("ID = %q, want %q", col.ID, "todo")
+	}
+	if col.Label != "Todo" {
+		t.Errorf("Label = %q, want %q", col.Label, "Todo")
+	}
 	if len(col.Cards) != 2 {
 		t.Fatalf("len(Cards) = %d, want 2", len(col.Cards))
 	}

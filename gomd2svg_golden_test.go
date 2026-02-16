@@ -13,6 +13,7 @@ import (
 var updateGolden = flag.Bool("update", false, "update golden files")
 
 func TestGolden(t *testing.T) {
+	t.Parallel()
 	fixtures, err := filepath.Glob("testdata/fixtures/*.mmd")
 	if err != nil {
 		t.Fatal(err)
@@ -73,39 +74,39 @@ func diffSnippet(want, got string, maxLines int) string {
 
 	var buf strings.Builder
 	shown := 0
-	max := len(wantLines)
-	if len(gotLines) > max {
-		max = len(gotLines)
+	maxIdx := len(wantLines)
+	if len(gotLines) > maxIdx {
+		maxIdx = len(gotLines)
 	}
 
-	for i := 0; i < max && shown < maxLines; i++ {
-		var w, g string
-		if i < len(wantLines) {
-			w = wantLines[i]
+	for lineIdx := 0; lineIdx < maxIdx && shown < maxLines; lineIdx++ {
+		var wantLine, gotLine string
+		if lineIdx < len(wantLines) {
+			wantLine = wantLines[lineIdx]
 		}
-		if i < len(gotLines) {
-			g = gotLines[i]
+		if lineIdx < len(gotLines) {
+			gotLine = gotLines[lineIdx]
 		}
-		if w != g {
+		if wantLine != gotLine {
 			if shown == 0 {
 				buf.WriteString("first difference at line ")
-				buf.WriteString(strings.TrimLeft(strings.Repeat("0", 3)+string(rune('0'+i%10)), "0"))
+				buf.WriteString(strings.TrimLeft(strings.Repeat("0", 3)+string(rune('0'+lineIdx%10)), "0"))
 				buf.WriteByte('\n')
 			}
 			buf.WriteString("  want: ")
-			if len(w) > 120 {
-				buf.WriteString(w[:120])
+			if len(wantLine) > 120 {
+				buf.WriteString(wantLine[:120])
 				buf.WriteString("...")
 			} else {
-				buf.WriteString(w)
+				buf.WriteString(wantLine)
 			}
 			buf.WriteByte('\n')
 			buf.WriteString("  got:  ")
-			if len(g) > 120 {
-				buf.WriteString(g[:120])
+			if len(gotLine) > 120 {
+				buf.WriteString(gotLine[:120])
 				buf.WriteString("...")
 			} else {
-				buf.WriteString(g)
+				buf.WriteString(gotLine)
 			}
 			buf.WriteByte('\n')
 			shown++

@@ -8,8 +8,13 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
-func renderSankey(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *config.Layout) {
-	sd, ok := l.Diagram.(layout.SankeyData)
+// Sankey diagram rendering constants.
+const (
+	sankeyLabelGap float32 = 4
+)
+
+func renderSankey(builder *svgBuilder, lay *layout.Layout, th *theme.Theme, _ *config.Layout) {
+	sd, ok := lay.Diagram.(layout.SankeyData)
 	if !ok {
 		return
 	}
@@ -42,13 +47,13 @@ func renderSankey(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *config.La
 		ty := link.TargetY + link.Width/2
 		midX := (sx + tx) / 2
 
-		d := fmt.Sprintf("M %s,%s C %s,%s %s,%s %s,%s",
+		pathData := fmt.Sprintf("M %s,%s C %s,%s %s,%s %s,%s",
 			fmtFloat(sx), fmtFloat(sy),
 			fmtFloat(midX), fmtFloat(sy),
 			fmtFloat(midX), fmtFloat(ty),
 			fmtFloat(tx), fmtFloat(ty),
 		)
-		b.path(d,
+		builder.path(pathData,
 			"fill", "none",
 			"stroke", linkColor,
 			"stroke-width", fmtFloat(link.Width),
@@ -59,14 +64,14 @@ func renderSankey(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *config.La
 	// Draw node rectangles.
 	for _, node := range sd.Nodes {
 		color := nodeColors[node.ColorIndex%len(nodeColors)]
-		b.rect(node.X, node.Y, node.Width, node.Height, 0,
+		builder.rect(node.X, node.Y, node.Width, node.Height, 0,
 			"fill", color,
 		)
 
 		// Label to the right of the node.
-		labelX := node.X + node.Width + 4
+		labelX := node.X + node.Width + sankeyLabelGap
 		labelY := node.Y + node.Height/2 + th.FontSize/3
-		b.text(labelX, labelY, node.Label,
+		builder.text(labelX, labelY, node.Label,
 			"font-family", th.FontFamily,
 			"font-size", fmtFloat(th.FontSize),
 			"fill", th.TextColor,

@@ -12,22 +12,22 @@ func TestBuildObstacleGrid(t *testing.T) {
 		"B": {ID: "B", X: 150, Y: 50, Width: 40, Height: 30},
 	}
 
-	g := buildGrid(nodes, 10, 4)
+	grid := buildGrid(nodes, 10, 4)
 
 	// Grid should cover all nodes plus margin.
-	if g.cols <= 0 || g.rows <= 0 {
-		t.Fatalf("grid has no cells: cols=%d rows=%d", g.cols, g.rows)
+	if grid.cols <= 0 || grid.rows <= 0 {
+		t.Fatalf("grid has no cells: cols=%d rows=%d", grid.cols, grid.rows)
 	}
 
 	// Center of node A (50,50) should be blocked.
-	r, c := g.worldToCell(50, 50)
-	if !g.isBlocked(r, c) {
+	row, col := grid.worldToCell(50, 50)
+	if !grid.isBlocked(row, col) {
 		t.Error("center of node A should be blocked")
 	}
 
 	// A point well outside all nodes should be free.
-	r, c = g.worldToCell(100, 100)
-	if g.isBlocked(r, c) {
+	row, col = grid.worldToCell(100, 100)
+	if grid.isBlocked(row, col) {
 		t.Error("point (100,100) should be free, no node there")
 	}
 }
@@ -202,13 +202,13 @@ func TestRouteLabelAnchor(t *testing.T) {
 	if len(result) != 1 {
 		t.Fatalf("got %d edges, want 1", len(result))
 	}
-	e := result[0]
-	if e.Label == nil {
+	edge := result[0]
+	if edge.Label == nil {
 		t.Fatal("edge label is nil, want non-nil")
 	}
 	// Label anchor should be between the two nodes' X positions.
-	if e.LabelAnchor[0] <= 70 || e.LabelAnchor[0] >= 180 {
-		t.Errorf("LabelAnchor X = %f, want between ~70 and ~180", e.LabelAnchor[0])
+	if edge.LabelAnchor[0] <= 70 || edge.LabelAnchor[0] >= 180 {
+		t.Errorf("LabelAnchor X = %f, want between ~70 and ~180", edge.LabelAnchor[0])
 	}
 }
 
@@ -230,18 +230,18 @@ func TestRouteEdgesPreservesMetadata(t *testing.T) {
 	if len(result) != 1 {
 		t.Fatalf("got %d edges, want 1", len(result))
 	}
-	e := result[0]
-	if !e.ArrowStart {
+	edge := result[0]
+	if !edge.ArrowStart {
 		t.Error("ArrowStart should be true")
 	}
-	if !e.ArrowEnd {
+	if !edge.ArrowEnd {
 		t.Error("ArrowEnd should be true")
 	}
-	if e.ArrowStartKind == nil || *e.ArrowStartKind != ir.FilledDiamond {
+	if edge.ArrowStartKind == nil || *edge.ArrowStartKind != ir.FilledDiamond {
 		t.Error("ArrowStartKind should be FilledDiamond")
 	}
-	if e.Style != ir.Dotted {
-		t.Errorf("Style = %v, want Dotted", e.Style)
+	if edge.Style != ir.Dotted {
+		t.Errorf("Style = %v, want Dotted", edge.Style)
 	}
 }
 
@@ -323,32 +323,32 @@ func TestGridOverlappingNodePadding(t *testing.T) {
 		"B": {ID: "B", X: 80, Y: 50, Width: 40, Height: 30}, // 10px gap, but 4px padding each side means overlap
 	}
 
-	g := buildGrid(nodes, 8, 4)
+	grid := buildGrid(nodes, 8, 4)
 
 	// Find a cell in the overlap zone (between X=66 and X=64: A's right pad edge and B's left pad edge).
 	// A right edge + pad = 50+20+4 = 74, B left edge - pad = 80-20-4 = 56
 	// So cells between X=56 and X=74 could be in the overlap.
 	overlapX := float32(65) // should be in both A and B's padded region
 	overlapY := float32(50)
-	r, c := g.worldToCell(overlapX, overlapY)
+	row, col := grid.worldToCell(overlapX, overlapY)
 
 	// Cell should be blocked.
-	if !g.isBlocked(r, c) {
+	if !grid.isBlocked(row, col) {
 		t.Fatal("overlap cell should be blocked")
 	}
 
 	// Cell should be passable when excluding A (edge from A goes through).
-	if g.isBlockedExcluding(r, c, "A", "X") {
+	if grid.isBlockedExcluding(row, col, "A", "X") {
 		t.Error("overlap cell should be passable when excluding A")
 	}
 
 	// Cell should be passable when excluding B (edge from B goes through).
-	if g.isBlockedExcluding(r, c, "X", "B") {
+	if grid.isBlockedExcluding(row, col, "X", "B") {
 		t.Error("overlap cell should be passable when excluding B")
 	}
 
 	// Cell should be blocked when excluding neither A nor B.
-	if !g.isBlockedExcluding(r, c, "X", "Y") {
+	if !grid.isBlockedExcluding(row, col, "X", "Y") {
 		t.Error("overlap cell should be blocked when excluding unrelated nodes")
 	}
 }

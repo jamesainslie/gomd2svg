@@ -2,6 +2,7 @@ package render
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/jamesainslie/gomd2svg/config"
 	"github.com/jamesainslie/gomd2svg/ir"
@@ -9,25 +10,65 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
+// Sequence diagram rendering constants.
+const (
+	seqBoxBorderRadius    float32 = 4
+	seqBoxLabelOffsetX    float32 = 8
+	seqBoxLabelOffsetY    float32 = 16
+	seqBoxFontScale       float32 = 0.9
+	seqFrameBorderRadius  float32 = 4
+	seqFrameTabCharWidth  float32 = 0.6
+	seqFrameTabPadding    float32 = 16
+	seqFrameTabPadY       float32 = 8
+	seqFrameLabelOffsetX  float32 = 6
+	seqFrameFontScale     float32 = 0.85
+	seqSelfBumpWidth      float32 = 40
+	seqSelfBumpHeight     float32 = 30
+	seqSelfTextOffsetX    float32 = 24
+	seqTextAboveOffset    float32 = 6
+	seqAutoNumFontScale   float32 = 0.6
+	seqAutoNumTextScale   float32 = 0.7
+	seqAutoNumBaselineAdj float32 = 0.3
+	seqNoteBorderRadius   float32 = 4
+	seqNoteLineHeight     float32 = 1.2
+	seqNoteTextPadY       float32 = 4
+	seqNoteTextPadX       float32 = 8
+	seqPartBorderRadius   float32 = 4
+	seqKindFontScale      float32 = 0.65
+	seqTextBaselineAdj    float32 = 0.35
+	seqHeadScale          float32 = 0.15
+	seqBodyScale          float32 = 0.3
+	seqArmYFraction       float32 = 0.3
+	seqArmSpanScale       float32 = 0.25
+	seqLegLenScale        float32 = 0.25
+	seqDbEllipseScale     float32 = 0.12
+	seqPersonHeadRadius   float32 = 12
+	seqPersonHeadCY       float32 = 18
+	seqPersonBodyWidth    float32 = 20
+	seqPersonBodyArc      float32 = 24
+	seqPersonTextStart    float32 = 50
+	seqPersonBorderRadius float32 = 6
+)
+
 // renderSequence renders all sequence diagram elements in visual stacking
 // order (back to front): boxes, frames, lifelines, activations, messages,
 // notes, then participants.
-func renderSequence(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *config.Layout) {
-	sd, ok := l.Diagram.(layout.SequenceData)
+func renderSequence(builder *svgBuilder, computed *layout.Layout, th *theme.Theme, _ *config.Layout) {
+	sd, ok := computed.Diagram.(layout.SequenceData)
 	if !ok {
 		return
 	}
-	renderSeqBoxes(b, &sd, th)
-	renderSeqFrames(b, &sd, th)
-	renderSeqLifelines(b, &sd, th)
-	renderSeqActivations(b, &sd, th)
-	renderSeqMessages(b, &sd, th)
-	renderSeqNotes(b, &sd, th)
-	renderSeqParticipants(b, &sd, th)
+	renderSeqBoxes(builder, &sd, th)
+	renderSeqFrames(builder, &sd, th)
+	renderSeqLifelines(builder, &sd, th)
+	renderSeqActivations(builder, &sd, th)
+	renderSeqMessages(builder, &sd, th)
+	renderSeqNotes(builder, &sd, th)
+	renderSeqParticipants(builder, &sd, th)
 }
 
 // renderSeqBoxes renders participant box groups as rounded rectangles.
-func renderSeqBoxes(b *svgBuilder, sd *layout.SequenceData, th *theme.Theme) {
+func renderSeqBoxes(builder *svgBuilder, sd *layout.SequenceData, th *theme.Theme) {
 	for _, box := range sd.Boxes {
 		fill := box.Color
 		if fill == "" {
@@ -41,11 +82,11 @@ func renderSeqBoxes(b *svgBuilder, sd *layout.SequenceData, th *theme.Theme) {
 		if box.Color != "" && !isTransparentColor(box.Color) {
 			attrs = append(attrs, "fill-opacity", "0.15")
 		}
-		b.rect(box.X, box.Y, box.Width, box.Height, 4, attrs...)
+		builder.rect(box.X, box.Y, box.Width, box.Height, seqBoxBorderRadius, attrs...)
 		if box.Label != "" {
-			b.text(box.X+8, box.Y+16, box.Label,
+			builder.text(box.X+seqBoxLabelOffsetX, box.Y+seqBoxLabelOffsetY, box.Label,
 				"fill", th.TextColor,
-				"font-size", fmtFloat(th.FontSize*0.9),
+				"font-size", fmtFloat(th.FontSize*seqBoxFontScale),
 				"font-weight", "bold",
 			)
 		}
@@ -53,7 +94,7 @@ func renderSeqBoxes(b *svgBuilder, sd *layout.SequenceData, th *theme.Theme) {
 }
 
 // renderSeqFrames renders combined fragment frames (loop, alt, opt, etc.).
-func renderSeqFrames(b *svgBuilder, sd *layout.SequenceData, th *theme.Theme) {
+func renderSeqFrames(builder *svgBuilder, sd *layout.SequenceData, th *theme.Theme) {
 	for _, frame := range sd.Frames {
 		fill := "rgba(0,0,0,0.03)"
 		if frame.Kind == ir.FrameRect && frame.Color != "" {
@@ -61,7 +102,7 @@ func renderSeqFrames(b *svgBuilder, sd *layout.SequenceData, th *theme.Theme) {
 		}
 
 		// Outer frame rect.
-		b.rect(frame.X, frame.Y, frame.Width, frame.Height, 4,
+		builder.rect(frame.X, frame.Y, frame.Width, frame.Height, seqFrameBorderRadius,
 			"fill", fill,
 			"stroke", th.ClusterBorder,
 			"stroke-width", "1",
@@ -69,24 +110,24 @@ func renderSeqFrames(b *svgBuilder, sd *layout.SequenceData, th *theme.Theme) {
 
 		// Label tab in top-left corner.
 		kindLabel := frame.Kind.String()
-		tabW := float32(len(kindLabel))*th.FontSize*0.6 + 16
-		tabH := th.FontSize + 8
-		b.rect(frame.X, frame.Y, tabW, tabH, 4,
+		tabW := float32(len(kindLabel))*th.FontSize*seqFrameTabCharWidth + seqFrameTabPadding
+		tabH := th.FontSize + seqFrameTabPadY
+		builder.rect(frame.X, frame.Y, tabW, tabH, seqFrameBorderRadius,
 			"fill", th.ClusterBorder,
 			"stroke", th.ClusterBorder,
 			"stroke-width", "1",
 		)
-		b.text(frame.X+6, frame.Y+th.FontSize+1, kindLabel,
+		builder.text(frame.X+seqFrameLabelOffsetX, frame.Y+th.FontSize+1, kindLabel,
 			"fill", th.LoopTextColor,
-			"font-size", fmtFloat(th.FontSize*0.85),
+			"font-size", fmtFloat(th.FontSize*seqFrameFontScale),
 			"font-weight", "bold",
 		)
 
 		// Condition/label text after the tab.
 		if frame.Label != "" {
-			b.text(frame.X+tabW+6, frame.Y+th.FontSize+1, frame.Label,
+			builder.text(frame.X+tabW+seqFrameLabelOffsetX, frame.Y+th.FontSize+1, frame.Label,
 				"fill", th.LoopTextColor,
-				"font-size", fmtFloat(th.FontSize*0.85),
+				"font-size", fmtFloat(th.FontSize*seqFrameFontScale),
 			)
 		}
 
@@ -94,7 +135,7 @@ func renderSeqFrames(b *svgBuilder, sd *layout.SequenceData, th *theme.Theme) {
 		switch frame.Kind {
 		case ir.FrameAlt, ir.FramePar, ir.FrameCritical:
 			for _, divY := range frame.Dividers {
-				b.line(frame.X, divY, frame.X+frame.Width, divY,
+				builder.line(frame.X, divY, frame.X+frame.Width, divY,
 					"stroke", th.ClusterBorder,
 					"stroke-width", "1",
 					"stroke-dasharray", "5,5",
@@ -105,9 +146,9 @@ func renderSeqFrames(b *svgBuilder, sd *layout.SequenceData, th *theme.Theme) {
 }
 
 // renderSeqLifelines renders vertical dashed lines for each participant.
-func renderSeqLifelines(b *svgBuilder, sd *layout.SequenceData, th *theme.Theme) {
+func renderSeqLifelines(builder *svgBuilder, sd *layout.SequenceData, th *theme.Theme) {
 	for _, ll := range sd.Lifelines {
-		b.line(ll.X, ll.TopY, ll.X, ll.BottomY,
+		builder.line(ll.X, ll.TopY, ll.X, ll.BottomY,
 			"stroke", th.ActorLineColor,
 			"stroke-width", "1",
 			"stroke-dasharray", "5,5",
@@ -116,9 +157,9 @@ func renderSeqLifelines(b *svgBuilder, sd *layout.SequenceData, th *theme.Theme)
 }
 
 // renderSeqActivations renders narrow filled rectangles for activation bars.
-func renderSeqActivations(b *svgBuilder, sd *layout.SequenceData, th *theme.Theme) {
+func renderSeqActivations(builder *svgBuilder, sd *layout.SequenceData, th *theme.Theme) {
 	for _, act := range sd.Activations {
-		b.rect(act.X, act.TopY, act.Width, act.BottomY-act.TopY, 2,
+		builder.rect(act.X, act.TopY, act.Width, act.BottomY-act.TopY, 2,
 			"fill", th.ActivationBackground,
 			"stroke", th.ActivationBorderColor,
 			"stroke-width", "1",
@@ -127,7 +168,7 @@ func renderSeqActivations(b *svgBuilder, sd *layout.SequenceData, th *theme.Them
 }
 
 // renderSeqMessages renders message arrows between participants.
-func renderSeqMessages(b *svgBuilder, sd *layout.SequenceData, th *theme.Theme) {
+func renderSeqMessages(builder *svgBuilder, sd *layout.SequenceData, th *theme.Theme) {
 	for _, msg := range sd.Messages {
 		isSelf := msg.From == msg.To
 
@@ -158,30 +199,28 @@ func renderSeqMessages(b *svgBuilder, sd *layout.SequenceData, th *theme.Theme) 
 
 		if isSelf {
 			// Self-message: draw a right-bump loop path.
-			bumpW := float32(40)
-			bumpH := float32(30)
-			d := fmt.Sprintf("M %s,%s L %s,%s L %s,%s L %s,%s",
+			pathData := fmt.Sprintf("M %s,%s L %s,%s L %s,%s L %s,%s",
 				fmtFloat(msg.FromX), fmtFloat(msg.Y),
-				fmtFloat(msg.FromX+bumpW), fmtFloat(msg.Y),
-				fmtFloat(msg.FromX+bumpW), fmtFloat(msg.Y+bumpH),
-				fmtFloat(msg.FromX), fmtFloat(msg.Y+bumpH),
+				fmtFloat(msg.FromX+seqSelfBumpWidth), fmtFloat(msg.Y),
+				fmtFloat(msg.FromX+seqSelfBumpWidth), fmtFloat(msg.Y+seqSelfBumpHeight),
+				fmtFloat(msg.FromX), fmtFloat(msg.Y+seqSelfBumpHeight),
 			)
-			b.path(d, attrs...)
+			builder.path(pathData, attrs...)
 		} else {
-			b.line(msg.FromX, msg.Y, msg.ToX, msg.Y, attrs...)
+			builder.line(msg.FromX, msg.Y, msg.ToX, msg.Y, attrs...)
 		}
 
 		// Message text label above the arrow line.
 		if len(msg.Text.Lines) > 0 && msg.Text.Lines[0] != "" {
 			var textX float32
 			if isSelf {
-				textX = msg.FromX + 24
+				textX = msg.FromX + seqSelfTextOffsetX
 			} else {
 				textX = (msg.FromX + msg.ToX) / 2
 			}
-			textY := msg.Y - 6
+			textY := msg.Y - seqTextAboveOffset
 
-			b.text(textX, textY, msg.Text.Lines[0],
+			builder.text(textX, textY, msg.Text.Lines[0],
 				"text-anchor", "middle",
 				"fill", th.SignalTextColor,
 				"font-size", fmtFloat(th.FontSize),
@@ -190,18 +229,18 @@ func renderSeqMessages(b *svgBuilder, sd *layout.SequenceData, th *theme.Theme) 
 
 		// Autonumber: filled circle with number at the start of the arrow.
 		if msg.Number > 0 {
-			numR := th.FontSize * 0.6
+			numR := th.FontSize * seqAutoNumFontScale
 			numX := msg.FromX
 			numY := msg.Y
 
-			b.circle(numX, numY, numR,
+			builder.circle(numX, numY, numR,
 				"fill", th.SignalColor,
 				"stroke", "none",
 			)
-			b.text(numX, numY+th.FontSize*0.3, fmt.Sprintf("%d", msg.Number),
+			builder.text(numX, numY+th.FontSize*seqAutoNumBaselineAdj, strconv.Itoa(msg.Number),
 				"text-anchor", "middle",
 				"fill", th.SequenceNumberColor,
-				"font-size", fmtFloat(th.FontSize*0.7),
+				"font-size", fmtFloat(th.FontSize*seqAutoNumTextScale),
 				"font-weight", "bold",
 			)
 		}
@@ -209,9 +248,9 @@ func renderSeqMessages(b *svgBuilder, sd *layout.SequenceData, th *theme.Theme) 
 }
 
 // renderSeqNotes renders note boxes with text content.
-func renderSeqNotes(b *svgBuilder, sd *layout.SequenceData, th *theme.Theme) {
+func renderSeqNotes(builder *svgBuilder, sd *layout.SequenceData, th *theme.Theme) {
 	for _, note := range sd.Notes {
-		b.rect(note.X, note.Y, note.Width, note.Height, 4,
+		builder.rect(note.X, note.Y, note.Width, note.Height, seqNoteBorderRadius,
 			"fill", th.NoteBackground,
 			"stroke", th.NoteBorderColor,
 			"stroke-width", "1",
@@ -222,12 +261,12 @@ func renderSeqNotes(b *svgBuilder, sd *layout.SequenceData, th *theme.Theme) {
 		if fontSize <= 0 {
 			fontSize = th.FontSize
 		}
-		lineH := fontSize * 1.2
-		startY := note.Y + lineH + 4
+		lineH := fontSize * seqNoteLineHeight
+		startY := note.Y + lineH + seqNoteTextPadY
 
-		for i, line := range note.Text.Lines {
-			ly := startY + float32(i)*lineH
-			b.text(note.X+8, ly, line,
+		for idx, line := range note.Text.Lines {
+			ly := startY + float32(idx)*lineH
+			builder.text(note.X+seqNoteTextPadX, ly, line,
 				"fill", th.NoteTextColor,
 				"font-size", fmtFloat(fontSize),
 			)
@@ -237,58 +276,58 @@ func renderSeqNotes(b *svgBuilder, sd *layout.SequenceData, th *theme.Theme) {
 
 // renderSeqParticipants renders participant headers (at the top of the diagram)
 // and footers (at the bottom). Different participant kinds get different shapes.
-func renderSeqParticipants(b *svgBuilder, sd *layout.SequenceData, th *theme.Theme) {
-	for _, p := range sd.Participants {
+func renderSeqParticipants(builder *svgBuilder, sd *layout.SequenceData, th *theme.Theme) {
+	for _, participant := range sd.Participants {
 		// Render header at top.
-		renderSeqParticipantShape(b, &p, p.X, p.Y, th)
+		renderSeqParticipantShape(builder, &participant, participant.X, participant.Y, th)
 
 		// Render footer at bottom (mirror of header).
-		footerY := sd.DiagramHeight - p.Height
-		renderSeqParticipantShape(b, &p, p.X, footerY, th)
+		footerY := sd.DiagramHeight - participant.Height
+		renderSeqParticipantShape(builder, &participant, participant.X, footerY, th)
 	}
 }
 
 // renderSeqParticipantShape renders a single participant shape at the given position.
-func renderSeqParticipantShape(b *svgBuilder, p *layout.SeqParticipantLayout, cx, topY float32, th *theme.Theme) {
+func renderSeqParticipantShape(builder *svgBuilder, participant *layout.SeqParticipantLayout, cx, topY float32, th *theme.Theme) {
 	label := ""
-	if len(p.Label.Lines) > 0 {
-		label = p.Label.Lines[0]
+	if len(participant.Label.Lines) > 0 {
+		label = participant.Label.Lines[0]
 	}
 
-	switch p.Kind {
+	switch participant.Kind {
 	case ir.ActorStickFigure:
-		renderStickFigure(b, cx, topY, p.Height, label, th)
+		renderStickFigure(builder, cx, topY, participant.Height, label, th)
 
 	case ir.ParticipantDatabase:
-		renderDatabaseShape(b, cx, topY, p.Width, p.Height, label, th)
+		renderDatabaseShape(builder, cx, topY, participant.Width, participant.Height, label, th)
 
 	default:
 		// ParticipantBox and all other kinds: rounded rect with label.
-		x := cx - p.Width/2
-		b.rect(x, topY, p.Width, p.Height, 4,
+		posX := cx - participant.Width/2
+		builder.rect(posX, topY, participant.Width, participant.Height, seqPartBorderRadius,
 			"fill", th.ActorBackground,
 			"stroke", th.ActorBorder,
 			"stroke-width", "1.5",
 		)
 
 		// For non-standard kinds, add a small kind label above the main label.
-		if p.Kind != ir.ParticipantBox {
-			kindStr := p.Kind.String()
-			b.text(cx, topY+th.FontSize*0.9, "<<"+kindStr+">>",
+		if participant.Kind != ir.ParticipantBox {
+			kindStr := participant.Kind.String()
+			builder.text(cx, topY+th.FontSize*seqBoxFontScale, "<<"+kindStr+">>",
 				"text-anchor", "middle",
 				"fill", th.ActorTextColor,
-				"font-size", fmtFloat(th.FontSize*0.65),
+				"font-size", fmtFloat(th.FontSize*seqKindFontScale),
 				"font-style", "italic",
 			)
 			// Main label below the kind annotation.
-			b.text(cx, topY+p.Height/2+th.FontSize*0.35, label,
+			builder.text(cx, topY+participant.Height/2+th.FontSize*seqTextBaselineAdj, label,
 				"text-anchor", "middle",
 				"fill", th.ActorTextColor,
 				"font-size", fmtFloat(th.FontSize),
 			)
 		} else {
 			// Standard participant: label centered.
-			b.text(cx, topY+p.Height/2+th.FontSize*0.35, label,
+			builder.text(cx, topY+participant.Height/2+th.FontSize*seqTextBaselineAdj, label,
 				"text-anchor", "middle",
 				"fill", th.ActorTextColor,
 				"font-size", fmtFloat(th.FontSize),
@@ -299,49 +338,49 @@ func renderSeqParticipantShape(b *svgBuilder, p *layout.SeqParticipantLayout, cx
 
 // renderStickFigure draws a simple stick figure: circle head, body line,
 // arms line, leg lines, with a label below.
-func renderStickFigure(b *svgBuilder, cx, topY, height float32, label string, th *theme.Theme) {
-	headR := height * 0.15
+func renderStickFigure(builder *svgBuilder, cx, topY, height float32, label string, th *theme.Theme) {
+	headR := height * seqHeadScale
 	headCY := topY + headR + 2
 	bodySt := headCY + headR
-	bodyLen := height * 0.3
+	bodyLen := height * seqBodyScale
 	bodyEnd := bodySt + bodyLen
-	armY := bodySt + bodyLen*0.3
-	armSpan := height * 0.25
-	legLen := height * 0.25
+	armY := bodySt + bodyLen*seqArmYFraction
+	armSpan := height * seqArmSpanScale
+	legLen := height * seqLegLenScale
 
 	// Head.
-	b.circle(cx, headCY, headR,
+	builder.circle(cx, headCY, headR,
 		"fill", "none",
 		"stroke", th.ActorBorder,
 		"stroke-width", "1.5",
 	)
 
 	// Body.
-	b.line(cx, bodySt, cx, bodyEnd,
+	builder.line(cx, bodySt, cx, bodyEnd,
 		"stroke", th.ActorBorder,
 		"stroke-width", "1.5",
 	)
 
 	// Arms.
-	b.line(cx-armSpan, armY, cx+armSpan, armY,
+	builder.line(cx-armSpan, armY, cx+armSpan, armY,
 		"stroke", th.ActorBorder,
 		"stroke-width", "1.5",
 	)
 
 	// Left leg.
-	b.line(cx, bodyEnd, cx-armSpan, bodyEnd+legLen,
+	builder.line(cx, bodyEnd, cx-armSpan, bodyEnd+legLen,
 		"stroke", th.ActorBorder,
 		"stroke-width", "1.5",
 	)
 
 	// Right leg.
-	b.line(cx, bodyEnd, cx+armSpan, bodyEnd+legLen,
+	builder.line(cx, bodyEnd, cx+armSpan, bodyEnd+legLen,
 		"stroke", th.ActorBorder,
 		"stroke-width", "1.5",
 	)
 
 	// Label below the figure.
-	b.text(cx, topY+height-2, label,
+	builder.text(cx, topY+height-2, label,
 		"text-anchor", "middle",
 		"fill", th.ActorTextColor,
 		"font-size", fmtFloat(th.FontSize),
@@ -349,41 +388,41 @@ func renderStickFigure(b *svgBuilder, cx, topY, height float32, label string, th
 }
 
 // renderDatabaseShape draws a cylinder (rect body + ellipse caps) for database participants.
-func renderDatabaseShape(b *svgBuilder, cx, topY, width, height float32, label string, th *theme.Theme) {
-	x := cx - width/2
-	ellipseRY := height * 0.12
+func renderDatabaseShape(builder *svgBuilder, cx, topY, width, height float32, label string, th *theme.Theme) {
+	posX := cx - width/2
+	ellipseRY := height * seqDbEllipseScale
 	bodyTop := topY + ellipseRY
 	bodyH := height - 2*ellipseRY
 
 	// Body rect.
-	b.rect(x, bodyTop, width, bodyH, 0,
+	builder.rect(posX, bodyTop, width, bodyH, 0,
 		"fill", th.ActorBackground,
 		"stroke", th.ActorBorder,
 		"stroke-width", "1.5",
 	)
 
 	// Top ellipse cap.
-	b.ellipse(cx, bodyTop, width/2, ellipseRY,
+	builder.ellipse(cx, bodyTop, width/2, ellipseRY,
 		"fill", th.ActorBackground,
 		"stroke", th.ActorBorder,
 		"stroke-width", "1.5",
 	)
 
 	// Bottom ellipse cap.
-	b.ellipse(cx, bodyTop+bodyH, width/2, ellipseRY,
+	builder.ellipse(cx, bodyTop+bodyH, width/2, ellipseRY,
 		"fill", th.ActorBackground,
 		"stroke", th.ActorBorder,
 		"stroke-width", "1.5",
 	)
 
 	// Cover the body-top-ellipse overlap with a filled rect (no stroke).
-	b.rect(x+1, bodyTop, width-2, ellipseRY, 0,
+	builder.rect(posX+1, bodyTop, width-2, ellipseRY, 0,
 		"fill", th.ActorBackground,
 		"stroke", "none",
 	)
 
 	// Label centered.
-	b.text(cx, topY+height/2+th.FontSize*0.35, label,
+	builder.text(cx, topY+height/2+th.FontSize*seqTextBaselineAdj, label,
 		"text-anchor", "middle",
 		"fill", th.ActorTextColor,
 		"font-size", fmtFloat(th.FontSize),

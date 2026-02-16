@@ -11,9 +11,9 @@ import (
 )
 
 func TestRenderMindmap(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Mindmap
-	g.MindmapRoot = &ir.MindmapNode{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Mindmap
+	graph.MindmapRoot = &ir.MindmapNode{
 		ID: "root", Label: "Central", Shape: ir.MindmapCircle,
 		Children: []*ir.MindmapNode{
 			{ID: "a", Label: "Square", Shape: ir.MindmapSquare},
@@ -23,7 +23,7 @@ func TestRenderMindmap(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "<svg") {
@@ -41,12 +41,12 @@ func TestRenderMindmap(t *testing.T) {
 }
 
 func TestRenderMindmapEmpty(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Mindmap
+	graph := ir.NewGraph()
+	graph.Kind = ir.Mindmap
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "<svg") {

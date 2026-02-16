@@ -12,39 +12,37 @@ import (
 
 // buildSeqGraph creates a sequence diagram ir.Graph with the given participants,
 // events, and autonumber flag. Participants are created as ParticipantBox by default.
-func buildSeqGraph(names []string, events []*ir.SeqEvent, autonumber bool) *ir.Graph {
-	g := ir.NewGraph()
-	g.Kind = ir.Sequence
+func buildSeqGraph(names []string, events []*ir.SeqEvent) *ir.Graph {
+	graph := ir.NewGraph()
+	graph.Kind = ir.Sequence
 	for _, name := range names {
-		g.Participants = append(g.Participants, &ir.SeqParticipant{
+		graph.Participants = append(graph.Participants, &ir.SeqParticipant{
 			ID:   name,
 			Kind: ir.ParticipantBox,
 		})
 	}
-	g.Events = events
-	g.Autonumber = autonumber
-	return g
+	graph.Events = events
+	return graph
 }
 
-func renderSeqSVG(g *ir.Graph) string {
+func renderSeqSVG(seqGraph *ir.Graph) string {
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
-	return RenderSVG(l, th, cfg)
+	lay := layout.ComputeLayout(seqGraph, th, cfg)
+	return RenderSVG(lay, th, cfg)
 }
 
 func TestRenderSequenceHasLifelines(t *testing.T) {
-	g := buildSeqGraph(
+	graph := buildSeqGraph(
 		[]string{"Alice", "Bob"},
 		[]*ir.SeqEvent{
 			{Kind: ir.EvMessage, Message: &ir.SeqMessage{
 				From: "Alice", To: "Bob", Text: "Hi", Kind: ir.MsgSolidArrow,
 			}},
 		},
-		false,
 	)
 
-	svg := renderSeqSVG(g)
+	svg := renderSeqSVG(graph)
 
 	// Lifelines are dashed vertical lines.
 	if !strings.Contains(svg, "stroke-dasharray") {
@@ -58,17 +56,16 @@ func TestRenderSequenceHasLifelines(t *testing.T) {
 }
 
 func TestRenderSequenceHasParticipantLabels(t *testing.T) {
-	g := buildSeqGraph(
+	graph := buildSeqGraph(
 		[]string{"Alice", "Bob"},
 		[]*ir.SeqEvent{
 			{Kind: ir.EvMessage, Message: &ir.SeqMessage{
 				From: "Alice", To: "Bob", Text: "msg", Kind: ir.MsgSolid,
 			}},
 		},
-		false,
 	)
 
-	svg := renderSeqSVG(g)
+	svg := renderSeqSVG(graph)
 
 	if !strings.Contains(svg, "Alice") {
 		t.Error("expected SVG to contain participant label 'Alice'")
@@ -79,17 +76,16 @@ func TestRenderSequenceHasParticipantLabels(t *testing.T) {
 }
 
 func TestRenderSequenceHasMessageText(t *testing.T) {
-	g := buildSeqGraph(
+	graph := buildSeqGraph(
 		[]string{"Alice", "Bob"},
 		[]*ir.SeqEvent{
 			{Kind: ir.EvMessage, Message: &ir.SeqMessage{
 				From: "Alice", To: "Bob", Text: "Hello World", Kind: ir.MsgSolidArrow,
 			}},
 		},
-		false,
 	)
 
-	svg := renderSeqSVG(g)
+	svg := renderSeqSVG(graph)
 
 	if !strings.Contains(svg, "Hello World") {
 		t.Error("expected SVG to contain message text 'Hello World'")
@@ -99,7 +95,7 @@ func TestRenderSequenceHasMessageText(t *testing.T) {
 func TestRenderSequenceHasActivations(t *testing.T) {
 	th := theme.Modern()
 
-	g := buildSeqGraph(
+	graph := buildSeqGraph(
 		[]string{"Alice", "Bob"},
 		[]*ir.SeqEvent{
 			{Kind: ir.EvActivate, Target: "Bob"},
@@ -108,10 +104,9 @@ func TestRenderSequenceHasActivations(t *testing.T) {
 			}},
 			{Kind: ir.EvDeactivate, Target: "Bob"},
 		},
-		false,
 	)
 
-	svg := renderSeqSVG(g)
+	svg := renderSeqSVG(graph)
 
 	if !strings.Contains(svg, th.ActivationBackground) {
 		t.Errorf("expected SVG to contain activation fill color %s", th.ActivationBackground)

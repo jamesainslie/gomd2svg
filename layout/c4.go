@@ -7,53 +7,56 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
-func computeC4Layout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
-	measurer := textmetrics.New()
-	nodes := sizeC4Nodes(g, measurer, th, cfg)
+// c4SmallFontRatio is the ratio of small text size to the base font size.
+const c4SmallFontRatio = 0.85
 
-	r := runSugiyama(g, nodes, cfg)
+func computeC4Layout(graph *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
+	measurer := textmetrics.New()
+	nodes := sizeC4Nodes(graph, measurer, th, cfg)
+
+	result := runSugiyama(graph, nodes, cfg)
 
 	elemMap := make(map[string]*ir.C4Element)
-	for _, elem := range g.C4Elements {
+	for _, elem := range graph.C4Elements {
 		elemMap[elem.ID] = elem
 	}
 
 	var boundaryLayouts []*C4BoundaryLayout
-	for _, b := range g.C4Boundaries {
-		bl := computeC4BoundaryRect(b, nodes, cfg)
+	for _, boundary := range graph.C4Boundaries {
+		bl := computeC4BoundaryRect(boundary, nodes, cfg)
 		if bl != nil {
 			boundaryLayouts = append(boundaryLayouts, bl)
 		}
 	}
 
 	return &Layout{
-		Kind:   g.Kind,
+		Kind:   graph.Kind,
 		Nodes:  nodes,
-		Edges:  r.Edges,
-		Width:  r.Width,
-		Height: r.Height,
+		Edges:  result.Edges,
+		Width:  result.Width,
+		Height: result.Height,
 		Diagram: C4Data{
 			Elements:   elemMap,
 			Boundaries: boundaryLayouts,
-			SubKind:    g.C4SubKind,
+			SubKind:    graph.C4SubKind,
 		},
 	}
 }
 
-func sizeC4Nodes(g *ir.Graph, measurer *textmetrics.Measurer, th *theme.Theme, cfg *config.Layout) map[string]*NodeLayout {
-	nodes := make(map[string]*NodeLayout, len(g.Nodes))
+func sizeC4Nodes(graph *ir.Graph, measurer *textmetrics.Measurer, th *theme.Theme, cfg *config.Layout) map[string]*NodeLayout {
+	nodes := make(map[string]*NodeLayout, len(graph.Nodes))
 	lineH := th.FontSize * cfg.LabelLineHeight
-	smallFontSize := th.FontSize * 0.85
+	smallFontSize := th.FontSize * c4SmallFontRatio
 	smallLineH := smallFontSize * cfg.LabelLineHeight
 	padH := cfg.Padding.NodeHorizontal
 	padV := cfg.Padding.NodeVertical
 
 	elemMap := make(map[string]*ir.C4Element)
-	for _, elem := range g.C4Elements {
+	for _, elem := range graph.C4Elements {
 		elemMap[elem.ID] = elem
 	}
 
-	for id, node := range g.Nodes {
+	for id, node := range graph.Nodes {
 		elem := elemMap[id]
 		var maxW, totalH float32
 
@@ -109,25 +112,25 @@ func sizeC4Nodes(g *ir.Graph, measurer *textmetrics.Measurer, th *theme.Theme, c
 	return nodes
 }
 
-func computeC4BoundaryRect(b *ir.C4Boundary, nodes map[string]*NodeLayout, cfg *config.Layout) *C4BoundaryLayout {
+func computeC4BoundaryRect(boundary *ir.C4Boundary, nodes map[string]*NodeLayout, cfg *config.Layout) *C4BoundaryLayout {
 	const boundaryLabelHeight float32 = 20
 
-	if len(b.Children) == 0 {
+	if len(boundary.Children) == 0 {
 		return nil
 	}
 	pad := cfg.C4.BoundaryPadding
 
 	var minX, minY, maxX, maxY float32
 	first := true
-	for _, childID := range b.Children {
-		n, ok := nodes[childID]
+	for _, childID := range boundary.Children {
+		childNode, ok := nodes[childID]
 		if !ok {
 			continue
 		}
-		left := n.X - n.Width/2
-		top := n.Y - n.Height/2
-		right := n.X + n.Width/2
-		bottom := n.Y + n.Height/2
+		left := childNode.X - childNode.Width/2
+		top := childNode.Y - childNode.Height/2
+		right := childNode.X + childNode.Width/2
+		bottom := childNode.Y + childNode.Height/2
 		if first {
 			minX, minY, maxX, maxY = left, top, right, bottom
 			first = false
@@ -151,9 +154,9 @@ func computeC4BoundaryRect(b *ir.C4Boundary, nodes map[string]*NodeLayout, cfg *
 	}
 
 	return &C4BoundaryLayout{
-		ID:     b.ID,
-		Label:  b.Label,
-		Type:   b.Type,
+		ID:     boundary.ID,
+		Label:  boundary.Label,
+		Type:   boundary.Type,
 		X:      minX - pad,
 		Y:      minY - pad - boundaryLabelHeight,
 		Width:  (maxX - minX) + 2*pad,

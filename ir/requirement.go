@@ -60,11 +60,11 @@ const (
 func (r RiskLevel) String() string {
 	switch r {
 	case RiskLow:
-		return "Low"
+		return labelLow
 	case RiskMedium:
 		return "Medium"
 	case RiskHigh:
-		return "High"
+		return labelHigh
 	default:
 		return ""
 	}
@@ -88,7 +88,7 @@ func (v VerifyMethod) String() string {
 	case VerifyInspection:
 		return "Inspection"
 	case VerifyTest:
-		return "Test"
+		return labelTest
 	case VerifyDemonstration:
 		return "Demonstration"
 	default:

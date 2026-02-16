@@ -14,8 +14,8 @@ var (
 	archEdgeRe     = regexp.MustCompile(`^(\w+)(?:\{group\})?:(L|R|T|B)\s*(<)?--(>)?\s*(L|R|T|B):(\w+)(?:\{group\})?$`)
 )
 
-func parseArchSide(s string) ir.ArchSide {
-	switch s {
+func parseArchSide(side string) ir.ArchSide {
+	switch side {
 	case "R":
 		return ir.ArchRight
 	case "T":
@@ -27,9 +27,10 @@ func parseArchSide(s string) ir.ArchSide {
 	}
 }
 
+//nolint:unparam // error return is part of the parser interface contract used by Parse().
 func parseArchitecture(input string) (*ParseOutput, error) {
-	g := ir.NewGraph()
-	g.Kind = ir.Architecture
+	graph := ir.NewGraph()
+	graph.Kind = ir.Architecture
 
 	lines := preprocessInput(input)
 	groupChildren := make(map[string][]string)
@@ -41,64 +42,64 @@ func parseArchitecture(input string) (*ParseOutput, error) {
 			continue
 		}
 
-		// Try group
-		if m := archGroupRe.FindStringSubmatch(trimmed); m != nil {
+		// Try group.
+		if match := archGroupRe.FindStringSubmatch(trimmed); match != nil {
 			grp := &ir.ArchGroup{
-				ID:       m[1],
-				Icon:     m[2],
-				Label:    m[3],
-				ParentID: m[4],
+				ID:       match[1],
+				Icon:     match[2],
+				Label:    match[3],
+				ParentID: match[4],
 			}
-			g.ArchGroups = append(g.ArchGroups, grp)
+			graph.ArchGroups = append(graph.ArchGroups, grp)
 			if grp.ParentID != "" {
 				groupChildren[grp.ParentID] = append(groupChildren[grp.ParentID], grp.ID)
 			}
 			continue
 		}
 
-		// Try service
-		if m := archServiceRe.FindStringSubmatch(trimmed); m != nil {
+		// Try service.
+		if match := archServiceRe.FindStringSubmatch(trimmed); match != nil {
 			svc := &ir.ArchService{
-				ID:      m[1],
-				Icon:    m[2],
-				Label:   m[3],
-				GroupID: m[4],
+				ID:      match[1],
+				Icon:    match[2],
+				Label:   match[3],
+				GroupID: match[4],
 			}
-			g.ArchServices = append(g.ArchServices, svc)
+			graph.ArchServices = append(graph.ArchServices, svc)
 			label := svc.Label
-			g.EnsureNode(svc.ID, &label, nil)
+			graph.EnsureNode(svc.ID, &label, nil)
 			if svc.GroupID != "" {
 				groupChildren[svc.GroupID] = append(groupChildren[svc.GroupID], svc.ID)
 			}
 			continue
 		}
 
-		// Try junction
-		if m := archJunctionRe.FindStringSubmatch(trimmed); m != nil {
+		// Try junction.
+		if match := archJunctionRe.FindStringSubmatch(trimmed); match != nil {
 			junc := &ir.ArchJunction{
-				ID:      m[1],
-				GroupID: m[2],
+				ID:      match[1],
+				GroupID: match[2],
 			}
-			g.ArchJunctions = append(g.ArchJunctions, junc)
-			g.EnsureNode(junc.ID, nil, nil)
+			graph.ArchJunctions = append(graph.ArchJunctions, junc)
+			graph.EnsureNode(junc.ID, nil, nil)
 			if junc.GroupID != "" {
 				groupChildren[junc.GroupID] = append(groupChildren[junc.GroupID], junc.ID)
 			}
 			continue
 		}
 
-		// Try edge
-		if m := archEdgeRe.FindStringSubmatch(trimmed); m != nil {
+		// Try edge.
+		if match := archEdgeRe.FindStringSubmatch(trimmed); match != nil {
 			edge := &ir.ArchEdge{
-				FromID:     m[1],
-				FromSide:   parseArchSide(m[2]),
-				ArrowLeft:  m[3] == "<",
-				ArrowRight: m[4] == ">",
-				ToSide:     parseArchSide(m[5]),
-				ToID:       m[6],
+				FromID:     match[1],
+				FromSide:   parseArchSide(match[2]),
+				ArrowLeft:  match[3] == "<",
+				ArrowRight: match[4] == ">",
+				ToSide:     parseArchSide(match[5]),
+				ToID:       match[6],
 			}
-			g.ArchEdges = append(g.ArchEdges, edge)
-			g.Edges = append(g.Edges, &ir.Edge{
+			graph.ArchEdges = append(graph.ArchEdges, edge)
+			graph.Edges = append(graph.Edges, &ir.Edge{
 				From:       edge.FromID,
 				To:         edge.ToID,
 				Directed:   edge.ArrowRight,
@@ -109,10 +110,10 @@ func parseArchitecture(input string) (*ParseOutput, error) {
 		}
 	}
 
-	// Populate group Children from accumulated map
-	for _, grp := range g.ArchGroups {
+	// Populate group Children from accumulated map.
+	for _, grp := range graph.ArchGroups {
 		grp.Children = groupChildren[grp.ID]
 	}
 
-	return &ParseOutput{Graph: g}, nil
+	return &ParseOutput{Graph: graph}, nil
 }

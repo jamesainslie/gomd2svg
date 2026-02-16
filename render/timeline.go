@@ -6,15 +6,25 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
-func renderTimeline(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *config.Layout) {
-	td, ok := l.Diagram.(layout.TimelineData)
+// Timeline rendering constants.
+const (
+	timelineTitlePadding    float32 = 5
+	timelineSectionRadius   float32 = 4
+	timelineSectionLabelOff float32 = 10
+	timelinePeriodLabelGap  float32 = 4
+	timelineEventPadding    float32 = 4
+	timelineEventRadius     float32 = 12
+)
+
+func renderTimeline(builder *svgBuilder, lay *layout.Layout, th *theme.Theme, _ *config.Layout) {
+	td, ok := lay.Diagram.(layout.TimelineData)
 	if !ok {
 		return
 	}
 
 	// Title.
 	if td.Title != "" {
-		b.text(l.Width/2, th.FontSize+5, td.Title,
+		builder.text(lay.Width/2, th.FontSize+timelineTitlePadding, td.Title,
 			"text-anchor", "middle",
 			"font-family", th.FontFamily,
 			"font-size", fmtFloat(th.FontSize+2),
@@ -25,14 +35,14 @@ func renderTimeline(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *config.
 
 	for _, sec := range td.Sections {
 		// Section background.
-		b.rect(sec.X, sec.Y, sec.Width, sec.Height, 4,
+		builder.rect(sec.X, sec.Y, sec.Width, sec.Height, timelineSectionRadius,
 			"fill", sec.Color,
 			"stroke", "none",
 		)
 
 		// Section label.
 		if sec.Title != "" {
-			b.text(sec.X+10, sec.Y+sec.Height/2, sec.Title,
+			builder.text(sec.X+timelineSectionLabelOff, sec.Y+sec.Height/2, sec.Title,
 				"dominant-baseline", "middle",
 				"font-family", th.FontFamily,
 				"font-size", fmtFloat(th.FontSize),
@@ -41,9 +51,9 @@ func renderTimeline(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *config.
 			)
 		}
 
-		for _, p := range sec.Periods {
+		for _, period := range sec.Periods {
 			// Period column separator.
-			b.rect(p.X, p.Y, p.Width, p.Height, 0,
+			builder.rect(period.X, period.Y, period.Width, period.Height, 0,
 				"fill", "none",
 				"stroke", th.TimelineEventBorder,
 				"stroke-width", "0.5",
@@ -51,7 +61,7 @@ func renderTimeline(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *config.
 			)
 
 			// Period title.
-			b.text(p.X+p.Width/2, p.Y-4, p.Title,
+			builder.text(period.X+period.Width/2, period.Y-timelinePeriodLabelGap, period.Title,
 				"text-anchor", "middle",
 				"font-family", th.FontFamily,
 				"font-size", fmtFloat(th.FontSize-1),
@@ -60,13 +70,13 @@ func renderTimeline(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *config.
 			)
 
 			// Events.
-			for _, e := range p.Events {
-				b.rect(e.X, e.Y+2, e.Width, e.Height-4, 12,
+			for _, event := range period.Events {
+				builder.rect(event.X, event.Y+2, event.Width, event.Height-timelineEventPadding, timelineEventRadius,
 					"fill", th.TimelineEventFill,
 					"stroke", th.TimelineEventBorder,
 					"stroke-width", "1",
 				)
-				b.text(e.X+e.Width/2, e.Y+e.Height/2, e.Text,
+				builder.text(event.X+event.Width/2, event.Y+event.Height/2, event.Text,
 					"text-anchor", "middle",
 					"dominant-baseline", "middle",
 					"font-family", th.FontFamily,

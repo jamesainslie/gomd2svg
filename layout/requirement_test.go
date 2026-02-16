@@ -9,34 +9,34 @@ import (
 )
 
 func TestRequirementLayout(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Requirement
-	g.Direction = ir.TopDown
+	graph := ir.NewGraph()
+	graph.Kind = ir.Requirement
+	graph.Direction = ir.TopDown
 
 	reqLabel := "test_req"
 	elemLabel := "test_elem"
-	g.EnsureNode("test_req", &reqLabel, nil)
-	g.EnsureNode("test_elem", &elemLabel, nil)
+	graph.EnsureNode("test_req", &reqLabel, nil)
+	graph.EnsureNode("test_elem", &elemLabel, nil)
 
-	g.Requirements = append(g.Requirements, &ir.RequirementDef{
+	graph.Requirements = append(graph.Requirements, &ir.RequirementDef{
 		Name: "test_req", ID: "REQ-001", Text: "Must work", Risk: ir.RiskHigh, VerifyMethod: ir.VerifyTest,
 	})
-	g.ReqElements = append(g.ReqElements, &ir.ElementDef{
+	graph.ReqElements = append(graph.ReqElements, &ir.ElementDef{
 		Name: "test_elem", Type: "Simulation",
 	})
 
 	relLabel := "satisfies"
-	g.Edges = append(g.Edges, &ir.Edge{From: "test_elem", To: "test_req", Label: &relLabel, Directed: true, ArrowEnd: true})
-	g.ReqRelationships = append(g.ReqRelationships, &ir.RequirementRel{Source: "test_elem", Target: "test_req", Type: ir.ReqRelSatisfies})
+	graph.Edges = append(graph.Edges, &ir.Edge{From: "test_elem", To: "test_req", Label: &relLabel, Directed: true, ArrowEnd: true})
+	graph.ReqRelationships = append(graph.ReqRelationships, &ir.RequirementRel{Source: "test_elem", Target: "test_req", Type: ir.ReqRelSatisfies})
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	if l.Kind != ir.Requirement {
-		t.Fatalf("Kind = %v", l.Kind)
+	if lay.Kind != ir.Requirement {
+		t.Fatalf("Kind = %v", lay.Kind)
 	}
-	rd, ok := l.Diagram.(RequirementData)
+	rd, ok := lay.Diagram.(RequirementData)
 	if !ok {
 		t.Fatal("Diagram is not RequirementData")
 	}
@@ -46,21 +46,21 @@ func TestRequirementLayout(t *testing.T) {
 	if len(rd.Elements) != 1 {
 		t.Errorf("Elements = %d", len(rd.Elements))
 	}
-	if len(l.Nodes) != 2 {
-		t.Errorf("Nodes = %d", len(l.Nodes))
+	if len(lay.Nodes) != 2 {
+		t.Errorf("Nodes = %d", len(lay.Nodes))
 	}
-	if len(l.Edges) != 1 {
-		t.Errorf("Edges = %d", len(l.Edges))
+	if len(lay.Edges) != 1 {
+		t.Errorf("Edges = %d", len(lay.Edges))
 	}
 }
 
 func TestRequirementLayoutEmpty(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Requirement
+	graph := ir.NewGraph()
+	graph.Kind = ir.Requirement
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
-	if len(l.Nodes) != 0 {
-		t.Errorf("Nodes = %d", len(l.Nodes))
+	lay := ComputeLayout(graph, th, cfg)
+	if len(lay.Nodes) != 0 {
+		t.Errorf("Nodes = %d", len(lay.Nodes))
 	}
 }

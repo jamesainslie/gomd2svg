@@ -9,14 +9,14 @@ import (
 )
 
 func TestJourneyLayout(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Journey
-	g.JourneyTitle = "Test Journey"
-	g.JourneySections = []*ir.JourneySection{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Journey
+	graph.JourneyTitle = "Test Journey"
+	graph.JourneySections = []*ir.JourneySection{
 		{Name: "Section 1", Tasks: []int{0, 1}},
 		{Name: "Section 2", Tasks: []int{2}},
 	}
-	g.JourneyTasks = []*ir.JourneyTask{
+	graph.JourneyTasks = []*ir.JourneyTask{
 		{Name: "Task A", Score: 5, Actors: []string{"Alice"}, Section: "Section 1"},
 		{Name: "Task B", Score: 1, Actors: []string{"Alice", "Bob"}, Section: "Section 1"},
 		{Name: "Task C", Score: 3, Actors: []string{"Bob"}, Section: "Section 2"},
@@ -24,12 +24,12 @@ func TestJourneyLayout(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := computeJourneyLayout(g, th, cfg)
+	lay := computeJourneyLayout(graph, th, cfg)
 
-	if l.Kind != ir.Journey {
-		t.Fatalf("Kind = %v, want Journey", l.Kind)
+	if lay.Kind != ir.Journey {
+		t.Fatalf("Kind = %v, want Journey", lay.Kind)
 	}
-	data, ok := l.Diagram.(JourneyData)
+	data, ok := lay.Diagram.(JourneyData)
 	if !ok {
 		t.Fatal("Diagram is not JourneyData")
 	}
@@ -53,23 +53,23 @@ func TestJourneyLayout(t *testing.T) {
 	if len(data.Actors) < 2 {
 		t.Errorf("len(Actors) = %d, want >= 2", len(data.Actors))
 	}
-	if l.Width <= 0 || l.Height <= 0 {
-		t.Errorf("invalid dimensions: %f x %f", l.Width, l.Height)
+	if lay.Width <= 0 || lay.Height <= 0 {
+		t.Errorf("invalid dimensions: %f x %f", lay.Width, lay.Height)
 	}
 }
 
 func TestJourneyLayoutEmpty(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Journey
+	graph := ir.NewGraph()
+	graph.Kind = ir.Journey
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := computeJourneyLayout(g, th, cfg)
+	lay := computeJourneyLayout(graph, th, cfg)
 
-	if l.Kind != ir.Journey {
-		t.Fatalf("Kind = %v, want Journey", l.Kind)
+	if lay.Kind != ir.Journey {
+		t.Fatalf("Kind = %v, want Journey", lay.Kind)
 	}
-	data, ok := l.Diagram.(JourneyData)
+	data, ok := lay.Diagram.(JourneyData)
 	if !ok {
 		t.Fatal("Diagram is not JourneyData")
 	}

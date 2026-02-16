@@ -12,13 +12,13 @@ const (
 func (t XYSeriesType) String() string {
 	switch t {
 	case XYSeriesNone:
-		return "none"
+		return labelNone
 	case XYSeriesBar:
 		return "bar"
 	case XYSeriesLine:
 		return "line"
 	default:
-		return "unknown"
+		return labelUnknown
 	}
 }
 
@@ -34,13 +34,13 @@ const (
 func (m XYAxisMode) String() string {
 	switch m {
 	case XYAxisNone:
-		return "none"
+		return labelNone
 	case XYAxisBand:
 		return "band"
 	case XYAxisNumeric:
 		return "numeric"
 	default:
-		return "unknown"
+		return labelUnknown
 	}
 }
 

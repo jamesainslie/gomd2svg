@@ -8,11 +8,11 @@ import (
 )
 
 const (
-	// Default grid cell size for A* routing.
+	// defaultCellSize is the grid cell size for A* routing.
 	defaultCellSize float32 = 8
-	// Default padding around nodes in the obstacle grid.
+	// defaultNodePad is the padding around nodes in the obstacle grid.
 	defaultNodePad float32 = 4
-	// Margin around the bounding box for the grid.
+	// gridMargin is the margin around the bounding box for the grid.
 	gridMargin float32 = 40
 )
 
@@ -25,11 +25,11 @@ func routeEdges(
 ) []*EdgeLayout {
 	result := make([]*EdgeLayout, 0, len(edges))
 
-	g := buildGrid(nodes, defaultCellSize, defaultNodePad)
+	obstacleGrid := buildGrid(nodes, defaultCellSize, defaultNodePad)
 
-	for _, e := range edges {
-		src, srcOK := nodes[e.From]
-		dst, dstOK := nodes[e.To]
+	for _, edge := range edges {
+		src, srcOK := nodes[edge.From]
+		dst, dstOK := nodes[edge.To]
 		if !srcOK || !dstOK {
 			continue
 		}
@@ -41,7 +41,7 @@ func routeEdges(
 		startX, startY, endX, endY := edgeEndpoints(src, dst, direction)
 
 		// Try A* routing.
-		astarPath := g.findPath(startX, startY, endX, endY, e.From, e.To)
+		astarPath := obstacleGrid.findPath(startX, startY, endX, endY, edge.From, edge.To)
 		if astarPath != nil {
 			points = simplifyPath(astarPath)
 			labelAnchor = pathMidpoint(points)
@@ -56,24 +56,24 @@ func routeEdges(
 		}
 
 		var label *TextBlock
-		if e.Label != nil {
+		if edge.Label != nil {
 			label = &TextBlock{
-				Lines:    []string{*e.Label},
+				Lines:    []string{*edge.Label},
 				FontSize: src.Label.FontSize,
 			}
 		}
 
 		result = append(result, &EdgeLayout{
-			From:           e.From,
-			To:             e.To,
+			From:           edge.From,
+			To:             edge.To,
 			Label:          label,
 			Points:         points,
 			LabelAnchor:    labelAnchor,
-			Style:          e.Style,
-			ArrowStart:     e.ArrowStart,
-			ArrowEnd:       e.ArrowEnd,
-			ArrowStartKind: e.ArrowStartKind,
-			ArrowEndKind:   e.ArrowEndKind,
+			Style:          edge.Style,
+			ArrowStart:     edge.ArrowStart,
+			ArrowEnd:       edge.ArrowEnd,
+			ArrowStartKind: edge.ArrowStartKind,
+			ArrowEndKind:   edge.ArrowEndKind,
 		})
 	}
 
@@ -82,30 +82,17 @@ func routeEdges(
 
 // edgeEndpoints computes the start and end points on node boundaries
 // based on the diagram direction.
-func edgeEndpoints(src, dst *NodeLayout, direction ir.Direction) (startX, startY, endX, endY float32) {
+func edgeEndpoints(src, dst *NodeLayout, direction ir.Direction) (float32, float32, float32, float32) {
 	switch direction {
 	case ir.LeftRight:
-		startX = src.X + src.Width/2
-		startY = src.Y
-		endX = dst.X - dst.Width/2
-		endY = dst.Y
+		return src.X + src.Width/2, src.Y, dst.X - dst.Width/2, dst.Y
 	case ir.RightLeft:
-		startX = src.X - src.Width/2
-		startY = src.Y
-		endX = dst.X + dst.Width/2
-		endY = dst.Y
+		return src.X - src.Width/2, src.Y, dst.X + dst.Width/2, dst.Y
 	case ir.BottomTop:
-		startX = src.X
-		startY = src.Y - src.Height/2
-		endX = dst.X
-		endY = dst.Y + dst.Height/2
+		return src.X, src.Y - src.Height/2, dst.X, dst.Y + dst.Height/2
 	default: // TopDown
-		startX = src.X
-		startY = src.Y + src.Height/2
-		endX = dst.X
-		endY = dst.Y - dst.Height/2
+		return src.X, src.Y + src.Height/2, dst.X, dst.Y - dst.Height/2
 	}
-	return
 }
 
 // grid represents a 2D obstacle grid for A* pathfinding.
@@ -120,7 +107,7 @@ type grid struct {
 }
 
 // buildGrid constructs an obstacle grid from positioned nodes.
-func buildGrid(nodes map[string]*NodeLayout, cellSize, nodePad float32) *grid {
+func buildGrid(nodes map[string]*NodeLayout, cellSize, nodePad float32) *grid { //nolint:unparam // nodePad kept as parameter for testability
 	if len(nodes) == 0 {
 		return &grid{cellSize: cellSize}
 	}
@@ -128,11 +115,11 @@ func buildGrid(nodes map[string]*NodeLayout, cellSize, nodePad float32) *grid {
 	// Find bounding box of all nodes.
 	var minX, minY, maxX, maxY float32
 	first := true
-	for _, n := range nodes {
-		left := n.X - n.Width/2 - nodePad
-		right := n.X + n.Width/2 + nodePad
-		top := n.Y - n.Height/2 - nodePad
-		bottom := n.Y + n.Height/2 + nodePad
+	for _, node := range nodes {
+		left := node.X - node.Width/2 - nodePad
+		right := node.X + node.Width/2 + nodePad
+		top := node.Y - node.Height/2 - nodePad
+		bottom := node.Y + node.Height/2 + nodePad
 		if first {
 			minX, minY, maxX, maxY = left, top, right, bottom
 			first = false
@@ -158,67 +145,67 @@ func buildGrid(nodes map[string]*NodeLayout, cellSize, nodePad float32) *grid {
 	maxX += gridMargin
 	maxY += gridMargin
 
-	cols := int(math.Ceil(float64((maxX - minX) / cellSize)))
-	rows := int(math.Ceil(float64((maxY - minY) / cellSize)))
-	if cols < 1 {
-		cols = 1
+	numCols := int(math.Ceil(float64((maxX - minX) / cellSize)))
+	numRows := int(math.Ceil(float64((maxY - minY) / cellSize)))
+	if numCols < 1 {
+		numCols = 1
 	}
-	if rows < 1 {
-		rows = 1
-	}
-
-	blocked := make([][]bool, rows)
-	nodeIDGrid := make([][][]string, rows)
-	for r := range blocked {
-		blocked[r] = make([]bool, cols)
-		nodeIDGrid[r] = make([][]string, cols)
+	if numRows < 1 {
+		numRows = 1
 	}
 
-	g := &grid{
+	blocked := make([][]bool, numRows)
+	nodeIDGrid := make([][][]string, numRows)
+	for row := range blocked {
+		blocked[row] = make([]bool, numCols)
+		nodeIDGrid[row] = make([][]string, numCols)
+	}
+
+	obstacleGrid := &grid{
 		blocked:  blocked,
 		nodeIDs:  nodeIDGrid,
 		originX:  minX,
 		originY:  minY,
 		cellSize: cellSize,
-		cols:     cols,
-		rows:     rows,
+		cols:     numCols,
+		rows:     numRows,
 	}
 
 	// Mark cells overlapping with node bounds (+ padding) as blocked.
-	for _, n := range nodes {
-		left := n.X - n.Width/2 - nodePad
-		right := n.X + n.Width/2 + nodePad
-		top := n.Y - n.Height/2 - nodePad
-		bottom := n.Y + n.Height/2 + nodePad
+	for _, node := range nodes {
+		left := node.X - node.Width/2 - nodePad
+		right := node.X + node.Width/2 + nodePad
+		top := node.Y - node.Height/2 - nodePad
+		bottom := node.Y + node.Height/2 + nodePad
 
-		rMin, cMin := g.worldToCell(left, top)
-		rMax, cMax := g.worldToCell(right, bottom)
+		rMin, cMin := obstacleGrid.worldToCell(left, top)
+		rMax, cMax := obstacleGrid.worldToCell(right, bottom)
 
-		for r := rMin; r <= rMax; r++ {
-			for c := cMin; c <= cMax; c++ {
-				if r >= 0 && r < rows && c >= 0 && c < cols {
-					g.blocked[r][c] = true
-					g.nodeIDs[r][c] = append(g.nodeIDs[r][c], n.ID)
+		for row := rMin; row <= rMax; row++ {
+			for col := cMin; col <= cMax; col++ {
+				if row >= 0 && row < numRows && col >= 0 && col < numCols {
+					obstacleGrid.blocked[row][col] = true
+					obstacleGrid.nodeIDs[row][col] = append(obstacleGrid.nodeIDs[row][col], node.ID)
 				}
 			}
 		}
 	}
 
-	return g
+	return obstacleGrid
 }
 
 // worldToCell converts world coordinates to grid cell indices.
-func (g *grid) worldToCell(wx, wy float32) (row, col int) {
-	col = int((wx - g.originX) / g.cellSize)
-	row = int((wy - g.originY) / g.cellSize)
-	return
+func (g *grid) worldToCell(worldX, worldY float32) (int, int) {
+	gridCol := int((worldX - g.originX) / g.cellSize)
+	gridRow := int((worldY - g.originY) / g.cellSize)
+	return gridRow, gridCol
 }
 
 // cellToWorld converts grid cell indices to world coordinates (cell center).
-func (g *grid) cellToWorld(row, col int) (wx, wy float32) {
-	wx = g.originX + float32(col)*g.cellSize + g.cellSize/2
-	wy = g.originY + float32(row)*g.cellSize + g.cellSize/2
-	return
+func (g *grid) cellToWorld(row, col int) (float32, float32) {
+	wx := g.originX + float32(col)*g.cellSize + g.cellSize/2
+	wy := g.originY + float32(row)*g.cellSize + g.cellSize/2
+	return wx, wy
 }
 
 // isBlocked returns true if the cell at (row, col) is an obstacle.
@@ -256,16 +243,16 @@ func (g *grid) findPath(startX, startY, endX, endY float32, fromNode, toNode str
 		return nil
 	}
 
-	sr, sc := g.worldToCell(startX, startY)
-	er, ec := g.worldToCell(endX, endY)
+	startRow, startCol := g.worldToCell(startX, startY)
+	endRow, endCol := g.worldToCell(endX, endY)
 
 	// Clamp to grid bounds.
-	sr = clampInt(sr, 0, g.rows-1)
-	sc = clampInt(sc, 0, g.cols-1)
-	er = clampInt(er, 0, g.rows-1)
-	ec = clampInt(ec, 0, g.cols-1)
+	startRow = clampInt(startRow, 0, g.rows-1)
+	startCol = clampInt(startCol, 0, g.cols-1)
+	endRow = clampInt(endRow, 0, g.rows-1)
+	endCol = clampInt(endCol, 0, g.cols-1)
 
-	if sr == er && sc == ec {
+	if startRow == endRow && startCol == endCol {
 		return [][2]float32{{startX, startY}, {endX, endY}}
 	}
 
@@ -279,56 +266,55 @@ func (g *grid) findPath(startX, startY, endX, endY float32, fromNode, toNode str
 	parent := make(map[cell]cell)
 	visited := make(map[cell]bool)
 
-	start := cell{sr, sc}
-	end := cell{er, ec}
+	start := cell{startRow, startCol}
+	end := cell{endRow, endCol}
 
 	gScore[start] = 0
 
-	heuristic := func(c cell) float32 {
-		dr := c.row - end.row
-		dc := c.col - end.col
-		if dr < 0 {
-			dr = -dr
+	heuristic := func(target cell) float32 {
+		deltaRow := target.row - end.row
+		deltaCol := target.col - end.col
+		if deltaRow < 0 {
+			deltaRow = -deltaRow
 		}
-		if dc < 0 {
-			dc = -dc
+		if deltaCol < 0 {
+			deltaCol = -deltaCol
 		}
-		return float32(dr + dc)
+		return float32(deltaRow + deltaCol)
 	}
 
 	pq := &priorityQueue{}
 	heap.Init(pq)
-	heap.Push(pq, &pqItem{row: sr, col: sc, f: heuristic(start)})
-
+	heap.Push(pq, &pqItem{row: startRow, col: startCol, f: heuristic(start)})
 	dirs := [4][2]int{{-1, 0}, {1, 0}, {0, -1}, {0, 1}}
 
 	found := false
 	for pq.Len() > 0 {
-		cur := heap.Pop(pq).(*pqItem)
-		c := cell{cur.row, cur.col}
+		cur, _ := heap.Pop(pq).(*pqItem) //nolint:errcheck // type assertion is safe for our priority queue
+		currentCell := cell{cur.row, cur.col}
 
-		if visited[c] {
+		if visited[currentCell] {
 			continue
 		}
-		visited[c] = true
+		visited[currentCell] = true
 
-		if c == end {
+		if currentCell == end {
 			found = true
 			break
 		}
 
-		curG := gScore[c]
+		curG := gScore[currentCell]
 
-		for _, d := range dirs {
-			nr, nc := cur.row+d[0], cur.col+d[1]
-			if nr < 0 || nr >= g.rows || nc < 0 || nc >= g.cols {
+		for _, dir := range dirs {
+			neighborRow, neighborCol := cur.row+dir[0], cur.col+dir[1]
+			if neighborRow < 0 || neighborRow >= g.rows || neighborCol < 0 || neighborCol >= g.cols {
 				continue
 			}
-			if g.isBlockedExcluding(nr, nc, fromNode, toNode) {
+			if g.isBlockedExcluding(neighborRow, neighborCol, fromNode, toNode) {
 				continue
 			}
 
-			next := cell{nr, nc}
+			next := cell{neighborRow, neighborCol}
 			newG := curG + 1
 
 			if prev, ok := gScore[next]; ok && newG >= prev {
@@ -336,9 +322,9 @@ func (g *grid) findPath(startX, startY, endX, endY float32, fromNode, toNode str
 			}
 
 			gScore[next] = newG
-			parent[next] = c
-			f := newG + heuristic(next)
-			heap.Push(pq, &pqItem{row: nr, col: nc, f: f})
+			parent[next] = currentCell
+			fScore := newG + heuristic(next)
+			heap.Push(pq, &pqItem{row: neighborRow, col: neighborCol, f: fScore})
 		}
 	}
 
@@ -348,23 +334,23 @@ func (g *grid) findPath(startX, startY, endX, endY float32, fromNode, toNode str
 
 	// Reconstruct path.
 	var path []cell
-	c := end
-	for c != start {
-		path = append(path, c)
-		c = parent[c]
+	currentCell := end
+	for currentCell != start {
+		path = append(path, currentCell)
+		currentCell = parent[currentCell]
 	}
 	path = append(path, start)
 
 	// Reverse path.
-	for i, j := 0, len(path)-1; i < j; i, j = i+1, j-1 {
-		path[i], path[j] = path[j], path[i]
+	for left, right := 0, len(path)-1; left < right; left, right = left+1, right-1 {
+		path[left], path[right] = path[right], path[left]
 	}
 
 	// Convert to world coordinates. Use exact start/end for first/last points.
 	points := make([][2]float32, len(path))
-	for i, c := range path {
-		wx, wy := g.cellToWorld(c.row, c.col)
-		points[i] = [2]float32{wx, wy}
+	for idx, pathCell := range path {
+		worldX, worldY := g.cellToWorld(pathCell.row, pathCell.col)
+		points[idx] = [2]float32{worldX, worldY}
 	}
 	points[0] = [2]float32{startX, startY}
 	points[len(points)-1] = [2]float32{endX, endY}
@@ -380,10 +366,10 @@ func simplifyPath(pts [][2]float32) [][2]float32 {
 	}
 
 	result := [][2]float32{pts[0]}
-	for i := 1; i < len(pts)-1; i++ {
+	for idx := 1; idx < len(pts)-1; idx++ {
 		prev := result[len(result)-1]
-		next := pts[i+1]
-		cur := pts[i]
+		next := pts[idx+1]
+		cur := pts[idx]
 		// Keep point if direction changes (not collinear).
 		sameX := prev[0] == cur[0] && cur[0] == next[0]
 		sameY := prev[1] == cur[1] && cur[1] == next[1]
@@ -406,24 +392,24 @@ func pathMidpoint(pts [][2]float32) [2]float32 {
 
 	// Compute total path length.
 	var totalLen float32
-	for i := 1; i < len(pts); i++ {
-		dx := pts[i][0] - pts[i-1][0]
-		dy := pts[i][1] - pts[i-1][1]
-		totalLen += float32(math.Sqrt(float64(dx*dx + dy*dy)))
+	for idx := 1; idx < len(pts); idx++ {
+		deltaX := pts[idx][0] - pts[idx-1][0]
+		deltaY := pts[idx][1] - pts[idx-1][1]
+		totalLen += float32(math.Sqrt(float64(deltaX*deltaX + deltaY*deltaY)))
 	}
 
 	// Walk to the halfway point.
 	halfLen := totalLen / 2
 	var walked float32
-	for i := 1; i < len(pts); i++ {
-		dx := pts[i][0] - pts[i-1][0]
-		dy := pts[i][1] - pts[i-1][1]
-		segLen := float32(math.Sqrt(float64(dx*dx + dy*dy)))
+	for idx := 1; idx < len(pts); idx++ {
+		deltaX := pts[idx][0] - pts[idx-1][0]
+		deltaY := pts[idx][1] - pts[idx-1][1]
+		segLen := float32(math.Sqrt(float64(deltaX*deltaX + deltaY*deltaY)))
 		if walked+segLen >= halfLen && segLen > 0 {
-			t := (halfLen - walked) / segLen
+			frac := (halfLen - walked) / segLen
 			return [2]float32{
-				pts[i-1][0] + dx*t,
-				pts[i-1][1] + dy*t,
+				pts[idx-1][0] + deltaX*frac,
+				pts[idx-1][1] + deltaY*frac,
 			}
 		}
 		walked += segLen
@@ -474,14 +460,14 @@ func routeTD(src, dst *NodeLayout) ([][2]float32, [2]float32) {
 	return points, labelAnchor
 }
 
-func clampInt(v, lo, hi int) int {
-	if v < lo {
-		return lo
+func clampInt(val, low, high int) int { //nolint:unparam // low kept as parameter for generality
+	if val < low {
+		return low
 	}
-	if v > hi {
-		return hi
+	if val > high {
+		return high
 	}
-	return v
+	return val
 }
 
 // Priority queue for A*.
@@ -493,26 +479,26 @@ type pqItem struct {
 
 type priorityQueue []*pqItem
 
-func (pq priorityQueue) Len() int           { return len(pq) }
-func (pq priorityQueue) Less(i, j int) bool { return pq[i].f < pq[j].f }
-func (pq priorityQueue) Swap(i, j int) {
-	pq[i], pq[j] = pq[j], pq[i]
-	pq[i].index = i
-	pq[j].index = j
+func (pq priorityQueue) Len() int                 { return len(pq) }
+func (pq priorityQueue) Less(idxA, idxB int) bool { return pq[idxA].f < pq[idxB].f }
+func (pq priorityQueue) Swap(idxA, idxB int) {
+	pq[idxA], pq[idxB] = pq[idxB], pq[idxA]
+	pq[idxA].index = idxA
+	pq[idxB].index = idxB
 }
 
 func (pq *priorityQueue) Push(x any) {
-	item := x.(*pqItem)
+	item, _ := x.(*pqItem) //nolint:errcheck // type assertion is safe for our priority queue
 	item.index = len(*pq)
 	*pq = append(*pq, item)
 }
 
 func (pq *priorityQueue) Pop() any {
 	old := *pq
-	n := len(old)
-	item := old[n-1]
-	old[n-1] = nil
+	length := len(old)
+	item := old[length-1]
+	old[length-1] = nil
 	item.index = -1
-	*pq = old[:n-1]
+	*pq = old[:length-1]
 	return item
 }

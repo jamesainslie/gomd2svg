@@ -17,34 +17,34 @@ Server.request() {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := out.Graph
-	if g.Kind != ir.ZenUML {
-		t.Fatalf("kind = %v, want ZenUML", g.Kind)
+	graph := out.Graph
+	if graph.Kind != ir.ZenUML {
+		t.Fatalf("kind = %v, want ZenUML", graph.Kind)
 	}
-	if len(g.Participants) != 3 {
-		t.Fatalf("participants = %d, want 3", len(g.Participants))
+	if len(graph.Participants) != 3 {
+		t.Fatalf("participants = %d, want 3", len(graph.Participants))
 	}
-	if g.Participants[0].ID != "Client" {
-		t.Errorf("participant[0] = %q, want Client", g.Participants[0].ID)
+	if graph.Participants[0].ID != "Client" {
+		t.Errorf("participant[0] = %q, want Client", graph.Participants[0].ID)
 	}
-	if g.Participants[1].ID != "Server" {
-		t.Errorf("participant[1] = %q, want Server", g.Participants[1].ID)
+	if graph.Participants[1].ID != "Server" {
+		t.Errorf("participant[1] = %q, want Server", graph.Participants[1].ID)
 	}
 
 	// Events: message(Client→Server), activate(Server),
 	//         message(Server→Database), deactivate(Server)
 	wantEvents := []ir.SeqEventKind{ir.EvMessage, ir.EvActivate, ir.EvMessage, ir.EvDeactivate}
-	if len(g.Events) != len(wantEvents) {
-		t.Fatalf("events = %d, want %d; got: %v", len(g.Events), len(wantEvents), eventKinds(g.Events))
+	if len(graph.Events) != len(wantEvents) {
+		t.Fatalf("events = %d, want %d; got: %v", len(graph.Events), len(wantEvents), eventKinds(graph.Events))
 	}
 	for i, want := range wantEvents {
-		if g.Events[i].Kind != want {
-			t.Errorf("event[%d].Kind = %v, want %v", i, g.Events[i].Kind, want)
+		if graph.Events[i].Kind != want {
+			t.Errorf("event[%d].Kind = %v, want %v", i, graph.Events[i].Kind, want)
 		}
 	}
 
 	// First message: Client → Server
-	msg := g.Events[0].Message
+	msg := graph.Events[0].Message
 	if msg.From != "Client" || msg.To != "Server" {
 		t.Errorf("msg[0] = %s→%s, want Client→Server", msg.From, msg.To)
 	}
@@ -56,7 +56,7 @@ Server.request() {
 	}
 
 	// Nested message: Server → Database (caller is Server inside the block)
-	msg2 := g.Events[2].Message
+	msg2 := graph.Events[2].Message
 	if msg2.From != "Server" || msg2.To != "Database" {
 		t.Errorf("msg[2] = %s→%s, want Server→Database", msg2.From, msg2.To)
 	}
@@ -73,7 +73,7 @@ Client.login()
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
 	tests := []struct {
 		id    string
@@ -86,14 +86,14 @@ Client.login()
 	}
 	for _, tt := range tests {
 		found := false
-		for _, p := range g.Participants {
-			if p.ID == tt.id {
+		for _, participant := range graph.Participants {
+			if participant.ID == tt.id {
 				found = true
-				if p.Kind != tt.kind {
-					t.Errorf("participant %s kind = %v, want %v", tt.id, p.Kind, tt.kind)
+				if participant.Kind != tt.kind {
+					t.Errorf("participant %s kind = %v, want %v", tt.id, participant.Kind, tt.kind)
 				}
-				if p.Alias != tt.alias {
-					t.Errorf("participant %s alias = %q, want %q", tt.id, p.Alias, tt.alias)
+				if participant.Alias != tt.alias {
+					t.Errorf("participant %s alias = %q, want %q", tt.id, participant.Alias, tt.alias)
 				}
 				break
 			}
@@ -127,11 +127,11 @@ Alice->Bob: How are you?
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := out.Graph
-	if len(g.Events) != 1 {
-		t.Fatalf("events = %d, want 1", len(g.Events))
+	graph := out.Graph
+	if len(graph.Events) != 1 {
+		t.Fatalf("events = %d, want 1", len(graph.Events))
 	}
-	msg := g.Events[0].Message
+	msg := graph.Events[0].Message
 	if msg.From != "Alice" || msg.To != "Bob" {
 		t.Errorf("msg = %s→%s, want Alice→Bob", msg.From, msg.To)
 	}
@@ -154,15 +154,15 @@ Server.process() {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
 	// Events: message(Client→Server), activate(Server), message(Server→Client: success), deactivate(Server)
-	if len(g.Events) != 4 {
-		t.Fatalf("events = %d, want 4", len(g.Events))
+	if len(graph.Events) != 4 {
+		t.Fatalf("events = %d, want 4", len(graph.Events))
 	}
 
 	// Return message: dotted arrow from Server back to Client.
-	ret := g.Events[2].Message
+	ret := graph.Events[2].Message
 	if ret.From != "Server" || ret.To != "Client" {
 		t.Errorf("return = %s→%s, want Server→Client", ret.From, ret.To)
 	}
@@ -202,7 +202,7 @@ if(authenticated) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
 	// Events: FrameStart(alt, "authenticated"), message, FrameMiddle("else"), message, FrameEnd
 	wantKinds := []ir.SeqEventKind{
@@ -212,21 +212,21 @@ if(authenticated) {
 		ir.EvMessage,
 		ir.EvFrameEnd,
 	}
-	if len(g.Events) != len(wantKinds) {
-		t.Fatalf("events = %d, want %d; got kinds: %v", len(g.Events), len(wantKinds), eventKinds(g.Events))
+	if len(graph.Events) != len(wantKinds) {
+		t.Fatalf("events = %d, want %d; got kinds: %v", len(graph.Events), len(wantKinds), eventKinds(graph.Events))
 	}
 	for i, want := range wantKinds {
-		if g.Events[i].Kind != want {
-			t.Errorf("event[%d] = %v, want %v", i, g.Events[i].Kind, want)
+		if graph.Events[i].Kind != want {
+			t.Errorf("event[%d] = %v, want %v", i, graph.Events[i].Kind, want)
 		}
 	}
 
 	// Frame start label.
-	if g.Events[0].Frame.Label != "authenticated" {
-		t.Errorf("frame label = %q, want %q", g.Events[0].Frame.Label, "authenticated")
+	if graph.Events[0].Frame.Label != "authenticated" {
+		t.Errorf("frame label = %q, want %q", graph.Events[0].Frame.Label, "authenticated")
 	}
-	if g.Events[0].Frame.Kind != ir.FrameAlt {
-		t.Errorf("frame kind = %v, want FrameAlt", g.Events[0].Frame.Kind)
+	if graph.Events[0].Frame.Kind != ir.FrameAlt {
+		t.Errorf("frame kind = %v, want FrameAlt", graph.Events[0].Frame.Kind)
 	}
 }
 
@@ -245,7 +245,7 @@ if(x > 0) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
 	wantKinds := []ir.SeqEventKind{
 		ir.EvFrameStart,  // if(x > 0)
@@ -256,18 +256,18 @@ if(x > 0) {
 		ir.EvMessage,     // B.negative()
 		ir.EvFrameEnd,
 	}
-	if len(g.Events) != len(wantKinds) {
-		t.Fatalf("events = %d, want %d; got: %v", len(g.Events), len(wantKinds), eventKinds(g.Events))
+	if len(graph.Events) != len(wantKinds) {
+		t.Fatalf("events = %d, want %d; got: %v", len(graph.Events), len(wantKinds), eventKinds(graph.Events))
 	}
 	for i, want := range wantKinds {
-		if g.Events[i].Kind != want {
-			t.Errorf("event[%d] = %v, want %v", i, g.Events[i].Kind, want)
+		if graph.Events[i].Kind != want {
+			t.Errorf("event[%d] = %v, want %v", i, graph.Events[i].Kind, want)
 		}
 	}
 
 	// Check middle frame labels.
-	if g.Events[2].Frame.Label != "x == 0" {
-		t.Errorf("else-if label = %q, want %q", g.Events[2].Frame.Label, "x == 0")
+	if graph.Events[2].Frame.Label != "x == 0" {
+		t.Errorf("else-if label = %q, want %q", graph.Events[2].Frame.Label, "x == 0")
 	}
 }
 
@@ -282,17 +282,17 @@ while(hasMore) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
 	wantKinds := []ir.SeqEventKind{ir.EvFrameStart, ir.EvMessage, ir.EvFrameEnd}
-	if len(g.Events) != len(wantKinds) {
-		t.Fatalf("events = %d, want %d", len(g.Events), len(wantKinds))
+	if len(graph.Events) != len(wantKinds) {
+		t.Fatalf("events = %d, want %d", len(graph.Events), len(wantKinds))
 	}
-	if g.Events[0].Frame.Kind != ir.FrameLoop {
-		t.Errorf("frame kind = %v, want FrameLoop", g.Events[0].Frame.Kind)
+	if graph.Events[0].Frame.Kind != ir.FrameLoop {
+		t.Errorf("frame kind = %v, want FrameLoop", graph.Events[0].Frame.Kind)
 	}
-	if g.Events[0].Frame.Label != "hasMore" {
-		t.Errorf("frame label = %q, want %q", g.Events[0].Frame.Label, "hasMore")
+	if graph.Events[0].Frame.Label != "hasMore" {
+		t.Errorf("frame label = %q, want %q", graph.Events[0].Frame.Label, "hasMore")
 	}
 }
 
@@ -327,7 +327,7 @@ try {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
 	wantKinds := []ir.SeqEventKind{
 		ir.EvFrameStart,  // try
@@ -338,23 +338,23 @@ try {
 		ir.EvMessage,     // Server.cleanup()
 		ir.EvFrameEnd,
 	}
-	if len(g.Events) != len(wantKinds) {
-		t.Fatalf("events = %d, want %d; got: %v", len(g.Events), len(wantKinds), eventKinds(g.Events))
+	if len(graph.Events) != len(wantKinds) {
+		t.Fatalf("events = %d, want %d; got: %v", len(graph.Events), len(wantKinds), eventKinds(graph.Events))
 	}
 	for i, want := range wantKinds {
-		if g.Events[i].Kind != want {
-			t.Errorf("event[%d] = %v, want %v", i, g.Events[i].Kind, want)
+		if graph.Events[i].Kind != want {
+			t.Errorf("event[%d] = %v, want %v", i, graph.Events[i].Kind, want)
 		}
 	}
 
-	if g.Events[0].Frame.Label != "try" {
-		t.Errorf("try label = %q, want %q", g.Events[0].Frame.Label, "try")
+	if graph.Events[0].Frame.Label != "try" {
+		t.Errorf("try label = %q, want %q", graph.Events[0].Frame.Label, "try")
 	}
-	if g.Events[2].Frame.Label != "catch" {
-		t.Errorf("catch label = %q, want %q", g.Events[2].Frame.Label, "catch")
+	if graph.Events[2].Frame.Label != "catch" {
+		t.Errorf("catch label = %q, want %q", graph.Events[2].Frame.Label, "catch")
 	}
-	if g.Events[4].Frame.Label != "finally" {
-		t.Errorf("finally label = %q, want %q", g.Events[4].Frame.Label, "finally")
+	if graph.Events[4].Frame.Label != "finally" {
+		t.Errorf("finally label = %q, want %q", graph.Events[4].Frame.Label, "finally")
 	}
 }
 
@@ -371,9 +371,9 @@ try() {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := out.Graph
-	if g.Events[0].Kind != ir.EvFrameStart {
-		t.Errorf("event[0] = %v, want EvFrameStart", g.Events[0].Kind)
+	graph := out.Graph
+	if graph.Events[0].Kind != ir.EvFrameStart {
+		t.Errorf("event[0] = %v, want EvFrameStart", graph.Events[0].Kind)
 	}
 }
 
@@ -392,17 +392,17 @@ par {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
-	// opt: FrameStart(Opt), message, FrameEnd, par: FrameStart(Par), message, message, FrameEnd
-	if len(g.Events) < 7 {
-		t.Fatalf("events = %d, want >= 7", len(g.Events))
+	// opt: FrameStart(Opt), message, FrameEnd, par: FrameStart(Par), msg1, msg2, FrameEnd
+	if len(graph.Events) < 7 {
+		t.Fatalf("events = %d, want >= 7", len(graph.Events))
 	}
-	if g.Events[0].Frame.Kind != ir.FrameOpt {
-		t.Errorf("event[0] frame = %v, want FrameOpt", g.Events[0].Frame.Kind)
+	if graph.Events[0].Frame.Kind != ir.FrameOpt {
+		t.Errorf("event[0] frame = %v, want FrameOpt", graph.Events[0].Frame.Kind)
 	}
-	if g.Events[3].Frame.Kind != ir.FramePar {
-		t.Errorf("event[3] frame = %v, want FramePar", g.Events[3].Frame.Kind)
+	if graph.Events[3].Frame.Kind != ir.FramePar {
+		t.Errorf("event[3] frame = %v, want FramePar", graph.Events[3].Frame.Kind)
 	}
 }
 
@@ -415,19 +415,19 @@ receipt = new Receipt()
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
 	// Events: EvCreate(Receipt), EvMessage(Client→Receipt)
-	if len(g.Events) != 2 {
-		t.Fatalf("events = %d, want 2; got: %v", len(g.Events), eventKinds(g.Events))
+	if len(graph.Events) != 2 {
+		t.Fatalf("events = %d, want 2; got: %v", len(graph.Events), eventKinds(graph.Events))
 	}
-	if g.Events[0].Kind != ir.EvCreate {
-		t.Errorf("event[0] = %v, want EvCreate", g.Events[0].Kind)
+	if graph.Events[0].Kind != ir.EvCreate {
+		t.Errorf("event[0] = %v, want EvCreate", graph.Events[0].Kind)
 	}
-	if g.Events[0].Target != "Receipt" {
-		t.Errorf("create target = %q, want Receipt", g.Events[0].Target)
+	if graph.Events[0].Target != "Receipt" {
+		t.Errorf("create target = %q, want Receipt", graph.Events[0].Target)
 	}
-	msg := g.Events[1].Message
+	msg := graph.Events[1].Message
 	if msg.Text != "receipt = new Receipt()" {
 		t.Errorf("text = %q, want %q", msg.Text, "receipt = new Receipt()")
 	}
@@ -445,25 +445,25 @@ Server.handle() {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
 	// Events: msg(Client→Server), activate(Server), msg(Server→Server: validate()),
 	//         msg(Server→Server: process()), deactivate(Server)
 	wantKinds := []ir.SeqEventKind{
 		ir.EvMessage, ir.EvActivate, ir.EvMessage, ir.EvMessage, ir.EvDeactivate,
 	}
-	if len(g.Events) != len(wantKinds) {
-		t.Fatalf("events = %d, want %d; got: %v", len(g.Events), len(wantKinds), eventKinds(g.Events))
+	if len(graph.Events) != len(wantKinds) {
+		t.Fatalf("events = %d, want %d; got: %v", len(graph.Events), len(wantKinds), eventKinds(graph.Events))
 	}
 	for i, want := range wantKinds {
-		if g.Events[i].Kind != want {
-			t.Errorf("event[%d] = %v, want %v", i, g.Events[i].Kind, want)
+		if graph.Events[i].Kind != want {
+			t.Errorf("event[%d] = %v, want %v", i, graph.Events[i].Kind, want)
 		}
 	}
 
 	// Self-calls should be from Server to Server.
 	for _, idx := range []int{2, 3} {
-		msg := g.Events[idx].Message
+		msg := graph.Events[idx].Message
 		if msg.From != "Server" || msg.To != "Server" {
 			t.Errorf("event[%d] = %s→%s, want Server→Server", idx, msg.From, msg.To)
 		}
@@ -482,15 +482,15 @@ A.call()
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := out.Graph
-	if len(g.Boxes) != 1 {
-		t.Fatalf("boxes = %d, want 1", len(g.Boxes))
+	graph := out.Graph
+	if len(graph.Boxes) != 1 {
+		t.Fatalf("boxes = %d, want 1", len(graph.Boxes))
 	}
-	if g.Boxes[0].Label != "BusinessService" {
-		t.Errorf("box label = %q, want BusinessService", g.Boxes[0].Label)
+	if graph.Boxes[0].Label != "BusinessService" {
+		t.Errorf("box label = %q, want BusinessService", graph.Boxes[0].Label)
 	}
-	if len(g.Boxes[0].Participants) != 2 {
-		t.Errorf("box participants = %d, want 2", len(g.Boxes[0].Participants))
+	if len(graph.Boxes[0].Participants) != 2 {
+		t.Errorf("box participants = %d, want 2", len(graph.Boxes[0].Participants))
 	}
 }
 
@@ -504,11 +504,11 @@ Server.process()
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := out.Graph
-	if len(g.Events) != 2 {
-		t.Fatalf("events = %d, want 2", len(g.Events))
+	graph := out.Graph
+	if len(graph.Events) != 2 {
+		t.Fatalf("events = %d, want 2", len(graph.Events))
 	}
-	ret := g.Events[1].Message
+	ret := graph.Events[1].Message
 	if ret.From != "Server" || ret.To != "Client" {
 		t.Errorf("@return = %s→%s, want Server→Client", ret.From, ret.To)
 	}
@@ -551,11 +551,11 @@ OrderController.post(payload) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
 	// Verify participants were created.
 	names := make(map[string]bool)
-	for _, p := range g.Participants {
+	for _, p := range graph.Participants {
 		names[p.ID] = true
 	}
 	for _, want := range []string{"Client", "OrderController", "OrderService", "Order", "PurchaseService", "InvoiceService"} {
@@ -566,7 +566,7 @@ OrderController.post(payload) {
 
 	// Verify frame events exist.
 	var frameStarts, frameEnds int
-	for _, ev := range g.Events {
+	for _, ev := range graph.Events {
 		if ev.Kind == ir.EvFrameStart {
 			frameStarts++
 		}
@@ -591,11 +591,11 @@ A.process()
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := out.Graph
-	if len(g.Events) != 1 {
-		t.Fatalf("events = %d, want 1", len(g.Events))
+	graph := out.Graph
+	if len(graph.Events) != 1 {
+		t.Fatalf("events = %d, want 1", len(graph.Events))
 	}
-	msg := g.Events[0].Message
+	msg := graph.Events[0].Message
 	if msg.From != "A" || msg.To != "A" {
 		t.Errorf("msg = %s→%s, want A→A (self-call)", msg.From, msg.To)
 	}
@@ -612,12 +612,12 @@ loop {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := out.Graph
-	if g.Events[0].Kind != ir.EvFrameStart {
-		t.Errorf("event[0] = %v, want EvFrameStart", g.Events[0].Kind)
+	graph := out.Graph
+	if graph.Events[0].Kind != ir.EvFrameStart {
+		t.Errorf("event[0] = %v, want EvFrameStart", graph.Events[0].Kind)
 	}
-	if g.Events[0].Frame.Kind != ir.FrameLoop {
-		t.Errorf("frame kind = %v, want FrameLoop", g.Events[0].Frame.Kind)
+	if graph.Events[0].Frame.Kind != ir.FrameLoop {
+		t.Errorf("frame kind = %v, want FrameLoop", graph.Events[0].Frame.Kind)
 	}
 }
 
@@ -670,27 +670,27 @@ Server.process(foo(bar)) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
 	// Events: msg(Client→Server), activate(Server), msg(Server→Database), deactivate(Server)
 	wantKinds := []ir.SeqEventKind{
 		ir.EvMessage, ir.EvActivate, ir.EvMessage, ir.EvDeactivate,
 	}
-	if len(g.Events) != len(wantKinds) {
-		t.Fatalf("events = %d, want %d; got: %v", len(g.Events), len(wantKinds), eventKinds(g.Events))
+	if len(graph.Events) != len(wantKinds) {
+		t.Fatalf("events = %d, want %d; got: %v", len(graph.Events), len(wantKinds), eventKinds(graph.Events))
 	}
 	for i, want := range wantKinds {
-		if g.Events[i].Kind != want {
-			t.Errorf("event[%d] = %v, want %v", i, g.Events[i].Kind, want)
+		if graph.Events[i].Kind != want {
+			t.Errorf("event[%d] = %v, want %v", i, graph.Events[i].Kind, want)
 		}
 	}
 
 	// Verify args are preserved including nested parens.
-	msg0 := g.Events[0].Message
+	msg0 := graph.Events[0].Message
 	if msg0.Text != "process(foo(bar))" {
 		t.Errorf("msg[0].Text = %q, want %q", msg0.Text, "process(foo(bar))")
 	}
-	msg2 := g.Events[2].Message
+	msg2 := graph.Events[2].Message
 	if msg2.Text != "query(a, b(c))" {
 		t.Errorf("msg[2].Text = %q, want %q", msg2.Text, "query(a, b(c))")
 	}
@@ -707,11 +707,11 @@ Server.handle() {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
 	// Find the self-call message.
 	var selfCall *ir.SeqMessage
-	for _, ev := range g.Events {
+	for _, ev := range graph.Events {
 		if ev.Kind == ir.EvMessage && ev.Message != nil && ev.Message.From == "Server" && ev.Message.To == "Server" {
 			selfCall = ev.Message
 			break
@@ -734,15 +734,15 @@ obj = new Foo(bar(baz))
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
-	if len(g.Events) < 2 {
-		t.Fatalf("events = %d, want >= 2", len(g.Events))
+	if len(graph.Events) < 2 {
+		t.Fatalf("events = %d, want >= 2", len(graph.Events))
 	}
-	if g.Events[0].Kind != ir.EvCreate {
-		t.Errorf("event[0] = %v, want EvCreate", g.Events[0].Kind)
+	if graph.Events[0].Kind != ir.EvCreate {
+		t.Errorf("event[0] = %v, want EvCreate", graph.Events[0].Kind)
 	}
-	msg := g.Events[1].Message
+	msg := graph.Events[1].Message
 	if msg.Text != "obj = new Foo(bar(baz))" {
 		t.Errorf("text = %q, want %q", msg.Text, "obj = new Foo(bar(baz))")
 	}
@@ -763,7 +763,7 @@ else {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
 	wantKinds := []ir.SeqEventKind{
 		ir.EvFrameStart,  // if(x)
@@ -772,12 +772,12 @@ else {
 		ir.EvMessage,     // Server.deny()
 		ir.EvFrameEnd,
 	}
-	if len(g.Events) != len(wantKinds) {
-		t.Fatalf("events = %d, want %d; got: %v", len(g.Events), len(wantKinds), eventKinds(g.Events))
+	if len(graph.Events) != len(wantKinds) {
+		t.Fatalf("events = %d, want %d; got: %v", len(graph.Events), len(wantKinds), eventKinds(graph.Events))
 	}
 	for i, want := range wantKinds {
-		if g.Events[i].Kind != want {
-			t.Errorf("event[%d] = %v, want %v", i, g.Events[i].Kind, want)
+		if graph.Events[i].Kind != want {
+			t.Errorf("event[%d] = %v, want %v", i, graph.Events[i].Kind, want)
 		}
 	}
 }
@@ -800,7 +800,7 @@ finally {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
 	wantKinds := []ir.SeqEventKind{
 		ir.EvFrameStart,  // try
@@ -811,12 +811,12 @@ finally {
 		ir.EvMessage,     // Server.cleanup()
 		ir.EvFrameEnd,
 	}
-	if len(g.Events) != len(wantKinds) {
-		t.Fatalf("events = %d, want %d; got: %v", len(g.Events), len(wantKinds), eventKinds(g.Events))
+	if len(graph.Events) != len(wantKinds) {
+		t.Fatalf("events = %d, want %d; got: %v", len(graph.Events), len(wantKinds), eventKinds(graph.Events))
 	}
 	for i, want := range wantKinds {
-		if g.Events[i].Kind != want {
-			t.Errorf("event[%d] = %v, want %v", i, g.Events[i].Kind, want)
+		if graph.Events[i].Kind != want {
+			t.Errorf("event[%d] = %v, want %v", i, graph.Events[i].Kind, want)
 		}
 	}
 }
@@ -839,7 +839,7 @@ else {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
 	wantKinds := []ir.SeqEventKind{
 		ir.EvFrameStart,  // if(x > 0)
@@ -850,12 +850,12 @@ else {
 		ir.EvMessage,     // B.negative()
 		ir.EvFrameEnd,
 	}
-	if len(g.Events) != len(wantKinds) {
-		t.Fatalf("events = %d, want %d; got: %v", len(g.Events), len(wantKinds), eventKinds(g.Events))
+	if len(graph.Events) != len(wantKinds) {
+		t.Fatalf("events = %d, want %d; got: %v", len(graph.Events), len(wantKinds), eventKinds(graph.Events))
 	}
 	for i, want := range wantKinds {
-		if g.Events[i].Kind != want {
-			t.Errorf("event[%d] = %v, want %v", i, g.Events[i].Kind, want)
+		if graph.Events[i].Kind != want {
+			t.Errorf("event[%d] = %v, want %v", i, graph.Events[i].Kind, want)
 		}
 	}
 }

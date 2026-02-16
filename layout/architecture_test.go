@@ -9,39 +9,39 @@ import (
 )
 
 func TestArchitectureLayout(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Architecture
+	graph := ir.NewGraph()
+	graph.Kind = ir.Architecture
 
 	// Create 3 services
 	dbLabel := "Database"
 	srvLabel := "Server"
 	webLabel := "WebApp"
-	g.EnsureNode("db", &dbLabel, nil)
-	g.EnsureNode("server", &srvLabel, nil)
-	g.EnsureNode("web", &webLabel, nil)
+	graph.EnsureNode("db", &dbLabel, nil)
+	graph.EnsureNode("server", &srvLabel, nil)
+	graph.EnsureNode("web", &webLabel, nil)
 
-	g.ArchServices = []*ir.ArchService{
+	graph.ArchServices = []*ir.ArchService{
 		{ID: "db", Label: "Database", Icon: "database"},
 		{ID: "server", Label: "Server", Icon: "server"},
 		{ID: "web", Label: "WebApp", Icon: "cloud"},
 	}
-	g.ArchEdges = []*ir.ArchEdge{
+	graph.ArchEdges = []*ir.ArchEdge{
 		{FromID: "db", FromSide: ir.ArchRight, ToID: "server", ToSide: ir.ArchLeft},
 		{FromID: "server", FromSide: ir.ArchRight, ToID: "web", ToSide: ir.ArchLeft, ArrowRight: true},
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := computeArchitectureLayout(g, th, cfg)
+	lay := computeArchitectureLayout(graph, th, cfg)
 
-	if l.Kind != ir.Architecture {
-		t.Fatalf("Kind = %v, want Architecture", l.Kind)
+	if lay.Kind != ir.Architecture {
+		t.Fatalf("Kind = %v, want Architecture", lay.Kind)
 	}
 
 	// Verify nodes are positioned left-to-right (db -> server -> web)
-	dbN := l.Nodes["db"]
-	srvN := l.Nodes["server"]
-	webN := l.Nodes["web"]
+	dbN := lay.Nodes["db"]
+	srvN := lay.Nodes["server"]
+	webN := lay.Nodes["web"]
 	if dbN == nil || srvN == nil || webN == nil {
 		t.Fatal("missing node layouts")
 	}
@@ -58,48 +58,48 @@ func TestArchitectureLayout(t *testing.T) {
 	}
 
 	// Verify edges
-	if len(l.Edges) != 2 {
-		t.Fatalf("len(Edges) = %d, want 2", len(l.Edges))
+	if len(lay.Edges) != 2 {
+		t.Fatalf("len(Edges) = %d, want 2", len(lay.Edges))
 	}
 
 	// Second edge should have ArrowEnd set
-	if !l.Edges[1].ArrowEnd {
+	if !lay.Edges[1].ArrowEnd {
 		t.Error("second edge should have ArrowEnd=true")
 	}
 
-	if l.Width <= 0 || l.Height <= 0 {
-		t.Errorf("invalid dimensions: %f x %f", l.Width, l.Height)
+	if lay.Width <= 0 || lay.Height <= 0 {
+		t.Errorf("invalid dimensions: %f x %f", lay.Width, lay.Height)
 	}
 }
 
 func TestArchitectureLayoutVertical(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Architecture
+	graph := ir.NewGraph()
+	graph.Kind = ir.Architecture
 
 	topLabel := "Frontend"
 	midLabel := "API"
 	botLabel := "Database"
-	g.EnsureNode("top", &topLabel, nil)
-	g.EnsureNode("mid", &midLabel, nil)
-	g.EnsureNode("bot", &botLabel, nil)
+	graph.EnsureNode("top", &topLabel, nil)
+	graph.EnsureNode("mid", &midLabel, nil)
+	graph.EnsureNode("bot", &botLabel, nil)
 
-	g.ArchServices = []*ir.ArchService{
+	graph.ArchServices = []*ir.ArchService{
 		{ID: "top", Label: "Frontend"},
 		{ID: "mid", Label: "API"},
 		{ID: "bot", Label: "Database"},
 	}
-	g.ArchEdges = []*ir.ArchEdge{
+	graph.ArchEdges = []*ir.ArchEdge{
 		{FromID: "top", FromSide: ir.ArchBottom, ToID: "mid", ToSide: ir.ArchTop},
 		{FromID: "mid", FromSide: ir.ArchBottom, ToID: "bot", ToSide: ir.ArchTop},
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := computeArchitectureLayout(g, th, cfg)
+	lay := computeArchitectureLayout(graph, th, cfg)
 
-	topN := l.Nodes["top"]
-	midN := l.Nodes["mid"]
-	botN := l.Nodes["bot"]
+	topN := lay.Nodes["top"]
+	midN := lay.Nodes["mid"]
+	botN := lay.Nodes["bot"]
 	if topN == nil || midN == nil || botN == nil {
 		t.Fatal("missing node layouts")
 	}
@@ -119,30 +119,30 @@ func TestArchitectureLayoutVertical(t *testing.T) {
 }
 
 func TestArchitectureLayoutGroups(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Architecture
+	graph := ir.NewGraph()
+	graph.Kind = ir.Architecture
 
 	dbLabel := "Database"
 	srvLabel := "Server"
-	g.EnsureNode("db", &dbLabel, nil)
-	g.EnsureNode("srv", &srvLabel, nil)
+	graph.EnsureNode("db", &dbLabel, nil)
+	graph.EnsureNode("srv", &srvLabel, nil)
 
-	g.ArchGroups = []*ir.ArchGroup{
+	graph.ArchGroups = []*ir.ArchGroup{
 		{ID: "api", Label: "API", Icon: "cloud", Children: []string{"db", "srv"}},
 	}
-	g.ArchServices = []*ir.ArchService{
+	graph.ArchServices = []*ir.ArchService{
 		{ID: "db", Label: "Database", GroupID: "api"},
 		{ID: "srv", Label: "Server", GroupID: "api"},
 	}
-	g.ArchEdges = []*ir.ArchEdge{
+	graph.ArchEdges = []*ir.ArchEdge{
 		{FromID: "db", FromSide: ir.ArchRight, ToID: "srv", ToSide: ir.ArchLeft},
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := computeArchitectureLayout(g, th, cfg)
+	lay := computeArchitectureLayout(graph, th, cfg)
 
-	data, ok := l.Diagram.(ArchitectureData)
+	data, ok := lay.Diagram.(ArchitectureData)
 	if !ok {
 		t.Fatal("Diagram is not ArchitectureData")
 	}
@@ -161,8 +161,8 @@ func TestArchitectureLayoutGroups(t *testing.T) {
 	}
 
 	// Group should encompass both nodes
-	dbN := l.Nodes["db"]
-	srvN := l.Nodes["srv"]
+	dbN := lay.Nodes["db"]
+	srvN := lay.Nodes["srv"]
 	if dbN.X-dbN.Width/2 < grp.X {
 		t.Errorf("db left edge (%f) should be >= group X (%f)", dbN.X-dbN.Width/2, grp.X)
 	}
@@ -172,32 +172,32 @@ func TestArchitectureLayoutGroups(t *testing.T) {
 }
 
 func TestArchitectureLayoutJunctions(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Architecture
+	graph := ir.NewGraph()
+	graph.Kind = ir.Architecture
 
 	aLabel := "ServiceA"
 	bLabel := "ServiceB"
-	g.EnsureNode("a", &aLabel, nil)
-	g.EnsureNode("b", &bLabel, nil)
-	g.EnsureNode("j1", nil, nil)
+	graph.EnsureNode("a", &aLabel, nil)
+	graph.EnsureNode("b", &bLabel, nil)
+	graph.EnsureNode("j1", nil, nil)
 
-	g.ArchServices = []*ir.ArchService{
+	graph.ArchServices = []*ir.ArchService{
 		{ID: "a", Label: "ServiceA"},
 		{ID: "b", Label: "ServiceB"},
 	}
-	g.ArchJunctions = []*ir.ArchJunction{
+	graph.ArchJunctions = []*ir.ArchJunction{
 		{ID: "j1"},
 	}
-	g.ArchEdges = []*ir.ArchEdge{
+	graph.ArchEdges = []*ir.ArchEdge{
 		{FromID: "a", FromSide: ir.ArchRight, ToID: "j1", ToSide: ir.ArchLeft},
 		{FromID: "j1", FromSide: ir.ArchRight, ToID: "b", ToSide: ir.ArchLeft},
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := computeArchitectureLayout(g, th, cfg)
+	lay := computeArchitectureLayout(graph, th, cfg)
 
-	data, ok := l.Diagram.(ArchitectureData)
+	data, ok := lay.Diagram.(ArchitectureData)
 	if !ok {
 		t.Fatal("Diagram is not ArchitectureData")
 	}
@@ -213,25 +213,25 @@ func TestArchitectureLayoutJunctions(t *testing.T) {
 	}
 
 	// Junction should be between a and b horizontally
-	aN := l.Nodes["a"]
-	bN := l.Nodes["b"]
+	aN := lay.Nodes["a"]
+	bN := lay.Nodes["b"]
 	if aN.X >= junc.X || junc.X >= bN.X {
 		t.Errorf("junction X (%f) should be between a.X (%f) and b.X (%f)", junc.X, aN.X, bN.X)
 	}
 }
 
 func TestArchitectureLayoutEmpty(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Architecture
+	graph := ir.NewGraph()
+	graph.Kind = ir.Architecture
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := computeArchitectureLayout(g, th, cfg)
+	lay := computeArchitectureLayout(graph, th, cfg)
 
-	if l.Kind != ir.Architecture {
-		t.Fatalf("Kind = %v, want Architecture", l.Kind)
+	if lay.Kind != ir.Architecture {
+		t.Fatalf("Kind = %v, want Architecture", lay.Kind)
 	}
-	data, ok := l.Diagram.(ArchitectureData)
+	data, ok := lay.Diagram.(ArchitectureData)
 	if !ok {
 		t.Fatal("Diagram is not ArchitectureData")
 	}
@@ -288,7 +288,7 @@ func TestArchSideOffsetReverse(t *testing.T) {
 }
 
 func TestArchAnchorPoint(t *testing.T) {
-	n := &NodeLayout{
+	node := &NodeLayout{
 		X:      100,
 		Y:      50,
 		Width:  60,
@@ -308,7 +308,7 @@ func TestArchAnchorPoint(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			x, y := archAnchorPoint(n, tt.side)
+			x, y := archAnchorPoint(node, tt.side)
 			if x != tt.wantX || y != tt.wantY {
 				t.Errorf("archAnchorPoint(%v) = (%f, %f), want (%f, %f)", tt.side, x, y, tt.wantX, tt.wantY)
 			}

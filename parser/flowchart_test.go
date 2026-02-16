@@ -11,18 +11,18 @@ func TestParseFlowchartSimpleChain(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse() error: %v", err)
 	}
-	g := out.Graph
-	if g.Kind != ir.Flowchart {
-		t.Errorf("Kind = %v, want Flowchart", g.Kind)
+	graph := out.Graph
+	if graph.Kind != ir.Flowchart {
+		t.Errorf("Kind = %v, want Flowchart", graph.Kind)
 	}
-	if g.Direction != ir.LeftRight {
-		t.Errorf("Direction = %v, want LeftRight", g.Direction)
+	if graph.Direction != ir.LeftRight {
+		t.Errorf("Direction = %v, want LeftRight", graph.Direction)
 	}
-	if len(g.Nodes) != 3 {
-		t.Errorf("Nodes = %d, want 3", len(g.Nodes))
+	if len(graph.Nodes) != 3 {
+		t.Errorf("Nodes = %d, want 3", len(graph.Nodes))
 	}
-	if len(g.Edges) != 2 {
-		t.Errorf("Edges = %d, want 2", len(g.Edges))
+	if len(graph.Edges) != 2 {
+		t.Errorf("Edges = %d, want 2", len(graph.Edges))
 	}
 }
 
@@ -31,21 +31,21 @@ func TestParseFlowchartWithLabels(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse() error: %v", err)
 	}
-	g := out.Graph
-	if g.Nodes["A"].Label != "Start" {
-		t.Errorf("A label = %q, want Start", g.Nodes["A"].Label)
+	graph := out.Graph
+	if graph.Nodes["A"].Label != "Start" {
+		t.Errorf("A label = %q, want Start", graph.Nodes["A"].Label)
 	}
-	if g.Nodes["A"].Shape != ir.Rectangle {
-		t.Errorf("A shape = %v, want Rectangle", g.Nodes["A"].Shape)
+	if graph.Nodes["A"].Shape != ir.Rectangle {
+		t.Errorf("A shape = %v, want Rectangle", graph.Nodes["A"].Shape)
 	}
-	if g.Nodes["B"].Shape != ir.Diamond {
-		t.Errorf("B shape = %v, want Diamond", g.Nodes["B"].Shape)
+	if graph.Nodes["B"].Shape != ir.Diamond {
+		t.Errorf("B shape = %v, want Diamond", graph.Nodes["B"].Shape)
 	}
-	if len(g.Edges) != 2 {
-		t.Errorf("Edges = %d, want 2", len(g.Edges))
+	if len(graph.Edges) != 2 {
+		t.Errorf("Edges = %d, want 2", len(graph.Edges))
 	}
 	var labelEdge *ir.Edge
-	for _, e := range g.Edges {
+	for _, e := range graph.Edges {
 		if e.Label != nil && *e.Label == "Yes" {
 			labelEdge = e
 		}

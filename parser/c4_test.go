@@ -16,27 +16,27 @@ Rel(user, webapp, "Uses", "HTTPS")`
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
-	g := out.Graph
-	if g.Kind != ir.C4 {
-		t.Fatalf("Kind = %v, want C4", g.Kind)
+	graph := out.Graph
+	if graph.Kind != ir.C4 {
+		t.Fatalf("Kind = %v, want C4", graph.Kind)
 	}
-	if g.C4SubKind != ir.C4Context {
-		t.Fatalf("C4SubKind = %v, want C4Context", g.C4SubKind)
+	if graph.C4SubKind != ir.C4Context {
+		t.Fatalf("C4SubKind = %v, want C4Context", graph.C4SubKind)
 	}
-	if len(g.C4Elements) != 2 {
-		t.Fatalf("Elements = %d, want 2", len(g.C4Elements))
+	if len(graph.C4Elements) != 2 {
+		t.Fatalf("Elements = %d, want 2", len(graph.C4Elements))
 	}
-	if g.C4Elements[0].Type != ir.C4Person {
-		t.Errorf("elem[0] type = %v, want Person", g.C4Elements[0].Type)
+	if graph.C4Elements[0].Type != ir.C4Person {
+		t.Errorf("elem[0] type = %v, want Person", graph.C4Elements[0].Type)
 	}
-	if g.C4Elements[0].Description != "A user of the system" {
-		t.Errorf("elem[0] desc = %q", g.C4Elements[0].Description)
+	if graph.C4Elements[0].Description != "A user of the system" {
+		t.Errorf("elem[0] desc = %q", graph.C4Elements[0].Description)
 	}
-	if len(g.C4Rels) != 1 {
-		t.Fatalf("Rels = %d, want 1", len(g.C4Rels))
+	if len(graph.C4Rels) != 1 {
+		t.Fatalf("Rels = %d, want 1", len(graph.C4Rels))
 	}
-	if g.C4Rels[0].Technology != "HTTPS" {
-		t.Errorf("rel tech = %q", g.C4Rels[0].Technology)
+	if graph.C4Rels[0].Technology != "HTTPS" {
+		t.Errorf("rel tech = %q", graph.C4Rels[0].Technology)
 	}
 }
 
@@ -54,14 +54,14 @@ Rel(api, db, "Reads/Writes")`
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
-	g := out.Graph
-	if g.C4SubKind != ir.C4Container {
-		t.Fatalf("C4SubKind = %v, want C4Container", g.C4SubKind)
+	graph := out.Graph
+	if graph.C4SubKind != ir.C4Container {
+		t.Fatalf("C4SubKind = %v, want C4Container", graph.C4SubKind)
 	}
-	if len(g.C4Boundaries) != 1 {
-		t.Fatalf("Boundaries = %d, want 1", len(g.C4Boundaries))
+	if len(graph.C4Boundaries) != 1 {
+		t.Fatalf("Boundaries = %d, want 1", len(graph.C4Boundaries))
 	}
-	b := g.C4Boundaries[0]
+	b := graph.C4Boundaries[0]
 	if b.Label != "My System" {
 		t.Errorf("boundary label = %q", b.Label)
 	}
@@ -69,7 +69,7 @@ Rel(api, db, "Reads/Writes")`
 		t.Fatalf("boundary children = %d, want 2", len(b.Children))
 	}
 	var api *ir.C4Element
-	for _, e := range g.C4Elements {
+	for _, e := range graph.C4Elements {
 		if e.ID == "api" {
 			api = e
 		}

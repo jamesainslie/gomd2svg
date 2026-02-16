@@ -18,36 +18,36 @@ func TestParseXYChartBasic(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
-	g := out.Graph
-	if g.Kind != ir.XYChart {
-		t.Fatalf("Kind = %v, want XYChart", g.Kind)
+	graph := out.Graph
+	if graph.Kind != ir.XYChart {
+		t.Fatalf("Kind = %v, want XYChart", graph.Kind)
 	}
-	if g.XYTitle != "Sales Revenue" {
-		t.Errorf("Title = %q, want %q", g.XYTitle, "Sales Revenue")
+	if graph.XYTitle != "Sales Revenue" {
+		t.Errorf("Title = %q, want %q", graph.XYTitle, "Sales Revenue")
 	}
-	if g.XYXAxis == nil {
+	if graph.XYXAxis == nil {
 		t.Fatal("XYXAxis is nil")
 	}
-	if g.XYXAxis.Mode != ir.XYAxisBand {
-		t.Errorf("x-axis mode = %v, want XYAxisBand", g.XYXAxis.Mode)
+	if graph.XYXAxis.Mode != ir.XYAxisBand {
+		t.Errorf("x-axis mode = %v, want XYAxisBand", graph.XYXAxis.Mode)
 	}
-	if len(g.XYXAxis.Categories) != 5 {
-		t.Errorf("x-axis categories len = %d, want 5", len(g.XYXAxis.Categories))
+	if len(graph.XYXAxis.Categories) != 5 {
+		t.Errorf("x-axis categories len = %d, want 5", len(graph.XYXAxis.Categories))
 	}
-	if g.XYYAxis == nil {
+	if graph.XYYAxis == nil {
 		t.Fatal("XYYAxis is nil")
 	}
-	if g.XYYAxis.Max != 1000 {
-		t.Errorf("y-axis max = %v, want 1000", g.XYYAxis.Max)
+	if graph.XYYAxis.Max != 1000 {
+		t.Errorf("y-axis max = %v, want 1000", graph.XYYAxis.Max)
 	}
-	if len(g.XYSeries) != 2 {
-		t.Fatalf("XYSeries len = %d, want 2", len(g.XYSeries))
+	if len(graph.XYSeries) != 2 {
+		t.Fatalf("XYSeries len = %d, want 2", len(graph.XYSeries))
 	}
-	if g.XYSeries[0].Type != ir.XYSeriesBar {
-		t.Errorf("series[0] type = %v, want Bar", g.XYSeries[0].Type)
+	if graph.XYSeries[0].Type != ir.XYSeriesBar {
+		t.Errorf("series[0] type = %v, want Bar", graph.XYSeries[0].Type)
 	}
-	if g.XYSeries[1].Type != ir.XYSeriesLine {
-		t.Errorf("series[1] type = %v, want Line", g.XYSeries[1].Type)
+	if graph.XYSeries[1].Type != ir.XYSeriesLine {
+		t.Errorf("series[1] type = %v, want Line", graph.XYSeries[1].Type)
 	}
 }
 

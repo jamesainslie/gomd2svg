@@ -3,17 +3,23 @@ package ir
 import "testing"
 
 func TestBlockDef(t *testing.T) {
-	b := &BlockDef{
+	block := &BlockDef{
 		ID:    "a",
 		Label: "Block A",
 		Shape: Rectangle,
 		Width: 2,
 	}
-	if b.Width != 2 {
-		t.Errorf("Width = %d, want 2", b.Width)
+	if block.ID != "a" {
+		t.Errorf("ID = %q, want %q", block.ID, "a")
 	}
-	if b.Shape != Rectangle {
-		t.Errorf("Shape = %v, want Rectangle", b.Shape)
+	if block.Label != "Block A" {
+		t.Errorf("Label = %q, want %q", block.Label, "Block A")
+	}
+	if block.Width != 2 {
+		t.Errorf("Width = %d, want 2", block.Width)
+	}
+	if block.Shape != Rectangle {
+		t.Errorf("Shape = %v, want Rectangle", block.Shape)
 	}
 }
 
@@ -28,6 +34,18 @@ func TestBlockNesting(t *testing.T) {
 			{ID: "child2", Label: "Child 2", Shape: RoundRect, Width: 1},
 		},
 	}
+	if parent.ID != "parent" {
+		t.Errorf("ID = %q, want %q", parent.ID, "parent")
+	}
+	if parent.Label != "Parent" {
+		t.Errorf("Label = %q, want %q", parent.Label, "Parent")
+	}
+	if parent.Shape != Rectangle {
+		t.Errorf("Shape = %v, want Rectangle", parent.Shape)
+	}
+	if parent.Width != 1 {
+		t.Errorf("Width = %d, want 1", parent.Width)
+	}
 	if len(parent.Children) != 2 {
 		t.Fatalf("Children = %d, want 2", len(parent.Children))
 	}
@@ -37,15 +55,15 @@ func TestBlockNesting(t *testing.T) {
 }
 
 func TestBlockGraphFields(t *testing.T) {
-	g := NewGraph()
-	g.Kind = Block
-	g.BlockColumns = 3
-	g.Blocks = append(g.Blocks, &BlockDef{ID: "a", Label: "A", Width: 1})
-	g.Blocks = append(g.Blocks, &BlockDef{ID: "b", Label: "B", Width: 2})
-	if g.BlockColumns != 3 {
-		t.Errorf("BlockColumns = %d, want 3", g.BlockColumns)
+	graph := NewGraph()
+	graph.Kind = Block
+	graph.BlockColumns = 3
+	graph.Blocks = append(graph.Blocks, &BlockDef{ID: "a", Label: "A", Width: 1})
+	graph.Blocks = append(graph.Blocks, &BlockDef{ID: "b", Label: "B", Width: 2})
+	if graph.BlockColumns != 3 {
+		t.Errorf("BlockColumns = %d, want 3", graph.BlockColumns)
 	}
-	if len(g.Blocks) != 2 {
-		t.Errorf("Blocks = %d, want 2", len(g.Blocks))
+	if len(graph.Blocks) != 2 {
+		t.Errorf("Blocks = %d, want 2", len(graph.Blocks))
 	}
 }

@@ -9,9 +9,9 @@ import (
 )
 
 func TestPacketLayout(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Packet
-	g.Fields = []*ir.PacketField{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Packet
+	graph.Fields = []*ir.PacketField{
 		{Start: 0, End: 15, Description: "Source Port"},
 		{Start: 16, End: 31, Description: "Dest Port"},
 		{Start: 32, End: 63, Description: "Sequence Number"},
@@ -19,11 +19,11 @@ func TestPacketLayout(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	pd, ok := l.Diagram.(PacketData)
+	pd, ok := lay.Diagram.(PacketData)
 	if !ok {
-		t.Fatalf("Diagram type = %T, want PacketData", l.Diagram)
+		t.Fatalf("Diagram type = %T, want PacketData", lay.Diagram)
 	}
 
 	// 32 bits per row: first row has 2 fields (0-15, 16-31), second row has 1 (32-63)
@@ -51,24 +51,27 @@ func TestPacketLayout(t *testing.T) {
 		t.Errorf("32-bit field width = %v, want %v", f2.Width, expectedFullWidth)
 	}
 
-	if l.Width <= 0 || l.Height <= 0 {
-		t.Errorf("dimensions = %v x %v, want positive", l.Width, l.Height)
+	if lay.Width <= 0 || lay.Height <= 0 {
+		t.Errorf("dimensions = %v x %v, want positive", lay.Width, lay.Height)
 	}
 }
 
 func TestPacketLayoutSingleBit(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Packet
-	g.Fields = []*ir.PacketField{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Packet
+	graph.Fields = []*ir.PacketField{
 		{Start: 0, End: 0, Description: "Flag"},
 		{Start: 1, End: 31, Description: "Rest"},
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	pd := l.Diagram.(PacketData)
+	pd, ok := lay.Diagram.(PacketData)
+	if !ok {
+		t.Fatal("expected PacketData")
+	}
 	if len(pd.Rows) != 1 {
 		t.Fatalf("len(Rows) = %d, want 1", len(pd.Rows))
 	}

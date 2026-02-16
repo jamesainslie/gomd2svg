@@ -11,11 +11,11 @@ import (
 )
 
 func TestRenderRequirement(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Requirement
+	graph := ir.NewGraph()
+	graph.Kind = ir.Requirement
 
 	// Add a requirement.
-	g.Requirements = append(g.Requirements, &ir.RequirementDef{
+	graph.Requirements = append(graph.Requirements, &ir.RequirementDef{
 		Name:         "test_req",
 		ID:           "REQ-001",
 		Text:         "Must do something",
@@ -24,25 +24,25 @@ func TestRenderRequirement(t *testing.T) {
 		VerifyMethod: ir.VerifyTest,
 	})
 	reqLabel := "test_req"
-	g.EnsureNode("test_req", &reqLabel, nil)
+	graph.EnsureNode("test_req", &reqLabel, nil)
 
 	// Add an element.
-	g.ReqElements = append(g.ReqElements, &ir.ElementDef{
+	graph.ReqElements = append(graph.ReqElements, &ir.ElementDef{
 		Name:   "test_element",
 		Type:   "Simulation",
 		DocRef: "DOC-001",
 	})
 	elemLabel := "test_element"
-	g.EnsureNode("test_element", &elemLabel, nil)
+	graph.EnsureNode("test_element", &elemLabel, nil)
 
 	// Add a relationship edge.
 	relLabel := "satisfies"
-	g.ReqRelationships = append(g.ReqRelationships, &ir.RequirementRel{
+	graph.ReqRelationships = append(graph.ReqRelationships, &ir.RequirementRel{
 		Source: "test_element",
 		Target: "test_req",
 		Type:   ir.ReqRelSatisfies,
 	})
-	g.Edges = append(g.Edges, &ir.Edge{
+	graph.Edges = append(graph.Edges, &ir.Edge{
 		From:     "test_element",
 		To:       "test_req",
 		Label:    &relLabel,
@@ -52,7 +52,7 @@ func TestRenderRequirement(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "<svg") {
@@ -91,12 +91,12 @@ func TestRenderRequirement(t *testing.T) {
 }
 
 func TestRenderRequirementEmpty(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Requirement
+	graph := ir.NewGraph()
+	graph.Kind = ir.Requirement
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "<svg") {

@@ -11,41 +11,41 @@ import (
 )
 
 func TestRenderArchitecture(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Architecture
+	graph := ir.NewGraph()
+	graph.Kind = ir.Architecture
 
 	dbLabel := "Database"
 	srvLabel := "Server"
-	g.EnsureNode("db", &dbLabel, nil)
-	g.EnsureNode("srv", &srvLabel, nil)
+	graph.EnsureNode("db", &dbLabel, nil)
+	graph.EnsureNode("srv", &srvLabel, nil)
 
-	g.ArchServices = []*ir.ArchService{
+	graph.ArchServices = []*ir.ArchService{
 		{ID: "db", Label: "Database", Icon: "database"},
 		{ID: "srv", Label: "Server", Icon: "server"},
 	}
-	g.ArchGroups = []*ir.ArchGroup{
+	graph.ArchGroups = []*ir.ArchGroup{
 		{ID: "api", Label: "API", Icon: "cloud", Children: []string{"db", "srv"}},
 	}
-	g.ArchEdges = []*ir.ArchEdge{
+	graph.ArchEdges = []*ir.ArchEdge{
 		{FromID: "db", FromSide: ir.ArchRight, ToID: "srv", ToSide: ir.ArchLeft, ArrowRight: true},
 	}
-	g.Edges = append(g.Edges, &ir.Edge{From: "db", To: "srv", Directed: true, ArrowEnd: true})
+	graph.Edges = append(graph.Edges, &ir.Edge{From: "db", To: "srv", Directed: true, ArrowEnd: true})
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	lay := layout.ComputeLayout(graph, th, cfg)
 
 	// Call renderArchitecture directly to verify our renderer works,
 	// independent of svg.go dispatch (which another agent adds).
-	var b svgBuilder
-	b.openTag("svg",
+	var builder svgBuilder
+	builder.openTag("svg",
 		"xmlns", "http://www.w3.org/2000/svg",
 		"width", "400",
 		"height", "300",
 	)
-	renderArchitecture(&b, l, th, cfg)
-	b.closeTag("svg")
-	svg := b.String()
+	renderArchitecture(&builder, lay, th, cfg)
+	builder.closeTag("svg")
+	svg := builder.String()
 
 	if !strings.Contains(svg, "<svg") {
 		t.Error("missing <svg tag")
@@ -70,36 +70,36 @@ func TestRenderArchitecture(t *testing.T) {
 }
 
 func TestRenderArchitectureJunctions(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Architecture
+	graph := ir.NewGraph()
+	graph.Kind = ir.Architecture
 
 	aLabel := "ServiceA"
 	bLabel := "ServiceB"
-	g.EnsureNode("a", &aLabel, nil)
-	g.EnsureNode("b", &bLabel, nil)
-	g.EnsureNode("j1", nil, nil)
+	graph.EnsureNode("a", &aLabel, nil)
+	graph.EnsureNode("b", &bLabel, nil)
+	graph.EnsureNode("j1", nil, nil)
 
-	g.ArchServices = []*ir.ArchService{
+	graph.ArchServices = []*ir.ArchService{
 		{ID: "a", Label: "ServiceA"},
 		{ID: "b", Label: "ServiceB"},
 	}
-	g.ArchJunctions = []*ir.ArchJunction{
+	graph.ArchJunctions = []*ir.ArchJunction{
 		{ID: "j1"},
 	}
-	g.ArchEdges = []*ir.ArchEdge{
+	graph.ArchEdges = []*ir.ArchEdge{
 		{FromID: "a", FromSide: ir.ArchRight, ToID: "j1", ToSide: ir.ArchLeft},
 		{FromID: "j1", FromSide: ir.ArchRight, ToID: "b", ToSide: ir.ArchLeft},
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	lay := layout.ComputeLayout(graph, th, cfg)
 
-	var b svgBuilder
-	b.openTag("svg", "xmlns", "http://www.w3.org/2000/svg", "width", "600", "height", "200")
-	renderArchitecture(&b, l, th, cfg)
-	b.closeTag("svg")
-	svg := b.String()
+	var builder svgBuilder
+	builder.openTag("svg", "xmlns", "http://www.w3.org/2000/svg", "width", "600", "height", "200")
+	renderArchitecture(&builder, lay, th, cfg)
+	builder.closeTag("svg")
+	svg := builder.String()
 
 	// Junction should be rendered as a circle.
 	if !strings.Contains(svg, "<circle") {
@@ -114,28 +114,28 @@ func TestRenderArchitectureJunctions(t *testing.T) {
 }
 
 func TestRenderArchitectureIcons(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Architecture
+	graph := ir.NewGraph()
+	graph.Kind = ir.Architecture
 
 	// Single service with each icon type.
 	icons := []string{"database", "server", "cloud", "internet", "disk"}
 	for _, icon := range icons {
 		label := icon
-		g.EnsureNode(icon, &label, nil)
-		g.ArchServices = append(g.ArchServices, &ir.ArchService{
+		graph.EnsureNode(icon, &label, nil)
+		graph.ArchServices = append(graph.ArchServices, &ir.ArchService{
 			ID: icon, Label: label, Icon: icon,
 		})
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	lay := layout.ComputeLayout(graph, th, cfg)
 
-	var b svgBuilder
-	b.openTag("svg", "xmlns", "http://www.w3.org/2000/svg", "width", "800", "height", "200")
-	renderArchitecture(&b, l, th, cfg)
-	b.closeTag("svg")
-	svg := b.String()
+	var builder svgBuilder
+	builder.openTag("svg", "xmlns", "http://www.w3.org/2000/svg", "width", "800", "height", "200")
+	renderArchitecture(&builder, lay, th, cfg)
+	builder.closeTag("svg")
+	svg := builder.String()
 
 	// Each icon type should produce some SVG shape.
 	if !strings.Contains(svg, "<ellipse") {
@@ -147,18 +147,18 @@ func TestRenderArchitectureIcons(t *testing.T) {
 }
 
 func TestRenderArchitectureEmpty(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Architecture
+	graph := ir.NewGraph()
+	graph.Kind = ir.Architecture
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	lay := layout.ComputeLayout(graph, th, cfg)
 
-	var b svgBuilder
-	b.openTag("svg", "xmlns", "http://www.w3.org/2000/svg", "width", "100", "height", "100")
-	renderArchitecture(&b, l, th, cfg)
-	b.closeTag("svg")
-	svg := b.String()
+	var builder svgBuilder
+	builder.openTag("svg", "xmlns", "http://www.w3.org/2000/svg", "width", "100", "height", "100")
+	renderArchitecture(&builder, lay, th, cfg)
+	builder.closeTag("svg")
+	svg := builder.String()
 
 	if !strings.Contains(svg, "<svg") {
 		t.Error("missing <svg tag")
@@ -170,31 +170,31 @@ func TestRenderArchitectureEmpty(t *testing.T) {
 }
 
 func TestRenderArchitectureEdgeArrows(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Architecture
+	graph := ir.NewGraph()
+	graph.Kind = ir.Architecture
 
 	aLabel := "A"
 	bLabel := "B"
-	g.EnsureNode("a", &aLabel, nil)
-	g.EnsureNode("b", &bLabel, nil)
+	graph.EnsureNode("a", &aLabel, nil)
+	graph.EnsureNode("b", &bLabel, nil)
 
-	g.ArchServices = []*ir.ArchService{
+	graph.ArchServices = []*ir.ArchService{
 		{ID: "a", Label: "A"},
 		{ID: "b", Label: "B"},
 	}
-	g.ArchEdges = []*ir.ArchEdge{
+	graph.ArchEdges = []*ir.ArchEdge{
 		{FromID: "a", FromSide: ir.ArchRight, ToID: "b", ToSide: ir.ArchLeft, ArrowLeft: true, ArrowRight: true},
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	lay := layout.ComputeLayout(graph, th, cfg)
 
-	var b svgBuilder
-	b.openTag("svg", "xmlns", "http://www.w3.org/2000/svg", "width", "400", "height", "200")
-	renderArchitecture(&b, l, th, cfg)
-	b.closeTag("svg")
-	svg := b.String()
+	var builder svgBuilder
+	builder.openTag("svg", "xmlns", "http://www.w3.org/2000/svg", "width", "400", "height", "200")
+	renderArchitecture(&builder, lay, th, cfg)
+	builder.closeTag("svg")
+	svg := builder.String()
 
 	// Bidirectional arrows should produce both marker-start and marker-end.
 	if !strings.Contains(svg, "marker-end") {
@@ -207,7 +207,7 @@ func TestRenderArchitectureEdgeArrows(t *testing.T) {
 
 func TestRenderArchitectureNoDispatch(t *testing.T) {
 	// Verify that renderArchitecture handles wrong diagram data gracefully.
-	l := &layout.Layout{
+	lay := &layout.Layout{
 		Kind:    ir.Architecture,
 		Nodes:   make(map[string]*layout.NodeLayout),
 		Diagram: layout.GraphData{}, // wrong type on purpose
@@ -216,11 +216,11 @@ func TestRenderArchitectureNoDispatch(t *testing.T) {
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
 
-	var b svgBuilder
-	b.openTag("svg", "xmlns", "http://www.w3.org/2000/svg", "width", "100", "height", "100")
-	renderArchitecture(&b, l, th, cfg)
-	b.closeTag("svg")
-	svg := b.String()
+	var builder svgBuilder
+	builder.openTag("svg", "xmlns", "http://www.w3.org/2000/svg", "width", "100", "height", "100")
+	renderArchitecture(&builder, lay, th, cfg)
+	builder.closeTag("svg")
+	svg := builder.String()
 
 	// Should produce valid SVG even with wrong data type (early return).
 	if !strings.Contains(svg, "</svg>") {

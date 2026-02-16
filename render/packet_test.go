@@ -11,16 +11,16 @@ import (
 )
 
 func TestRenderPacketContainsFields(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Packet
-	g.Fields = []*ir.PacketField{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Packet
+	graph.Fields = []*ir.PacketField{
 		{Start: 0, End: 15, Description: "Source Port"},
 		{Start: 16, End: 31, Description: "Dest Port"},
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "Source Port") {
@@ -35,15 +35,15 @@ func TestRenderPacketContainsFields(t *testing.T) {
 }
 
 func TestRenderPacketBitNumbers(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Packet
-	g.Fields = []*ir.PacketField{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Packet
+	graph.Fields = []*ir.PacketField{
 		{Start: 0, End: 31, Description: "Data"},
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	// Should contain bit number "0" and "31"
@@ -56,15 +56,15 @@ func TestRenderPacketBitNumbers(t *testing.T) {
 }
 
 func TestRenderPacketValidSVG(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Packet
-	g.Fields = []*ir.PacketField{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Packet
+	graph.Fields = []*ir.PacketField{
 		{Start: 0, End: 15, Description: "Field"},
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.HasPrefix(svg, "<svg") {

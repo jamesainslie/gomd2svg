@@ -10,15 +10,20 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
-func renderXYChart(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.Layout) {
-	xyd, ok := l.Diagram.(layout.XYChartData)
+// XY chart rendering constants.
+const (
+	xyTickLabelPad float32 = 4
+)
+
+func renderXYChart(builder *svgBuilder, lay *layout.Layout, th *theme.Theme, cfg *config.Layout) {
+	xyd, ok := lay.Diagram.(layout.XYChartData)
 	if !ok {
 		return
 	}
 
 	// Title.
 	if xyd.Title != "" {
-		b.text(l.Width/2, cfg.XYChart.TitleFontSize, xyd.Title,
+		builder.text(lay.Width/2, cfg.XYChart.TitleFontSize, xyd.Title,
 			"text-anchor", "middle",
 			"font-family", th.FontFamily,
 			"font-size", fmtFloat(cfg.XYChart.TitleFontSize),
@@ -44,10 +49,10 @@ func renderXYChart(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config
 
 	for _, tick := range xyd.YTicks {
 		// Horizontal grid line.
-		b.line(cx, tick.Y, cx+cw, tick.Y,
+		builder.line(cx, tick.Y, cx+cw, tick.Y,
 			"stroke", gridColor, "stroke-width", "0.5")
 		// Tick label.
-		b.text(cx-4, tick.Y+4, tick.Label,
+		builder.text(cx-xyTickLabelPad, tick.Y+xyTickLabelPad, tick.Label,
 			"text-anchor", "end",
 			"font-family", th.FontFamily,
 			"font-size", fmtFloat(cfg.XYChart.AxisFontSize),
@@ -56,12 +61,12 @@ func renderXYChart(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config
 	}
 
 	// Axis lines.
-	b.line(cx, cy, cx, cy+ch, "stroke", axisColor, "stroke-width", "1")       // Y-axis
-	b.line(cx, cy+ch, cx+cw, cy+ch, "stroke", axisColor, "stroke-width", "1") // X-axis
+	builder.line(cx, cy, cx, cy+ch, "stroke", axisColor, "stroke-width", "1")       // Y-axis
+	builder.line(cx, cy+ch, cx+cw, cy+ch, "stroke", axisColor, "stroke-width", "1") // X-axis
 
 	// X-axis labels.
 	for _, label := range xyd.XLabels {
-		b.text(label.X, cy+ch+cfg.XYChart.AxisFontSize+4, label.Text,
+		builder.text(label.X, cy+ch+cfg.XYChart.AxisFontSize+xyTickLabelPad, label.Text,
 			"text-anchor", "middle",
 			"font-family", th.FontFamily,
 			"font-size", fmtFloat(cfg.XYChart.AxisFontSize),
@@ -70,16 +75,16 @@ func renderXYChart(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config
 	}
 
 	// Render each series.
-	for _, s := range xyd.Series {
+	for _, series := range xyd.Series {
 		color := "#4C78A8" // fallback
 		if len(th.XYChartColors) > 0 {
-			color = th.XYChartColors[s.ColorIndex%len(th.XYChartColors)]
+			color = th.XYChartColors[series.ColorIndex%len(th.XYChartColors)]
 		}
 
-		switch s.Type {
+		switch series.Type {
 		case ir.XYSeriesBar:
-			for _, p := range s.Points {
-				b.rect(p.X, p.Y, p.Width, p.Height, 0,
+			for _, pt := range series.Points {
+				builder.rect(pt.X, pt.Y, pt.Width, pt.Height, 0,
 					"fill", color,
 					"stroke", "none",
 				)
@@ -87,11 +92,11 @@ func renderXYChart(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config
 		case ir.XYSeriesLine:
 			// Polyline.
 			var pointStrs []string
-			for _, p := range s.Points {
-				pointStrs = append(pointStrs, fmt.Sprintf("%s,%s", fmtFloat(p.X), fmtFloat(p.Y)))
+			for _, pt := range series.Points {
+				pointStrs = append(pointStrs, fmt.Sprintf("%s,%s", fmtFloat(pt.X), fmtFloat(pt.Y)))
 			}
 			if len(pointStrs) > 0 {
-				b.selfClose("polyline",
+				builder.selfClose("polyline",
 					"points", strings.Join(pointStrs, " "),
 					"fill", "none",
 					"stroke", color,
@@ -99,8 +104,8 @@ func renderXYChart(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config
 				)
 			}
 			// Data point circles.
-			for _, p := range s.Points {
-				b.circle(p.X, p.Y, 3,
+			for _, pt := range series.Points {
+				builder.circle(pt.X, pt.Y, 3,
 					"fill", color,
 					"stroke", th.Background,
 					"stroke-width", "1",

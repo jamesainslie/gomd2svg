@@ -17,27 +17,27 @@ func TestParseRadarBasic(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
-	g := out.Graph
-	if g.Kind != ir.Radar {
-		t.Fatalf("Kind = %v, want Radar", g.Kind)
+	graph := out.Graph
+	if graph.Kind != ir.Radar {
+		t.Fatalf("Kind = %v, want Radar", graph.Kind)
 	}
-	if g.RadarTitle != "Language Skills" {
-		t.Errorf("Title = %q, want %q", g.RadarTitle, "Language Skills")
+	if graph.RadarTitle != "Language Skills" {
+		t.Errorf("Title = %q, want %q", graph.RadarTitle, "Language Skills")
 	}
-	if len(g.RadarAxes) != 3 {
-		t.Fatalf("RadarAxes len = %d, want 3", len(g.RadarAxes))
+	if len(graph.RadarAxes) != 3 {
+		t.Fatalf("RadarAxes len = %d, want 3", len(graph.RadarAxes))
 	}
-	if g.RadarAxes[0].Label != "English" {
-		t.Errorf("axis[0] label = %q, want %q", g.RadarAxes[0].Label, "English")
+	if graph.RadarAxes[0].Label != "English" {
+		t.Errorf("axis[0] label = %q, want %q", graph.RadarAxes[0].Label, "English")
 	}
-	if len(g.RadarCurves) != 2 {
-		t.Fatalf("RadarCurves len = %d, want 2", len(g.RadarCurves))
+	if len(graph.RadarCurves) != 2 {
+		t.Fatalf("RadarCurves len = %d, want 2", len(graph.RadarCurves))
 	}
-	if g.RadarCurves[0].Label != "User1" {
-		t.Errorf("curve[0] label = %q, want %q", g.RadarCurves[0].Label, "User1")
+	if graph.RadarCurves[0].Label != "User1" {
+		t.Errorf("curve[0] label = %q, want %q", graph.RadarCurves[0].Label, "User1")
 	}
-	if g.RadarCurves[0].Values[0] != 80 {
-		t.Errorf("curve[0] value[0] = %v, want 80", g.RadarCurves[0].Values[0])
+	if graph.RadarCurves[0].Values[0] != 80 {
+		t.Errorf("curve[0] value[0] = %v, want 80", graph.RadarCurves[0].Values[0])
 	}
 }
 
@@ -55,21 +55,21 @@ func TestParseRadarConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
-	g := out.Graph
-	if !g.RadarShowLegend {
+	graph := out.Graph
+	if !graph.RadarShowLegend {
 		t.Error("RadarShowLegend = false, want true")
 	}
-	if g.RadarGraticuleType != ir.RadarGraticulePolygon {
-		t.Errorf("Graticule = %v, want Polygon", g.RadarGraticuleType)
+	if graph.RadarGraticuleType != ir.RadarGraticulePolygon {
+		t.Errorf("Graticule = %v, want Polygon", graph.RadarGraticuleType)
 	}
-	if g.RadarTicks != 4 {
-		t.Errorf("Ticks = %d, want 4", g.RadarTicks)
+	if graph.RadarTicks != 4 {
+		t.Errorf("Ticks = %d, want 4", graph.RadarTicks)
 	}
-	if g.RadarMax != 100 {
-		t.Errorf("Max = %v, want 100", g.RadarMax)
+	if graph.RadarMax != 100 {
+		t.Errorf("Max = %v, want 100", graph.RadarMax)
 	}
-	if g.RadarMin != 10 {
-		t.Errorf("Min = %v, want 10", g.RadarMin)
+	if graph.RadarMin != 10 {
+		t.Errorf("Min = %v, want 10", graph.RadarMin)
 	}
 }
 
@@ -82,12 +82,12 @@ func TestParseRadarKeyValueCurve(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
-	g := out.Graph
-	if len(g.RadarCurves) != 1 {
-		t.Fatalf("curves len = %d, want 1", len(g.RadarCurves))
+	graph := out.Graph
+	if len(graph.RadarCurves) != 1 {
+		t.Fatalf("curves len = %d, want 1", len(graph.RadarCurves))
 	}
 	// Key-value maps to axis order: x=20, y=30, z=10
-	vals := g.RadarCurves[0].Values
+	vals := graph.RadarCurves[0].Values
 	if len(vals) != 3 {
 		t.Fatalf("values len = %d, want 3", len(vals))
 	}

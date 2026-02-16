@@ -7,8 +7,20 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
-func renderGitGraph(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.Layout) {
-	ggd, ok := l.Diagram.(layout.GitGraphData)
+// GitGraph rendering constants.
+const (
+	gitBranchLabelOffset float32 = 10
+	gitReverseCrossScale float32 = 0.6
+	gitTagPadding        float32 = 4
+	gitTagHalfWidth      float32 = 20
+	gitTagRectWidth      float32 = 40
+	gitTagRectHeight     float32 = 14
+	gitTagBorderRadius   float32 = 3
+	gitTagOffsetY        float32 = 10
+)
+
+func renderGitGraph(builder *svgBuilder, lay *layout.Layout, th *theme.Theme, cfg *config.Layout) {
+	ggd, ok := lay.Diagram.(layout.GitGraphData)
 	if !ok {
 		return
 	}
@@ -18,13 +30,13 @@ func renderGitGraph(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *confi
 	// Draw branch lines.
 	for _, br := range ggd.Branches {
 		if br.StartX < br.EndX {
-			b.line(br.StartX, br.Y, br.EndX, br.Y,
+			builder.line(br.StartX, br.Y, br.EndX, br.Y,
 				"stroke", br.Color,
 				"stroke-width", "2",
 			)
 		}
 		// Branch label.
-		b.text(br.StartX-10, br.Y, br.Name,
+		builder.text(br.StartX-gitBranchLabelOffset, br.Y, br.Name,
 			"text-anchor", "end",
 			"dominant-baseline", "middle",
 			"font-family", th.FontFamily,
@@ -46,7 +58,7 @@ func renderGitGraph(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *confi
 		if dashArray != "" {
 			attrs = append(attrs, "stroke-dasharray", dashArray)
 		}
-		b.line(conn.FromX, conn.FromY, conn.ToX, conn.ToY, attrs...)
+		builder.line(conn.FromX, conn.FromY, conn.ToX, conn.ToY, attrs...)
 	}
 
 	// Build a map from branch name to color.
@@ -56,37 +68,37 @@ func renderGitGraph(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *confi
 	}
 
 	// Draw commits.
-	for _, c := range ggd.Commits {
-		color := branchColor[c.Branch]
+	for _, commit := range ggd.Commits {
+		color := branchColor[commit.Branch]
 		if color == "" {
 			color = th.GitCommitFill
 		}
 
-		switch c.Type {
+		switch commit.Type {
 		case ir.GitCommitHighlight:
-			b.circle(c.X, c.Y, commitRadius,
+			builder.circle(commit.X, commit.Y, commitRadius,
 				"fill", th.GitHighlightFill,
 				"stroke", color,
 				"stroke-width", "2",
 			)
 		case ir.GitCommitReverse:
 			// Reverse: filled circle with a cross.
-			b.circle(c.X, c.Y, commitRadius,
+			builder.circle(commit.X, commit.Y, commitRadius,
 				"fill", color,
 				"stroke", th.GitCommitStroke,
 				"stroke-width", "2",
 			)
-			halfR := commitRadius * 0.6
-			b.line(c.X-halfR, c.Y-halfR, c.X+halfR, c.Y+halfR,
+			halfR := commitRadius * gitReverseCrossScale
+			builder.line(commit.X-halfR, commit.Y-halfR, commit.X+halfR, commit.Y+halfR,
 				"stroke", th.Background,
 				"stroke-width", "2",
 			)
-			b.line(c.X-halfR, c.Y+halfR, c.X+halfR, c.Y-halfR,
+			builder.line(commit.X-halfR, commit.Y+halfR, commit.X+halfR, commit.Y-halfR,
 				"stroke", th.Background,
 				"stroke-width", "2",
 			)
 		default:
-			b.circle(c.X, c.Y, commitRadius,
+			builder.circle(commit.X, commit.Y, commitRadius,
 				"fill", color,
 				"stroke", th.GitCommitStroke,
 				"stroke-width", "2",
@@ -94,15 +106,15 @@ func renderGitGraph(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *confi
 		}
 
 		// Tag label.
-		if c.Tag != "" {
-			tagX := c.X
-			tagY := c.Y - commitRadius - 4
-			b.rect(tagX-20, tagY-10, 40, 14, 3,
+		if commit.Tag != "" {
+			tagX := commit.X
+			tagY := commit.Y - commitRadius - gitTagPadding
+			builder.rect(tagX-gitTagHalfWidth, tagY-gitTagOffsetY, gitTagRectWidth, gitTagRectHeight, gitTagBorderRadius,
 				"fill", th.GitTagFill,
 				"stroke", th.GitTagBorder,
 				"stroke-width", "1",
 			)
-			b.text(tagX, tagY-1, c.Tag,
+			builder.text(tagX, tagY-1, commit.Tag,
 				"text-anchor", "middle",
 				"dominant-baseline", "middle",
 				"font-family", th.FontFamily,

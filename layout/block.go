@@ -7,35 +7,35 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
-func computeBlockLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
+func computeBlockLayout(graph *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
 	measurer := textmetrics.New()
-	nodes := sizeBlockNodes(g, measurer, th, cfg)
+	nodes := sizeBlockNodes(graph, measurer, th, cfg)
 
 	blockInfos := make(map[string]BlockInfo)
-	for _, b := range g.Blocks {
-		blockInfos[b.ID] = BlockInfo{Span: b.Width, HasChildren: len(b.Children) > 0}
+	for _, blk := range graph.Blocks {
+		blockInfos[blk.ID] = BlockInfo{Span: blk.Width, HasChildren: len(blk.Children) > 0}
 	}
 
 	// Decide layout strategy
-	if g.BlockColumns > 0 {
-		return blockGridLayout(g, nodes, blockInfos, cfg)
+	if graph.BlockColumns > 0 {
+		return blockGridLayout(graph, nodes, blockInfos, cfg)
 	}
-	if len(g.Edges) > 0 {
-		r := runSugiyama(g, nodes, cfg)
+	if len(graph.Edges) > 0 {
+		result := runSugiyama(graph, nodes, cfg)
 		return &Layout{
-			Kind:    g.Kind,
+			Kind:    graph.Kind,
 			Nodes:   nodes,
-			Edges:   r.Edges,
-			Width:   r.Width,
-			Height:  r.Height,
+			Edges:   result.Edges,
+			Width:   result.Width,
+			Height:  result.Height,
 			Diagram: BlockData{Columns: 0, BlockInfos: blockInfos},
 		}
 	}
-	return blockGridLayout(g, nodes, blockInfos, cfg)
+	return blockGridLayout(graph, nodes, blockInfos, cfg)
 }
 
-func blockGridLayout(g *ir.Graph, nodes map[string]*NodeLayout, blockInfos map[string]BlockInfo, cfg *config.Layout) *Layout {
-	cols := g.BlockColumns
+func blockGridLayout(graph *ir.Graph, nodes map[string]*NodeLayout, blockInfos map[string]BlockInfo, cfg *config.Layout) *Layout {
+	cols := graph.BlockColumns
 	if cols <= 0 {
 		cols = 1
 	}
@@ -56,8 +56,8 @@ func blockGridLayout(g *ir.Graph, nodes map[string]*NodeLayout, blockInfos map[s
 
 	col := 0
 	row := 0
-	for _, blk := range g.Blocks {
-		n, ok := nodes[blk.ID]
+	for _, blk := range graph.Blocks {
+		node, ok := nodes[blk.ID]
 		if !ok {
 			continue
 		}
@@ -72,9 +72,9 @@ func blockGridLayout(g *ir.Graph, nodes map[string]*NodeLayout, blockInfos map[s
 		}
 
 		cellW := maxCellW*float32(span) + colGap*float32(span-1)
-		n.Width = cellW
-		n.X = padX + float32(col)*(maxCellW+colGap) + cellW/2
-		n.Y = padY + float32(row)*(maxCellH+rowGap) + maxCellH/2
+		node.Width = cellW
+		node.X = padX + float32(col)*(maxCellW+colGap) + cellW/2
+		node.Y = padY + float32(row)*(maxCellH+rowGap) + maxCellH/2
 
 		col += span
 		if col >= cols {
@@ -84,17 +84,17 @@ func blockGridLayout(g *ir.Graph, nodes map[string]*NodeLayout, blockInfos map[s
 	}
 
 	var edges []*EdgeLayout
-	for _, e := range g.Edges {
-		src := nodes[e.From]
-		dst := nodes[e.To]
+	for _, edge := range graph.Edges {
+		src := nodes[edge.From]
+		dst := nodes[edge.To]
 		if src == nil || dst == nil {
 			continue
 		}
 		edges = append(edges, &EdgeLayout{
-			From:     e.From,
-			To:       e.To,
+			From:     edge.From,
+			To:       edge.To,
 			Points:   [][2]float32{{src.X, src.Y}, {dst.X, dst.Y}},
-			ArrowEnd: e.ArrowEnd,
+			ArrowEnd: edge.ArrowEnd,
 		})
 	}
 
@@ -106,7 +106,7 @@ func blockGridLayout(g *ir.Graph, nodes map[string]*NodeLayout, blockInfos map[s
 	totalH := padY*2 + float32(totalRows)*maxCellH + float32(totalRows-1)*rowGap
 
 	return &Layout{
-		Kind:    g.Kind,
+		Kind:    graph.Kind,
 		Nodes:   nodes,
 		Edges:   edges,
 		Width:   totalW,
@@ -115,9 +115,9 @@ func blockGridLayout(g *ir.Graph, nodes map[string]*NodeLayout, blockInfos map[s
 	}
 }
 
-func sizeBlockNodes(g *ir.Graph, measurer *textmetrics.Measurer, th *theme.Theme, cfg *config.Layout) map[string]*NodeLayout {
-	nodes := make(map[string]*NodeLayout, len(g.Nodes))
-	for id, node := range g.Nodes {
+func sizeBlockNodes(graph *ir.Graph, measurer *textmetrics.Measurer, th *theme.Theme, cfg *config.Layout) map[string]*NodeLayout {
+	nodes := make(map[string]*NodeLayout, len(graph.Nodes))
+	for id, node := range graph.Nodes {
 		nl := sizeNode(node, measurer, th, cfg)
 		nodes[id] = nl
 	}

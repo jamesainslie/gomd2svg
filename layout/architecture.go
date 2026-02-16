@@ -7,21 +7,105 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
-func computeArchitectureLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
+// archLabelPadding is the horizontal padding added around a service label.
+const archLabelPadding float32 = 20
+
+func computeArchitectureLayout(graph *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
 	measurer := textmetrics.New()
 	acfg := cfg.Architecture
-	nodes := sizeArchNodes(g, measurer, th, cfg)
+	nodes := sizeArchNodes(graph, measurer, th, cfg)
 
 	// Build grid positions from edge directional hints.
-	gridPos := make(map[string][2]int) // id -> [col, row]
+	gridPos := archBuildGridPositions(graph)
+
+	// Convert grid to pixel coordinates.
+	maxCol, maxRow := archGridMaxExtents(gridPos)
+
+	for id, pos := range gridPos {
+		node := nodes[id]
+		if node == nil {
+			continue
+		}
+		node.X = acfg.PaddingX + float32(pos[0])*(acfg.ServiceWidth+acfg.ColumnGap) + acfg.ServiceWidth/2
+		node.Y = acfg.PaddingY + float32(pos[1])*(acfg.ServiceHeight+acfg.RowGap) + acfg.ServiceHeight/2
+	}
+
+	// Compute junction layouts.
+	var junctions []ArchJunctionLayout
+	for _, junc := range graph.ArchJunctions {
+		node := nodes[junc.ID]
+		if node == nil {
+			continue
+		}
+		junctions = append(junctions, ArchJunctionLayout{
+			ID:   junc.ID,
+			X:    node.X,
+			Y:    node.Y,
+			Size: acfg.JunctionSize,
+		})
+	}
+
+	// Compute group bounding rectangles.
+	groups := make([]ArchGroupLayout, 0, len(graph.ArchGroups))
+	for _, grp := range graph.ArchGroups {
+		groupLayout := computeArchGroupBounds(grp, nodes, acfg)
+		groups = append(groups, groupLayout)
+	}
+
+	// Build edges with side-based anchor points.
+	var edges []*EdgeLayout
+	for _, archEdge := range graph.ArchEdges {
+		src := nodes[archEdge.FromID]
+		dst := nodes[archEdge.ToID]
+		if src == nil || dst == nil {
+			continue
+		}
+		sx, sy := archAnchorPoint(src, archEdge.FromSide)
+		dx, dy := archAnchorPoint(dst, archEdge.ToSide)
+		edges = append(edges, &EdgeLayout{
+			From:       archEdge.FromID,
+			To:         archEdge.ToID,
+			Points:     [][2]float32{{sx, sy}, {dx, dy}},
+			ArrowStart: archEdge.ArrowLeft,
+			ArrowEnd:   archEdge.ArrowRight,
+		})
+	}
+
+	totalW := acfg.PaddingX*2 + float32(maxCol+1)*acfg.ServiceWidth + float32(maxCol)*acfg.ColumnGap
+	totalH := acfg.PaddingY*2 + float32(maxRow+1)*acfg.ServiceHeight + float32(maxRow)*acfg.RowGap
+
+	// Build service info map for rendering (icon data).
+	svcInfo := make(map[string]ArchServiceInfo, len(graph.ArchServices))
+	for _, svc := range graph.ArchServices {
+		svcInfo[svc.ID] = ArchServiceInfo{Icon: svc.Icon}
+	}
+
+	return &Layout{
+		Kind:   graph.Kind,
+		Nodes:  nodes,
+		Edges:  edges,
+		Width:  totalW,
+		Height: totalH,
+		Diagram: ArchitectureData{
+			Groups:    groups,
+			Junctions: junctions,
+			Services:  svcInfo,
+		},
+	}
+}
+
+// archBuildGridPositions uses BFS to assign grid positions to all architecture
+// services and junctions based on edge directional hints.
+func archBuildGridPositions(graph *ir.Graph) map[string][2]int {
+	gridPos := make(map[string][2]int)
 	placed := make(map[string]bool)
 
-	// Place first service/junction at origin.
+	// Find the first node to place at origin.
 	var firstID string
-	if len(g.ArchServices) > 0 {
-		firstID = g.ArchServices[0].ID
-	} else if len(g.ArchJunctions) > 0 {
-		firstID = g.ArchJunctions[0].ID
+	if len(graph.ArchServices) > 0 {
+		firstID = graph.ArchServices[0].ID
+	} else if len(graph.ArchJunctions) > 0 {
+		firstID = graph.ArchJunctions[0].ID
 	}
 
 	if firstID != "" {
@@ -35,16 +119,8 @@ func computeArchitectureLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout)
 			queue = queue[1:]
 			curPos := gridPos[cur]
 
-			for _, e := range g.ArchEdges {
-				var neighbor string
-				var dc, dr int
-				if e.FromID == cur && !placed[e.ToID] {
-					neighbor = e.ToID
-					dc, dr = archSideOffset(e.FromSide)
-				} else if e.ToID == cur && !placed[e.FromID] {
-					neighbor = e.FromID
-					dc, dr = archSideOffsetReverse(e.ToSide)
-				}
+			for _, archEdge := range graph.ArchEdges {
+				neighbor, dc, dr := archEdgeNeighborOffset(archEdge, cur, placed)
 				if neighbor != "" && !placed[neighbor] {
 					gridPos[neighbor] = [2]int{curPos[0] + dc, curPos[1] + dr}
 					placed[neighbor] = true
@@ -55,22 +131,16 @@ func computeArchitectureLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout)
 	}
 
 	// Place any unplaced nodes in a row below.
-	nextRow := 0
-	for _, pos := range gridPos {
-		if pos[1] > nextRow {
-			nextRow = pos[1]
-		}
-	}
-	nextRow++
+	nextRow := archGridMaxRow(gridPos) + 1
 	nextCol := 0
-	for _, svc := range g.ArchServices {
+	for _, svc := range graph.ArchServices {
 		if !placed[svc.ID] {
 			gridPos[svc.ID] = [2]int{nextCol, nextRow}
 			placed[svc.ID] = true
 			nextCol++
 		}
 	}
-	for _, junc := range g.ArchJunctions {
+	for _, junc := range graph.ArchJunctions {
 		if !placed[junc.ID] {
 			gridPos[junc.ID] = [2]int{nextCol, nextRow}
 			placed[junc.ID] = true
@@ -79,6 +149,38 @@ func computeArchitectureLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout)
 	}
 
 	// Normalize grid to non-negative.
+	archNormalizeGrid(gridPos)
+
+	return gridPos
+}
+
+// archEdgeNeighborOffset returns the unplaced neighbor and grid offset for an edge,
+// given the current node ID.
+func archEdgeNeighborOffset(archEdge *ir.ArchEdge, cur string, placed map[string]bool) (string, int, int) {
+	if archEdge.FromID == cur && !placed[archEdge.ToID] {
+		dc, dr := archSideOffset(archEdge.FromSide)
+		return archEdge.ToID, dc, dr
+	}
+	if archEdge.ToID == cur && !placed[archEdge.FromID] {
+		dc, dr := archSideOffsetReverse(archEdge.ToSide)
+		return archEdge.FromID, dc, dr
+	}
+	return "", 0, 0
+}
+
+// archGridMaxRow returns the maximum row value in the grid.
+func archGridMaxRow(gridPos map[string][2]int) int {
+	maxRow := 0
+	for _, pos := range gridPos {
+		if pos[1] > maxRow {
+			maxRow = pos[1]
+		}
+	}
+	return maxRow
+}
+
+// archNormalizeGrid shifts all positions so that the minimum col and row are 0.
+func archNormalizeGrid(gridPos map[string][2]int) {
 	minCol, minRow := 0, 0
 	for _, pos := range gridPos {
 		if pos[0] < minCol {
@@ -91,8 +193,10 @@ func computeArchitectureLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout)
 	for id, pos := range gridPos {
 		gridPos[id] = [2]int{pos[0] - minCol, pos[1] - minRow}
 	}
+}
 
-	// Convert grid to pixel coordinates.
+// archGridMaxExtents returns the maximum column and row values.
+func archGridMaxExtents(gridPos map[string][2]int) (int, int) {
 	maxCol, maxRow := 0, 0
 	for _, pos := range gridPos {
 		if pos[0] > maxCol {
@@ -102,83 +206,12 @@ func computeArchitectureLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout)
 			maxRow = pos[1]
 		}
 	}
-
-	for id, pos := range gridPos {
-		n := nodes[id]
-		if n == nil {
-			continue
-		}
-		n.X = acfg.PaddingX + float32(pos[0])*(acfg.ServiceWidth+acfg.ColumnGap) + acfg.ServiceWidth/2
-		n.Y = acfg.PaddingY + float32(pos[1])*(acfg.ServiceHeight+acfg.RowGap) + acfg.ServiceHeight/2
-	}
-
-	// Compute junction layouts.
-	var junctions []ArchJunctionLayout
-	for _, junc := range g.ArchJunctions {
-		n := nodes[junc.ID]
-		if n == nil {
-			continue
-		}
-		junctions = append(junctions, ArchJunctionLayout{
-			ID:   junc.ID,
-			X:    n.X,
-			Y:    n.Y,
-			Size: acfg.JunctionSize,
-		})
-	}
-
-	// Compute group bounding rectangles.
-	var groups []ArchGroupLayout
-	for _, grp := range g.ArchGroups {
-		gl := computeArchGroupBounds(grp, nodes, acfg)
-		groups = append(groups, gl)
-	}
-
-	// Build edges with side-based anchor points.
-	var edges []*EdgeLayout
-	for _, e := range g.ArchEdges {
-		src := nodes[e.FromID]
-		dst := nodes[e.ToID]
-		if src == nil || dst == nil {
-			continue
-		}
-		sx, sy := archAnchorPoint(src, e.FromSide)
-		dx, dy := archAnchorPoint(dst, e.ToSide)
-		edges = append(edges, &EdgeLayout{
-			From:       e.FromID,
-			To:         e.ToID,
-			Points:     [][2]float32{{sx, sy}, {dx, dy}},
-			ArrowStart: e.ArrowLeft,
-			ArrowEnd:   e.ArrowRight,
-		})
-	}
-
-	totalW := acfg.PaddingX*2 + float32(maxCol+1)*acfg.ServiceWidth + float32(maxCol)*acfg.ColumnGap
-	totalH := acfg.PaddingY*2 + float32(maxRow+1)*acfg.ServiceHeight + float32(maxRow)*acfg.RowGap
-
-	// Build service info map for rendering (icon data).
-	svcInfo := make(map[string]ArchServiceInfo, len(g.ArchServices))
-	for _, svc := range g.ArchServices {
-		svcInfo[svc.ID] = ArchServiceInfo{Icon: svc.Icon}
-	}
-
-	return &Layout{
-		Kind:   g.Kind,
-		Nodes:  nodes,
-		Edges:  edges,
-		Width:  totalW,
-		Height: totalH,
-		Diagram: ArchitectureData{
-			Groups:    groups,
-			Junctions: junctions,
-			Services:  svcInfo,
-		},
-	}
+	return maxCol, maxRow
 }
 
 // archSideOffset returns the grid displacement when moving FROM the given side.
 // If A's Right side connects, the neighbor goes to the right (+1 col).
-func archSideOffset(side ir.ArchSide) (dc, dr int) {
+func archSideOffset(side ir.ArchSide) (int, int) {
 	switch side {
 	case ir.ArchRight:
 		return 1, 0
@@ -195,7 +228,7 @@ func archSideOffset(side ir.ArchSide) (dc, dr int) {
 
 // archSideOffsetReverse returns the grid displacement when moving TO the given side.
 // If the neighbor's Left side receives, the neighbor goes to the left.
-func archSideOffsetReverse(side ir.ArchSide) (dc, dr int) {
+func archSideOffsetReverse(side ir.ArchSide) (int, int) {
 	switch side {
 	case ir.ArchLeft:
 		return -1, 0
@@ -211,18 +244,18 @@ func archSideOffsetReverse(side ir.ArchSide) (dc, dr int) {
 }
 
 // archAnchorPoint returns the pixel coordinate on a node's side.
-func archAnchorPoint(n *NodeLayout, side ir.ArchSide) (float32, float32) {
+func archAnchorPoint(node *NodeLayout, side ir.ArchSide) (float32, float32) {
 	switch side {
 	case ir.ArchLeft:
-		return n.X - n.Width/2, n.Y
+		return node.X - node.Width/2, node.Y
 	case ir.ArchRight:
-		return n.X + n.Width/2, n.Y
+		return node.X + node.Width/2, node.Y
 	case ir.ArchTop:
-		return n.X, n.Y - n.Height/2
+		return node.X, node.Y - node.Height/2
 	case ir.ArchBottom:
-		return n.X, n.Y + n.Height/2
+		return node.X, node.Y + node.Height/2
 	default:
-		return n.X, n.Y
+		return node.X, node.Y
 	}
 }
 
@@ -232,15 +265,15 @@ func computeArchGroupBounds(grp *ir.ArchGroup, nodes map[string]*NodeLayout, acf
 	found := false
 
 	for _, childID := range grp.Children {
-		n := nodes[childID]
-		if n == nil {
+		node := nodes[childID]
+		if node == nil {
 			continue
 		}
 		found = true
-		left := n.X - n.Width/2
-		right := n.X + n.Width/2
-		top := n.Y - n.Height/2
-		bottom := n.Y + n.Height/2
+		left := node.X - node.Width/2
+		right := node.X + node.Width/2
+		top := node.Y - node.Height/2
+		bottom := node.Y + node.Height/2
 		if left < minX {
 			minX = left
 		}
@@ -271,23 +304,23 @@ func computeArchGroupBounds(grp *ir.ArchGroup, nodes map[string]*NodeLayout, acf
 	}
 }
 
-func sizeArchNodes(g *ir.Graph, measurer *textmetrics.Measurer, th *theme.Theme, cfg *config.Layout) map[string]*NodeLayout {
-	nodes := make(map[string]*NodeLayout, len(g.Nodes))
+func sizeArchNodes(graph *ir.Graph, measurer *textmetrics.Measurer, th *theme.Theme, cfg *config.Layout) map[string]*NodeLayout {
+	nodes := make(map[string]*NodeLayout, len(graph.Nodes))
 	fontSize := th.FontSize
 	fontFamily := th.FontFamily
-	for id, node := range g.Nodes {
-		w := cfg.Architecture.ServiceWidth
-		h := cfg.Architecture.ServiceHeight
+	for id, node := range graph.Nodes {
+		width := cfg.Architecture.ServiceWidth
+		height := cfg.Architecture.ServiceHeight
 		labelW := measurer.Width(node.Label, fontSize, fontFamily)
-		if labelW+20 > w {
-			w = labelW + 20
+		if labelW+archLabelPadding > width {
+			width = labelW + archLabelPadding
 		}
 		nodes[id] = &NodeLayout{
 			ID:     id,
 			Label:  TextBlock{Lines: []string{node.Label}, Width: labelW, Height: fontSize, FontSize: fontSize},
 			Shape:  node.Shape,
-			Width:  w,
-			Height: h,
+			Width:  width,
+			Height: height,
 		}
 	}
 	return nodes

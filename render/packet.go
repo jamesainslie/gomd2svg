@@ -1,28 +1,33 @@
 package render
 
 import (
-	"fmt"
+	"strconv"
 
 	"github.com/jamesainslie/gomd2svg/config"
 	"github.com/jamesainslie/gomd2svg/layout"
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
-func renderPacket(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.Layout) {
-	pd, ok := l.Diagram.(layout.PacketData)
+// Packet diagram rendering constants.
+const (
+	packetSmallFontScale float32 = 0.7
+)
+
+func renderPacket(builder *svgBuilder, lay *layout.Layout, th *theme.Theme, cfg *config.Layout) {
+	pd, ok := lay.Diagram.(layout.PacketData)
 	if !ok {
 		return
 	}
 
 	pc := cfg.Packet
-	smallFontSize := th.FontSize * 0.7
+	smallFontSize := th.FontSize * packetSmallFontScale
 
 	// Render bit numbers at top if enabled
 	if pd.ShowBits {
-		for bit := 0; bit < pd.BitsPerRow; bit++ {
-			x := pc.PaddingX + float32(bit)*pc.BitWidth + pc.BitWidth/2
-			y := th.FontSize * cfg.LabelLineHeight
-			b.text(x, y, fmt.Sprintf("%d", bit),
+		for bit := range pd.BitsPerRow {
+			posX := pc.PaddingX + float32(bit)*pc.BitWidth + pc.BitWidth/2
+			posY := th.FontSize * cfg.LabelLineHeight
+			builder.text(posX, posY, strconv.Itoa(bit),
 				"text-anchor", "middle",
 				"font-family", th.FontFamily,
 				"font-size", fmtFloat(smallFontSize),
@@ -35,7 +40,7 @@ func renderPacket(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.
 	for _, row := range pd.Rows {
 		for _, field := range row.Fields {
 			// Field rectangle
-			b.rect(field.X, field.Y, field.Width, field.Height, 0,
+			builder.rect(field.X, field.Y, field.Width, field.Height, 0,
 				"fill", th.PrimaryColor,
 				"stroke", th.NodeBorderColor,
 				"stroke-width", "1",
@@ -44,7 +49,7 @@ func renderPacket(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.
 			// Field label (centered)
 			textX := field.X + field.Width/2
 			textY := field.Y + field.Height/2 + field.Label.FontSize/3
-			b.text(textX, textY, field.Label.Lines[0],
+			builder.text(textX, textY, field.Label.Lines[0],
 				"text-anchor", "middle",
 				"font-family", th.FontFamily,
 				"font-size", fmtFloat(field.Label.FontSize),
@@ -53,13 +58,13 @@ func renderPacket(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.
 
 			// Bit range labels at bottom-left and bottom-right of field
 			bitY := field.Y + field.Height - 2
-			b.text(field.X+2, bitY, fmt.Sprintf("%d", field.StartBit),
+			builder.text(field.X+2, bitY, strconv.Itoa(field.StartBit),
 				"font-family", th.FontFamily,
 				"font-size", fmtFloat(smallFontSize),
 				"fill", th.SecondaryTextColor,
 			)
 			if field.EndBit != field.StartBit {
-				b.text(field.X+field.Width-2, bitY, fmt.Sprintf("%d", field.EndBit),
+				builder.text(field.X+field.Width-2, bitY, strconv.Itoa(field.EndBit),
 					"text-anchor", "end",
 					"font-family", th.FontFamily,
 					"font-size", fmtFloat(smallFontSize),

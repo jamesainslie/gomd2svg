@@ -19,20 +19,20 @@ func TestParseTreemapBasic(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
-	g := out.Graph
-	if g.Kind != ir.Treemap {
-		t.Fatalf("Kind = %v, want Treemap", g.Kind)
+	graph := out.Graph
+	if graph.Kind != ir.Treemap {
+		t.Fatalf("Kind = %v, want Treemap", graph.Kind)
 	}
-	if g.TreemapRoot == nil {
+	if graph.TreemapRoot == nil {
 		t.Fatal("TreemapRoot is nil")
 	}
-	if g.TreemapRoot.Label != "Root" {
-		t.Errorf("root label = %q, want Root", g.TreemapRoot.Label)
+	if graph.TreemapRoot.Label != "Root" {
+		t.Errorf("root label = %q, want Root", graph.TreemapRoot.Label)
 	}
-	if len(g.TreemapRoot.Children) != 2 {
-		t.Fatalf("root children = %d, want 2", len(g.TreemapRoot.Children))
+	if len(graph.TreemapRoot.Children) != 2 {
+		t.Fatalf("root children = %d, want 2", len(graph.TreemapRoot.Children))
 	}
-	secA := g.TreemapRoot.Children[0]
+	secA := graph.TreemapRoot.Children[0]
 	if secA.Label != "Section A" {
 		t.Errorf("secA label = %q", secA.Label)
 	}
@@ -55,11 +55,11 @@ func TestParseTreemapFlat(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
-	g := out.Graph
-	if len(g.TreemapRoot.Children) != 3 {
-		t.Fatalf("children = %d, want 3", len(g.TreemapRoot.Children))
+	graph := out.Graph
+	if len(graph.TreemapRoot.Children) != 3 {
+		t.Fatalf("children = %d, want 3", len(graph.TreemapRoot.Children))
 	}
-	total := g.TreemapRoot.TotalValue()
+	total := graph.TreemapRoot.TotalValue()
 	if total != 60 {
 		t.Errorf("total = %v, want 60", total)
 	}

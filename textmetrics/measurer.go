@@ -50,13 +50,13 @@ func (m *Measurer) Width(text string, fontSize float32, fontFamily string) float
 	}
 	m.mu.Unlock()
 
-	w := m.measure(text, fontSize, fontFamily)
+	width := m.measure(text, fontSize, fontFamily)
 
 	m.mu.Lock()
-	m.widthCache[key] = w
+	m.widthCache[key] = width
 	m.mu.Unlock()
 
-	return w
+	return width
 }
 
 // AverageCharWidth returns the average character width for a font family
@@ -81,25 +81,26 @@ func (m *Measurer) measure(text string, fontSize float32, fontFamily string) flo
 }
 
 // measureWithFont uses an sfnt.Font to compute the advance width of text.
-func (m *Measurer) measureWithFont(f *sfnt.Font, text string, fontSize float32) (float32, bool) {
+func (m *Measurer) measureWithFont(parsedFont *sfnt.Font, text string, fontSize float32) (float32, bool) {
 	var buf sfnt.Buffer
 	ppem := fixed.I(int(fontSize))
 
 	var totalAdvance fixed.Int26_6
 	for _, r := range text {
-		idx, err := f.GlyphIndex(&buf, r)
+		idx, err := parsedFont.GlyphIndex(&buf, r)
 		if err != nil || idx == 0 {
 			// Glyph not found; fall back to heuristic for entire string.
 			return 0, false
 		}
-		adv, err := f.GlyphAdvance(&buf, idx, ppem, font.HintingNone)
+		adv, err := parsedFont.GlyphAdvance(&buf, idx, ppem, font.HintingNone)
 		if err != nil {
 			return 0, false
 		}
 		totalAdvance += adv
 	}
 
-	return float32(totalAdvance) / 64.0, true // fixed.Int26_6 has 6 fractional bits
+	const fixedPointScale = 64.0 // fixed.Int26_6 has 6 fractional bits.
+	return float32(totalAdvance) / fixedPointScale, true
 }
 
 // loadFont attempts to find and load a system font matching the family name.
@@ -180,9 +181,9 @@ func (m *Measurer) tryLoadFontFile(path string) *sfnt.Font {
 	}
 
 	// Try as a single font first.
-	f, err := sfnt.Parse(data)
+	singleFont, err := sfnt.Parse(data)
 	if err == nil {
-		return f
+		return singleFont
 	}
 
 	// Try as a font collection (.ttc).
@@ -191,9 +192,9 @@ func (m *Measurer) tryLoadFontFile(path string) *sfnt.Font {
 		return nil
 	}
 
-	f, err = col.Font(0)
+	collectionFont, err := col.Font(0)
 	if err != nil {
 		return nil
 	}
-	return f
+	return collectionFont
 }

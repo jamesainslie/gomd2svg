@@ -33,32 +33,32 @@ func TestXYChartAxisMode(t *testing.T) {
 }
 
 func TestXYChartGraphFields(t *testing.T) {
-	g := NewGraph()
-	g.Kind = XYChart
-	g.XYTitle = "Test"
-	g.XYSeries = append(g.XYSeries, &XYSeries{
+	graph := NewGraph()
+	graph.Kind = XYChart
+	graph.XYTitle = "Test"
+	graph.XYSeries = append(graph.XYSeries, &XYSeries{
 		Type:   XYSeriesBar,
 		Values: []float64{1, 2, 3},
 	})
-	g.XYXAxis = &XYAxis{
+	graph.XYXAxis = &XYAxis{
 		Mode:       XYAxisBand,
 		Title:      "Month",
 		Categories: []string{"Jan", "Feb", "Mar"},
 	}
-	g.XYYAxis = &XYAxis{
+	graph.XYYAxis = &XYAxis{
 		Mode: XYAxisNumeric,
 	}
 
-	if g.XYTitle != "Test" {
-		t.Errorf("XYTitle = %q, want %q", g.XYTitle, "Test")
+	if graph.XYTitle != "Test" {
+		t.Errorf("XYTitle = %q, want %q", graph.XYTitle, "Test")
 	}
-	if len(g.XYSeries) != 1 {
-		t.Fatalf("XYSeries len = %d, want 1", len(g.XYSeries))
+	if len(graph.XYSeries) != 1 {
+		t.Fatalf("XYSeries len = %d, want 1", len(graph.XYSeries))
 	}
-	if g.XYSeries[0].Type != XYSeriesBar {
-		t.Errorf("series type = %v, want XYSeriesBar", g.XYSeries[0].Type)
+	if graph.XYSeries[0].Type != XYSeriesBar {
+		t.Errorf("series type = %v, want XYSeriesBar", graph.XYSeries[0].Type)
 	}
-	if g.XYXAxis.Mode != XYAxisBand {
-		t.Errorf("x-axis mode = %v, want XYAxisBand", g.XYXAxis.Mode)
+	if graph.XYXAxis.Mode != XYAxisBand {
+		t.Errorf("x-axis mode = %v, want XYAxisBand", graph.XYXAxis.Mode)
 	}
 }

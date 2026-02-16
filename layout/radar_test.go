@@ -9,28 +9,28 @@ import (
 )
 
 func TestRadarLayout(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Radar
-	g.RadarTitle = "Skills"
-	g.RadarAxes = []*ir.RadarAxis{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Radar
+	graph.RadarTitle = "Skills"
+	graph.RadarAxes = []*ir.RadarAxis{
 		{ID: "a", Label: "Speed"},
 		{ID: "b", Label: "Power"},
 		{ID: "c", Label: "Magic"},
 	}
-	g.RadarCurves = []*ir.RadarCurve{
+	graph.RadarCurves = []*ir.RadarCurve{
 		{ID: "p1", Label: "Player1", Values: []float64{80, 60, 40}},
 	}
-	g.RadarMax = 100
+	graph.RadarMax = 100
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	if l.Width <= 0 || l.Height <= 0 {
-		t.Errorf("invalid dimensions: %v x %v", l.Width, l.Height)
+	if lay.Width <= 0 || lay.Height <= 0 {
+		t.Errorf("invalid dimensions: %v x %v", lay.Width, lay.Height)
 	}
 
-	rd, ok := l.Diagram.(RadarData)
+	rd, ok := lay.Diagram.(RadarData)
 	if !ok {
 		t.Fatal("Diagram is not RadarData")
 	}
@@ -52,21 +52,21 @@ func TestRadarLayout(t *testing.T) {
 }
 
 func TestRadarAutoMax(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Radar
-	g.RadarAxes = []*ir.RadarAxis{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Radar
+	graph.RadarAxes = []*ir.RadarAxis{
 		{ID: "a", Label: "A"},
 		{ID: "b", Label: "B"},
 	}
-	g.RadarCurves = []*ir.RadarCurve{
+	graph.RadarCurves = []*ir.RadarCurve{
 		{ID: "c", Label: "C", Values: []float64{50, 80}},
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	rd, ok := l.Diagram.(RadarData)
+	rd, ok := lay.Diagram.(RadarData)
 	if !ok {
 		t.Fatal("Diagram is not RadarData")
 	}

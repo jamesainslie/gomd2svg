@@ -7,17 +7,17 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
-func computeKanbanLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
+func computeKanbanLayout(graph *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
 	measurer := textmetrics.New()
 	kc := cfg.Kanban
 	pad := kc.Padding
 
-	columns := make([]KanbanColumnLayout, len(g.Columns))
+	columns := make([]KanbanColumnLayout, len(graph.Columns))
 	cursorX := pad
 
 	maxColHeight := float32(0)
 
-	for i, col := range g.Columns {
+	for colIdx, col := range graph.Columns {
 		// Measure column header
 		headerTW := measurer.Width(col.Label, th.FontSize, th.FontFamily)
 		headerTB := TextBlock{
@@ -31,7 +31,7 @@ func computeKanbanLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layo
 		cardY := kc.HeaderHeight + pad
 		cards := make([]KanbanCardLayout, len(col.Cards))
 
-		for j, card := range col.Cards {
+		for cardIdx, card := range col.Cards {
 			cardTW := measurer.Width(card.Label, th.FontSize, th.FontFamily)
 			cardH := th.FontSize*cfg.LabelLineHeight + 2*pad
 			cardTB := TextBlock{
@@ -53,7 +53,7 @@ func computeKanbanLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layo
 				meta["icon"] = card.Icon
 			}
 
-			cards[j] = KanbanCardLayout{
+			cards[cardIdx] = KanbanCardLayout{
 				ID:       card.ID,
 				Label:    cardTB,
 				Priority: card.Priority,
@@ -72,7 +72,7 @@ func computeKanbanLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layo
 			colHeight = kc.HeaderHeight + 2*pad
 		}
 
-		columns[i] = KanbanColumnLayout{
+		columns[colIdx] = KanbanColumnLayout{
 			ID:     col.ID,
 			Label:  headerTB,
 			X:      cursorX,
@@ -98,7 +98,7 @@ func computeKanbanLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layo
 	totalH := maxColHeight + pad
 
 	return &Layout{
-		Kind:   g.Kind,
+		Kind:   graph.Kind,
 		Width:  totalW,
 		Height: totalH,
 		Diagram: KanbanData{

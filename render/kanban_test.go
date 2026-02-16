@@ -11,9 +11,9 @@ import (
 )
 
 func TestRenderKanbanContainsColumns(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Kanban
-	g.Columns = []*ir.KanbanColumn{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Kanban
+	graph.Columns = []*ir.KanbanColumn{
 		{ID: "todo", Label: "Todo", Cards: []*ir.KanbanCard{
 			{ID: "t1", Label: "Task One"},
 		}},
@@ -22,7 +22,7 @@ func TestRenderKanbanContainsColumns(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "Todo") {
@@ -40,9 +40,9 @@ func TestRenderKanbanContainsColumns(t *testing.T) {
 }
 
 func TestRenderKanbanValidSVG(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Kanban
-	g.Columns = []*ir.KanbanColumn{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Kanban
+	graph.Columns = []*ir.KanbanColumn{
 		{ID: "col", Label: "Column", Cards: []*ir.KanbanCard{
 			{ID: "c1", Label: "Card"},
 		}},
@@ -50,7 +50,7 @@ func TestRenderKanbanValidSVG(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.HasPrefix(svg, "<svg") {

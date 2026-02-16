@@ -11,9 +11,9 @@ import (
 )
 
 func TestRenderSankey(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Sankey
-	g.SankeyLinks = []*ir.SankeyLink{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Sankey
+	graph.SankeyLinks = []*ir.SankeyLink{
 		{Source: "Solar", Target: "Grid", Value: 60},
 		{Source: "Wind", Target: "Grid", Value: 290},
 		{Source: "Grid", Target: "Industry", Value: 350},
@@ -21,7 +21,7 @@ func TestRenderSankey(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "<svg") {
@@ -39,12 +39,12 @@ func TestRenderSankey(t *testing.T) {
 }
 
 func TestRenderSankeyEmpty(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Sankey
+	graph := ir.NewGraph()
+	graph.Kind = ir.Sankey
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "<svg") {

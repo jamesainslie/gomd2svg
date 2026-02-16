@@ -6,7 +6,7 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
-func computeQuadrantLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
+func computeQuadrantLayout(graph *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
 	chartW := cfg.Quadrant.ChartWidth
 	chartH := cfg.Quadrant.ChartHeight
 	padX := cfg.Quadrant.PaddingX
@@ -14,13 +14,13 @@ func computeQuadrantLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *La
 
 	// Title height.
 	var titleHeight float32
-	if g.QuadrantTitle != "" {
+	if graph.QuadrantTitle != "" {
 		titleHeight = th.FontSize + padY
 	}
 
 	// Y-axis label width (left side).
 	var yAxisLabelWidth float32
-	if g.YAxisBottom != "" || g.YAxisTop != "" {
+	if graph.YAxisBottom != "" || graph.YAxisTop != "" {
 		yAxisLabelWidth = padX
 	}
 
@@ -30,19 +30,19 @@ func computeQuadrantLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *La
 
 	// X-axis label height (below chart).
 	var xAxisLabelHeight float32
-	if g.XAxisLeft != "" || g.XAxisRight != "" {
+	if graph.XAxisLeft != "" || graph.XAxisRight != "" {
 		xAxisLabelHeight = cfg.Quadrant.AxisLabelFontSize + padY/2
 	}
 
 	// Map normalized points to pixel positions.
-	points := make([]QuadrantPointLayout, len(g.QuadrantPoints))
-	for i, p := range g.QuadrantPoints {
+	points := make([]QuadrantPointLayout, len(graph.QuadrantPoints))
+	for idx, pt := range graph.QuadrantPoints {
 		// X maps directly: 0 = left, 1 = right.
-		px := chartX + float32(p.X)*chartW
+		px := chartX + float32(pt.X)*chartW
 		// Y is inverted: 0 = bottom (high Y), 1 = top (low Y).
-		py := chartY + (1-float32(p.Y))*chartH
-		points[i] = QuadrantPointLayout{
-			Label: p.Label,
+		py := chartY + (1-float32(pt.Y))*chartH
+		points[idx] = QuadrantPointLayout{
+			Label: pt.Label,
 			X:     px,
 			Y:     py,
 		}
@@ -52,7 +52,7 @@ func computeQuadrantLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *La
 	totalH := titleHeight + padY + chartH + xAxisLabelHeight + padY
 
 	return &Layout{
-		Kind:   g.Kind,
+		Kind:   graph.Kind,
 		Nodes:  map[string]*NodeLayout{},
 		Width:  totalW,
 		Height: totalH,
@@ -62,12 +62,12 @@ func computeQuadrantLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *La
 			ChartY:      chartY,
 			ChartWidth:  chartW,
 			ChartHeight: chartH,
-			Title:       g.QuadrantTitle,
-			Labels:      g.QuadrantLabels,
-			XAxisLeft:   g.XAxisLeft,
-			XAxisRight:  g.XAxisRight,
-			YAxisBottom: g.YAxisBottom,
-			YAxisTop:    g.YAxisTop,
+			Title:       graph.QuadrantTitle,
+			Labels:      graph.QuadrantLabels,
+			XAxisLeft:   graph.XAxisLeft,
+			XAxisRight:  graph.XAxisRight,
+			YAxisBottom: graph.YAxisBottom,
+			YAxisTop:    graph.YAxisTop,
 		},
 	}
 }

@@ -56,18 +56,18 @@ func TestClassMembersGrouping(t *testing.T) {
 }
 
 func TestGraphClassFields(t *testing.T) {
-	g := NewGraph()
+	graph := NewGraph()
 
-	if g.Members == nil {
+	if graph.Members == nil {
 		t.Error("Members map should be initialized")
 	}
-	if g.Annotations == nil {
+	if graph.Annotations == nil {
 		t.Error("Annotations map should be initialized")
 	}
-	if g.Namespaces != nil {
+	if graph.Namespaces != nil {
 		t.Error("Namespaces should be nil (zero-value slice)")
 	}
-	if g.Notes != nil {
+	if graph.Notes != nil {
 		t.Error("Notes should be nil (zero-value slice)")
 	}
 }

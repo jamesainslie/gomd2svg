@@ -1,10 +1,12 @@
 package theme
 
 // Dark returns a dark theme with a dark background and light text.
+//
+//nolint:dupl,funlen // each theme preset is intentionally distinct; flat declaration
 func Dark() *Theme {
 	return &Theme{
 		FontFamily: "Inter, sans-serif",
-		FontSize:   14,
+		FontSize:   FontSizeDefault,
 		Background: "#1A1A2E",
 
 		PrimaryColor:       "#4C78A8",
@@ -45,15 +47,15 @@ func Dark() *Theme {
 		LabelTextColor:      "#E0E0E0",
 		LoopTextColor:       "#E0E0E0",
 
-		PieTitleTextSize:    18,
+		PieTitleTextSize:    PieTitleSizeDefault,
 		PieTitleTextColor:   "#E0E0E0",
-		PieSectionTextSize:  14,
+		PieSectionTextSize:  PieSectionSizeDefault,
 		PieSectionTextColor: "#FFFFFF",
 		PieStrokeColor:      "#1A1A2E",
-		PieStrokeWidth:      2,
-		PieOuterStrokeWidth: 2,
+		PieStrokeWidth:      PieStrokeWidthDefault,
+		PieOuterStrokeWidth: PieStrokeWidthDefault,
 		PieOuterStrokeColor: "#6B9BD2",
-		PieOpacity:          0.85,
+		PieOpacity:          PieOpacityDefault,
 		PieColors: []string{
 			"#4C78A8", "#72B7B2", "#EECA3B", "#F58518",
 			"#E45756", "#54A24B", "#B279A2", "#FF9DA6",
@@ -116,7 +118,7 @@ func Dark() *Theme {
 		},
 		RadarAxisColor:      "#A0AEC0",
 		RadarGraticuleColor: "#3D3D5C",
-		RadarCurveOpacity:   0.3,
+		RadarCurveOpacity:   RadarCurveOpacityDefault,
 
 		MindmapBranchColors: []string{
 			"#4C78A8", "#72B7B2", "#EECA3B", "#F58518",
@@ -130,7 +132,7 @@ func Dark() *Theme {
 			"#E45756", "#54A24B", "#B279A2", "#FF9DA6",
 		},
 		SankeyLinkColor:   "#A0AEC0",
-		SankeyLinkOpacity: 0.3,
+		SankeyLinkOpacity: SankeyLinkOpacityDark,
 
 		TreemapColors: []string{
 			"#4C78A8", "#72B7B2", "#EECA3B", "#F58518",
@@ -174,10 +176,12 @@ func Dark() *Theme {
 }
 
 // Forest returns a nature-inspired green theme.
+//
+//nolint:dupl,funlen // each theme preset is intentionally distinct; flat declaration
 func Forest() *Theme {
 	return &Theme{
 		FontFamily: "Inter, sans-serif",
-		FontSize:   14,
+		FontSize:   FontSizeDefault,
 		Background: "#FFFFFF",
 
 		PrimaryColor:       "#2D6A4F",
@@ -218,15 +222,15 @@ func Forest() *Theme {
 		LabelTextColor:      "#1B4332",
 		LoopTextColor:       "#1B4332",
 
-		PieTitleTextSize:    18,
+		PieTitleTextSize:    PieTitleSizeDefault,
 		PieTitleTextColor:   "#1B4332",
-		PieSectionTextSize:  14,
+		PieSectionTextSize:  PieSectionSizeDefault,
 		PieSectionTextColor: "#FFFFFF",
 		PieStrokeColor:      "#FFFFFF",
-		PieStrokeWidth:      2,
-		PieOuterStrokeWidth: 2,
+		PieStrokeWidth:      PieStrokeWidthDefault,
+		PieOuterStrokeWidth: PieStrokeWidthDefault,
 		PieOuterStrokeColor: "#1B4332",
-		PieOpacity:          0.85,
+		PieOpacity:          PieOpacityDefault,
 		PieColors: []string{
 			"#2D6A4F", "#52B788", "#DDA15E", "#BC6C25",
 			"#E76F51", "#606C38", "#283618", "#FEFAE0",
@@ -289,7 +293,7 @@ func Forest() *Theme {
 		},
 		RadarAxisColor:      "#40916C",
 		RadarGraticuleColor: "#D8F3DC",
-		RadarCurveOpacity:   0.3,
+		RadarCurveOpacity:   RadarCurveOpacityDefault,
 
 		MindmapBranchColors: []string{
 			"#2D6A4F", "#52B788", "#DDA15E", "#BC6C25",
@@ -303,7 +307,7 @@ func Forest() *Theme {
 			"#E76F51", "#606C38", "#283618", "#95D5B2",
 		},
 		SankeyLinkColor:   "#40916C",
-		SankeyLinkOpacity: 0.35,
+		SankeyLinkOpacity: SankeyLinkOpacityLight,
 
 		TreemapColors: []string{
 			"#2D6A4F", "#52B788", "#DDA15E", "#BC6C25",
@@ -347,10 +351,12 @@ func Forest() *Theme {
 }
 
 // Neutral returns a desaturated, accessibility-focused theme with high contrast.
+//
+//nolint:dupl,funlen // each theme preset is intentionally distinct; flat declaration
 func Neutral() *Theme {
 	return &Theme{
 		FontFamily: "Inter, sans-serif",
-		FontSize:   14,
+		FontSize:   FontSizeDefault,
 		Background: "#FFFFFF",
 
 		PrimaryColor:       "#5D6D7E",
@@ -391,15 +397,15 @@ func Neutral() *Theme {
 		LabelTextColor:      "#2D3748",
 		LoopTextColor:       "#2D3748",
 
-		PieTitleTextSize:    18,
+		PieTitleTextSize:    PieTitleSizeDefault,
 		PieTitleTextColor:   "#2D3748",
-		PieSectionTextSize:  14,
+		PieSectionTextSize:  PieSectionSizeDefault,
 		PieSectionTextColor: "#FFFFFF",
 		PieStrokeColor:      "#FFFFFF",
-		PieStrokeWidth:      2,
-		PieOuterStrokeWidth: 2,
+		PieStrokeWidth:      PieStrokeWidthDefault,
+		PieOuterStrokeWidth: PieStrokeWidthDefault,
 		PieOuterStrokeColor: "#4A5568",
-		PieOpacity:          0.85,
+		PieOpacity:          PieOpacityDefault,
 		PieColors: []string{
 			"#5D6D7E", "#A0AEC0", "#718096", "#4A5568",
 			"#2D3748", "#CBD5E0", "#E2E8F0", "#1A202C",
@@ -462,7 +468,7 @@ func Neutral() *Theme {
 		},
 		RadarAxisColor:      "#718096",
 		RadarGraticuleColor: "#E2E8F0",
-		RadarCurveOpacity:   0.3,
+		RadarCurveOpacity:   RadarCurveOpacityDefault,
 
 		MindmapBranchColors: []string{
 			"#5D6D7E", "#A0AEC0", "#718096", "#4A5568",
@@ -476,7 +482,7 @@ func Neutral() *Theme {
 			"#2D3748", "#CBD5E0", "#E2E8F0", "#1A202C",
 		},
 		SankeyLinkColor:   "#718096",
-		SankeyLinkOpacity: 0.35,
+		SankeyLinkOpacity: SankeyLinkOpacityLight,
 
 		TreemapColors: []string{
 			"#5D6D7E", "#A0AEC0", "#718096", "#4A5568",

@@ -9,15 +9,15 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
-func renderPie(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *config.Layout) {
-	pd, ok := l.Diagram.(layout.PieData)
+func renderPie(builder *svgBuilder, lay *layout.Layout, th *theme.Theme, _ *config.Layout) {
+	pd, ok := lay.Diagram.(layout.PieData)
 	if !ok {
 		return
 	}
 
 	// Title.
 	if pd.Title != "" {
-		b.text(l.Width/2, th.PieTitleTextSize, pd.Title,
+		builder.text(lay.Width/2, th.PieTitleTextSize, pd.Title,
 			"text-anchor", "middle",
 			"font-family", th.FontFamily,
 			"font-size", fmtFloat(th.PieTitleTextSize),
@@ -28,19 +28,19 @@ func renderPie(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *config.Layou
 
 	cx := pd.CenterX
 	cy := pd.CenterY
-	r := pd.Radius
+	radius := pd.Radius
 
-	for _, s := range pd.Slices {
+	for _, slice := range pd.Slices {
 		color := "#888888" // fallback
 		if len(th.PieColors) > 0 {
-			color = th.PieColors[s.ColorIndex%len(th.PieColors)]
+			color = th.PieColors[slice.ColorIndex%len(th.PieColors)]
 		}
 		opacity := fmt.Sprintf("%.2f", th.PieOpacity)
 
 		// Full circle special case.
-		span := s.EndAngle - s.StartAngle
+		span := slice.EndAngle - slice.StartAngle
 		if span >= 2*math.Pi-0.01 {
-			b.circle(cx, cy, r,
+			builder.circle(cx, cy, radius,
 				"fill", color,
 				"fill-opacity", opacity,
 				"stroke", th.PieStrokeColor,
@@ -48,25 +48,25 @@ func renderPie(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *config.Layou
 			)
 		} else {
 			// Arc path.
-			x1 := cx + r*float32(math.Cos(float64(s.StartAngle)))
-			y1 := cy + r*float32(math.Sin(float64(s.StartAngle)))
-			x2 := cx + r*float32(math.Cos(float64(s.EndAngle)))
-			y2 := cy + r*float32(math.Sin(float64(s.EndAngle)))
+			x1 := cx + radius*float32(math.Cos(float64(slice.StartAngle)))
+			y1 := cy + radius*float32(math.Sin(float64(slice.StartAngle)))
+			x2 := cx + radius*float32(math.Cos(float64(slice.EndAngle)))
+			y2 := cy + radius*float32(math.Sin(float64(slice.EndAngle)))
 
 			largeArc := "0"
 			if span > math.Pi {
 				largeArc = "1"
 			}
 
-			d := fmt.Sprintf("M %s,%s L %s,%s A %s,%s 0 %s,1 %s,%s Z",
+			pathData := fmt.Sprintf("M %s,%s L %s,%s A %s,%s 0 %s,1 %s,%s Z",
 				fmtFloat(cx), fmtFloat(cy),
 				fmtFloat(x1), fmtFloat(y1),
-				fmtFloat(r), fmtFloat(r),
+				fmtFloat(radius), fmtFloat(radius),
 				largeArc,
 				fmtFloat(x2), fmtFloat(y2),
 			)
 
-			b.path(d,
+			builder.path(pathData,
 				"fill", color,
 				"fill-opacity", opacity,
 				"stroke", th.PieStrokeColor,
@@ -75,11 +75,11 @@ func renderPie(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *config.Layou
 		}
 
 		// Slice label.
-		labelText := s.Label
+		labelText := slice.Label
 		if pd.ShowData {
-			labelText = fmt.Sprintf("%s (%.0f)", s.Label, s.Value)
+			labelText = fmt.Sprintf("%s (%.0f)", slice.Label, slice.Value)
 		}
-		b.text(s.LabelX, s.LabelY, labelText,
+		builder.text(slice.LabelX, slice.LabelY, labelText,
 			"text-anchor", "middle",
 			"dominant-baseline", "middle",
 			"font-family", th.FontFamily,
@@ -90,7 +90,7 @@ func renderPie(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *config.Layou
 
 	// Outer stroke.
 	if th.PieOuterStrokeWidth > 0 {
-		b.circle(cx, cy, r,
+		builder.circle(cx, cy, radius,
 			"fill", "none",
 			"stroke", th.PieOuterStrokeColor,
 			"stroke-width", fmtFloat(th.PieOuterStrokeWidth),

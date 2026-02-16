@@ -33,10 +33,10 @@ func TestGitActionInterface(t *testing.T) {
 }
 
 func TestGraphGitGraphFields(t *testing.T) {
-	g := NewGraph()
-	g.Kind = GitGraph
-	g.GitMainBranch = "main"
-	g.GitActions = append(g.GitActions,
+	graph := NewGraph()
+	graph.Kind = GitGraph
+	graph.GitMainBranch = "main"
+	graph.GitActions = append(graph.GitActions,
 		&GitCommit{ID: "init", Tag: "v0.1"},
 		&GitBranch{Name: "develop", Order: 1},
 		&GitCheckout{Branch: "develop"},
@@ -45,10 +45,10 @@ func TestGraphGitGraphFields(t *testing.T) {
 		&GitMerge{Branch: "develop", ID: "merge1", Tag: "v1.0"},
 	)
 
-	if g.GitMainBranch != "main" {
-		t.Errorf("GitMainBranch = %q", g.GitMainBranch)
+	if graph.GitMainBranch != "main" {
+		t.Errorf("GitMainBranch = %q", graph.GitMainBranch)
 	}
-	if len(g.GitActions) != 6 {
-		t.Errorf("GitActions = %d, want 6", len(g.GitActions))
+	if len(graph.GitActions) != 6 {
+		t.Errorf("GitActions = %d, want 6", len(graph.GitActions))
 	}
 }

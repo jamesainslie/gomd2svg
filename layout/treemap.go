@@ -9,6 +9,9 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
+// treemapColorCount is the number of distinct colors for treemap rects.
+const treemapColorCount = 8
+
 // treemapItem is an internal type pairing a TreemapNode with its computed
 // total value and original index (used for colour assignment).
 type treemapItem struct {
@@ -26,36 +29,36 @@ type treemapSquarifiedRect struct {
 }
 
 // computeTreemapLayout builds a squarified treemap layout from the IR graph.
-func computeTreemapLayout(g *ir.Graph, _ *theme.Theme, cfg *config.Layout) *Layout {
+func computeTreemapLayout(graph *ir.Graph, _ *theme.Theme, cfg *config.Layout) *Layout {
 	padX := cfg.Treemap.PaddingX
 	padY := cfg.Treemap.PaddingY
 	chartW := cfg.Treemap.ChartWidth
 	chartH := cfg.Treemap.ChartHeight
 
-	if g.TreemapRoot == nil || g.TreemapRoot.TotalValue() == 0 {
+	if graph.TreemapRoot == nil || graph.TreemapRoot.TotalValue() == 0 {
 		return &Layout{
-			Kind:    g.Kind,
+			Kind:    graph.Kind,
 			Nodes:   map[string]*NodeLayout{},
 			Width:   chartW + padX*2,
 			Height:  chartH + padY*2,
-			Diagram: TreemapData{Title: g.TreemapTitle},
+			Diagram: TreemapData{Title: graph.TreemapTitle},
 		}
 	}
 
 	var rects []TreemapRectLayout
 
 	// If root has children, lay them out; otherwise treat root as single rect.
-	if len(g.TreemapRoot.Children) > 0 {
+	if len(graph.TreemapRoot.Children) > 0 {
 		rects = treemapLayoutChildren(
-			g.TreemapRoot.Children,
+			graph.TreemapRoot.Children,
 			padX, padY, chartW, chartH,
 			cfg.Treemap.Padding, cfg.Treemap.HeaderHeight,
 			0, 0,
 		)
 	} else {
 		rects = []TreemapRectLayout{{
-			Label:      g.TreemapRoot.Label,
-			Value:      g.TreemapRoot.Value,
+			Label:      graph.TreemapRoot.Label,
+			Value:      graph.TreemapRoot.Value,
 			X:          padX,
 			Y:          padY,
 			Width:      chartW,
@@ -66,20 +69,20 @@ func computeTreemapLayout(g *ir.Graph, _ *theme.Theme, cfg *config.Layout) *Layo
 	}
 
 	return &Layout{
-		Kind:    g.Kind,
+		Kind:    graph.Kind,
 		Nodes:   map[string]*NodeLayout{},
 		Width:   chartW + padX*2,
 		Height:  chartH + padY*2,
-		Diagram: TreemapData{Rects: rects, Title: g.TreemapTitle},
+		Diagram: TreemapData{Rects: rects, Title: graph.TreemapTitle},
 	}
 }
 
 // treemapLayoutChildren lays out children within a given rectangle using the
 // squarified treemap algorithm (Bruls-Huizing-van Wijk). Section nodes get a
 // header band and their children are recursively laid out beneath it.
-func treemapLayoutChildren(
+func treemapLayoutChildren( //nolint:revive // argument-limit: recursive layout requires rectangle + styling + depth params
 	children []*ir.TreemapNode,
-	x, y, w, h float32,
+	rectX, rectY, width, height float32,
 	padding, headerH float32,
 	depth, colorStart int,
 ) []TreemapRectLayout {
@@ -104,11 +107,11 @@ func treemapLayoutChildren(
 		totalValue += it.value
 	}
 
-	squarifiedRects := treemapSquarify(items, x, y, w, h, totalValue)
+	squarifiedRects := treemapSquarify(items, rectX, rectY, width, height, totalValue)
 
 	for _, sr := range squarifiedRects {
 		it := sr.item
-		colorIdx := (colorStart + it.idx) % 8
+		colorIdx := (colorStart + it.idx) % treemapColorCount
 
 		if it.node.IsLeaf() {
 			rects = append(rects, TreemapRectLayout{
@@ -157,7 +160,7 @@ func treemapLayoutChildren(
 // rows, choosing the layout direction (horizontal or vertical) based on the
 // shorter side of the remaining rectangle and adding items to the current row
 // as long as doing so improves (or maintains) the worst aspect ratio.
-func treemapSquarify(items []treemapItem, x, y, w, h float32, totalValue float64) []treemapSquarifiedRect {
+func treemapSquarify(items []treemapItem, rectX, rectY, width, height float32, totalValue float64) []treemapSquarifiedRect {
 	if len(items) == 0 {
 		return nil
 	}
@@ -166,7 +169,7 @@ func treemapSquarify(items []treemapItem, x, y, w, h float32, totalValue float64
 	remaining := make([]treemapItem, len(items))
 	copy(remaining, items)
 
-	rx, ry, rw, rh := x, y, w, h
+	rx, ry, rw, rh := rectX, rectY, width, height
 	remainingValue := totalValue
 
 	for len(remaining) > 0 {
@@ -176,17 +179,18 @@ func treemapSquarify(items []treemapItem, x, y, w, h float32, totalValue float64
 
 		// Try adding more items to the row while aspect ratio improves.
 		for len(remaining) > 0 {
-			testRow := append(row[:len(row):len(row)], remaining[0])
+			testRow := make([]treemapItem, len(row)+1)
+			copy(testRow, row)
+			testRow[len(row)] = remaining[0]
 			testValue := rowValue + remaining[0].value
 
-			if treemapWorstAspect(testRow, testValue, rw, rh, remainingValue) <=
+			if treemapWorstAspect(testRow, testValue, rw, rh, remainingValue) >
 				treemapWorstAspect(row, rowValue, rw, rh, remainingValue) {
-				row = testRow
-				rowValue = testValue
-				remaining = remaining[1:]
-			} else {
 				break
 			}
+			row = testRow
+			rowValue = testValue
+			remaining = remaining[1:]
 		}
 
 		// Lay out the finalised row within the remaining rectangle.
@@ -234,19 +238,19 @@ func treemapSquarify(items []treemapItem, x, y, w, h float32, totalValue float64
 // candidate row. The row occupies a fraction of the remaining rectangle
 // determined by rowValue/totalValue. Lower values are better (1.0 is a
 // perfect square).
-func treemapWorstAspect(row []treemapItem, rowValue float64, w, h float32, totalValue float64) float64 {
+func treemapWorstAspect(row []treemapItem, rowValue float64, width, height float32, totalValue float64) float64 {
 	if totalValue == 0 || len(row) == 0 {
 		return math.MaxFloat64
 	}
 
 	fraction := rowValue / totalValue
 	var side, otherSide float32
-	if w >= h {
-		side = w * float32(fraction)
-		otherSide = h
+	if width >= height {
+		side = width * float32(fraction)
+		otherSide = height
 	} else {
-		side = h * float32(fraction)
-		otherSide = w
+		side = height * float32(fraction)
+		otherSide = width
 	}
 
 	if side == 0 || otherSide == 0 {

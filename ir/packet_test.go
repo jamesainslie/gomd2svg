@@ -10,13 +10,13 @@ func TestPacketFieldRange(t *testing.T) {
 }
 
 func TestGraphPacketFields(t *testing.T) {
-	g := NewGraph()
-	g.Kind = Packet
-	g.Fields = []*PacketField{
+	graph := NewGraph()
+	graph.Kind = Packet
+	graph.Fields = []*PacketField{
 		{Start: 0, End: 15, Description: "Source Port"},
 		{Start: 16, End: 31, Description: "Dest Port"},
 	}
-	if len(g.Fields) != 2 {
-		t.Fatalf("len(Fields) = %d, want 2", len(g.Fields))
+	if len(graph.Fields) != 2 {
+		t.Fatalf("len(Fields) = %d, want 2", len(graph.Fields))
 	}
 }

@@ -8,10 +8,10 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
-func computeSankeyLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
-	if len(g.SankeyLinks) == 0 {
+func computeSankeyLayout(graph *ir.Graph, _ *theme.Theme, cfg *config.Layout) *Layout {
+	if len(graph.SankeyLinks) == 0 {
 		return &Layout{
-			Kind:    g.Kind,
+			Kind:    graph.Kind,
 			Nodes:   map[string]*NodeLayout{},
 			Width:   cfg.Sankey.ChartWidth + cfg.Sankey.PaddingX*2,
 			Height:  cfg.Sankey.ChartHeight + cfg.Sankey.PaddingY*2,
@@ -20,10 +20,10 @@ func computeSankeyLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layo
 	}
 
 	// Step 1: Collect unique node names preserving order of first appearance.
-	nodeNames, nodeIndex := sankeyCollectNodes(g.SankeyLinks)
+	nodeNames, nodeIndex := sankeyCollectNodes(graph.SankeyLinks)
 
 	// Step 2: Assign columns via longest path from sources.
-	columns := sankeyAssignColumns(nodeNames, nodeIndex, g.SankeyLinks)
+	columns := sankeyAssignColumns(nodeNames, nodeIndex, graph.SankeyLinks)
 	maxCol := 0
 	for _, c := range columns {
 		if c > maxCol {
@@ -32,7 +32,7 @@ func computeSankeyLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layo
 	}
 
 	// Step 3: Compute total flow per node (max of inflow vs outflow).
-	totalFlow := sankeyComputeFlow(nodeNames, nodeIndex, g.SankeyLinks)
+	totalFlow := sankeyComputeFlow(nodeNames, nodeIndex, graph.SankeyLinks)
 
 	// Step 4: Position nodes in columns.
 	chartW := cfg.Sankey.ChartWidth
@@ -56,11 +56,11 @@ func computeSankeyLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layo
 
 	// Position nodes within each column.
 	nodes := make([]SankeyNodeLayout, len(nodeNames))
-	for c, col := range colNodes {
+	for colIdx, col := range colNodes {
 		// Sort nodes in column by their original appearance order.
-		sort.Slice(col, func(i, j int) bool { return col[i] < col[j] })
+		sort.Slice(col, func(ci, cj int) bool { return col[ci] < col[cj] })
 
-		x := padX + float32(c)*colWidth
+		nodeX := padX + float32(colIdx)*colWidth
 
 		// Compute total flow for this column.
 		colTotal := float64(0)
@@ -75,21 +75,21 @@ func computeSankeyLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layo
 			scale = 0
 		}
 
-		y := padY
+		nodeY := padY
 		for _, ni := range col {
-			h := float32(totalFlow[ni] * scale)
-			if h < 2 {
-				h = 2
+			nodeH := float32(totalFlow[ni] * scale)
+			if nodeH < 2 {
+				nodeH = 2
 			}
 			nodes[ni] = SankeyNodeLayout{
 				Label:      nodeNames[ni],
-				X:          x,
-				Y:          y,
+				X:          nodeX,
+				Y:          nodeY,
 				Width:      nodeWidth,
-				Height:     h,
+				Height:     nodeH,
 				ColorIndex: ni,
 			}
-			y += h + nodePad
+			nodeY += nodeH + nodePad
 		}
 	}
 
@@ -97,8 +97,8 @@ func computeSankeyLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layo
 	sourceOffsets := make([]float32, len(nodeNames))
 	targetOffsets := make([]float32, len(nodeNames))
 
-	links := make([]SankeyLinkLayout, len(g.SankeyLinks))
-	for i, link := range g.SankeyLinks {
+	links := make([]SankeyLinkLayout, len(graph.SankeyLinks))
+	for linkIdx, link := range graph.SankeyLinks {
 		si := nodeIndex[link.Source]
 		ti := nodeIndex[link.Target]
 
@@ -111,7 +111,7 @@ func computeSankeyLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layo
 			linkH = 1
 		}
 
-		links[i] = SankeyLinkLayout{
+		links[linkIdx] = SankeyLinkLayout{
 			SourceIdx: si,
 			TargetIdx: ti,
 			Value:     link.Value,
@@ -127,7 +127,7 @@ func computeSankeyLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layo
 	totalH := chartH + padY*2
 
 	return &Layout{
-		Kind:    g.Kind,
+		Kind:    graph.Kind,
 		Nodes:   map[string]*NodeLayout{},
 		Width:   totalW,
 		Height:  totalH,
@@ -157,11 +157,11 @@ func sankeyCollectNodes(links []*ir.SankeyLink) ([]string, map[string]int) {
 // algorithm: source nodes (no incoming links) get column 0, others get
 // max(source column) + 1.
 func sankeyAssignColumns(names []string, index map[string]int, links []*ir.SankeyLink) []int {
-	n := len(names)
-	columns := make([]int, n)
+	nodeCount := len(names)
+	columns := make([]int, nodeCount)
 
 	// Build incoming edge lists.
-	incoming := make([][]int, n)
+	incoming := make([][]int, nodeCount)
 	for _, link := range links {
 		si := index[link.Source]
 		ti := index[link.Target]
@@ -172,10 +172,10 @@ func sankeyAssignColumns(names []string, index map[string]int, links []*ir.Sanke
 	changed := true
 	for changed {
 		changed = false
-		for i := 0; i < n; i++ {
-			for _, src := range incoming[i] {
-				if columns[src]+1 > columns[i] {
-					columns[i] = columns[src] + 1
+		for idx := range nodeCount {
+			for _, src := range incoming[idx] {
+				if columns[src]+1 > columns[idx] {
+					columns[idx] = columns[src] + 1
 					changed = true
 				}
 			}
@@ -188,16 +188,16 @@ func sankeyAssignColumns(names []string, index map[string]int, links []*ir.Sanke
 // sankeyComputeFlow computes the total flow through each node as the max of
 // its inflow and outflow sums.
 func sankeyComputeFlow(names []string, index map[string]int, links []*ir.SankeyLink) []float64 {
-	n := len(names)
-	inflow := make([]float64, n)
-	outflow := make([]float64, n)
+	nodeCount := len(names)
+	inflow := make([]float64, nodeCount)
+	outflow := make([]float64, nodeCount)
 	for _, link := range links {
 		si := index[link.Source]
 		ti := index[link.Target]
 		outflow[si] += link.Value
 		inflow[ti] += link.Value
 	}
-	totalFlow := make([]float64, n)
+	totalFlow := make([]float64, nodeCount)
 	for i := range totalFlow {
 		if outflow[i] > inflow[i] {
 			totalFlow[i] = outflow[i]

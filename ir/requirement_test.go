@@ -59,32 +59,32 @@ func TestRequirementRelType(t *testing.T) {
 }
 
 func TestRequirementGraphFields(t *testing.T) {
-	g := NewGraph()
-	g.Kind = Requirement
-	g.Requirements = append(g.Requirements, &RequirementDef{
+	graph := NewGraph()
+	graph.Kind = Requirement
+	graph.Requirements = append(graph.Requirements, &RequirementDef{
 		Name: "test_req",
 		ID:   "REQ-001",
 		Text: "Must do something",
 		Type: ReqTypeFunctional,
 		Risk: RiskHigh,
 	})
-	g.ReqElements = append(g.ReqElements, &ElementDef{
+	graph.ReqElements = append(graph.ReqElements, &ElementDef{
 		Name:   "test_element",
 		Type:   "Simulation",
 		DocRef: "DOC-001",
 	})
-	g.ReqRelationships = append(g.ReqRelationships, &RequirementRel{
+	graph.ReqRelationships = append(graph.ReqRelationships, &RequirementRel{
 		Source: "test_element",
 		Target: "test_req",
 		Type:   ReqRelSatisfies,
 	})
-	if len(g.Requirements) != 1 {
-		t.Errorf("Requirements = %d", len(g.Requirements))
+	if len(graph.Requirements) != 1 {
+		t.Errorf("Requirements = %d", len(graph.Requirements))
 	}
-	if len(g.ReqElements) != 1 {
-		t.Errorf("ReqElements = %d", len(g.ReqElements))
+	if len(graph.ReqElements) != 1 {
+		t.Errorf("ReqElements = %d", len(graph.ReqElements))
 	}
-	if len(g.ReqRelationships) != 1 {
-		t.Errorf("ReqRelationships = %d", len(g.ReqRelationships))
+	if len(graph.ReqRelationships) != 1 {
+		t.Errorf("ReqRelationships = %d", len(graph.ReqRelationships))
 	}
 }

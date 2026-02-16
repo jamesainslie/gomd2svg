@@ -8,8 +8,15 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
-func renderTreemap(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.Layout) {
-	td, ok := l.Diagram.(layout.TreemapData)
+// Treemap rendering constants.
+const (
+	treemapTitleOffsetY     float32 = 20
+	treemapSectionLabelPadX float32 = 4
+	treemapSectionLabelPadY float32 = 6
+)
+
+func renderTreemap(builder *svgBuilder, lay *layout.Layout, th *theme.Theme, cfg *config.Layout) {
+	td, ok := lay.Diagram.(layout.TreemapData)
 	if !ok {
 		return
 	}
@@ -21,7 +28,7 @@ func renderTreemap(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config
 
 	// Draw title if present.
 	if td.Title != "" {
-		b.text(l.Width/2, 20, td.Title,
+		builder.text(lay.Width/2, treemapTitleOffsetY, td.Title,
 			"text-anchor", "middle",
 			"font-family", th.FontFamily,
 			"font-size", "16",
@@ -31,45 +38,45 @@ func renderTreemap(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config
 	}
 
 	// Draw rectangles.
-	for _, r := range td.Rects {
-		color := colors[r.ColorIndex%len(colors)]
+	for _, rect := range td.Rects {
+		color := colors[rect.ColorIndex%len(colors)]
 
-		if r.IsSection {
+		if rect.IsSection {
 			// Section: draw a container rect with header.
-			b.rect(r.X, r.Y, r.Width, r.Height, 2,
+			builder.rect(rect.X, rect.Y, rect.Width, rect.Height, 2,
 				"fill", "none",
 				"stroke", th.TreemapBorder,
 				"stroke-width", "1",
 			)
 			// Header background.
 			headerH := cfg.Treemap.HeaderHeight
-			if headerH > r.Height {
-				headerH = r.Height
+			if headerH > rect.Height {
+				headerH = rect.Height
 			}
-			b.rect(r.X, r.Y, r.Width, headerH, 0,
+			builder.rect(rect.X, rect.Y, rect.Width, headerH, 0,
 				"fill", color,
 				"opacity", "0.3",
 			)
 			// Section label.
-			b.text(r.X+4, r.Y+headerH-6, r.Label,
+			builder.text(rect.X+treemapSectionLabelPadX, rect.Y+headerH-treemapSectionLabelPadY, rect.Label,
 				"font-family", th.FontFamily,
 				"font-size", fmtFloat(cfg.Treemap.LabelFontSize),
 				"fill", th.TextColor,
 			)
 		} else {
 			// Leaf: fill with color, add label and value.
-			b.rect(r.X, r.Y, r.Width, r.Height, 2,
+			builder.rect(rect.X, rect.Y, rect.Width, rect.Height, 2,
 				"fill", color,
 				"stroke", th.TreemapBorder,
 				"stroke-width", "1",
 			)
 
 			// Only draw label if rect is large enough.
-			if r.Width > 20 && r.Height > 14 {
-				cx := r.X + r.Width/2
-				cy := r.Y + r.Height/2
+			if rect.Width > 20 && rect.Height > 14 {
+				cx := rect.X + rect.Width/2
+				cy := rect.Y + rect.Height/2
 
-				b.text(cx, cy, r.Label,
+				builder.text(cx, cy, rect.Label,
 					"text-anchor", "middle",
 					"font-family", th.FontFamily,
 					"font-size", fmtFloat(cfg.Treemap.LabelFontSize),
@@ -77,8 +84,8 @@ func renderTreemap(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config
 				)
 
 				// Show value below label if there's room.
-				if r.Height > 30 && r.Value > 0 {
-					b.text(cx, cy+cfg.Treemap.ValueFontSize+2, fmt.Sprintf("%.0f", r.Value),
+				if rect.Height > 30 && rect.Value > 0 {
+					builder.text(cx, cy+cfg.Treemap.ValueFontSize+2, fmt.Sprintf("%.0f", rect.Value),
 						"text-anchor", "middle",
 						"font-family", th.FontFamily,
 						"font-size", fmtFloat(cfg.Treemap.ValueFontSize),

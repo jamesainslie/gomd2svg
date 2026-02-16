@@ -15,15 +15,15 @@ func TestSequenceParticipants(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	g := out.Graph
-	if g.Kind != ir.Sequence {
-		t.Fatalf("expected Sequence, got %v", g.Kind)
+	graph := out.Graph
+	if graph.Kind != ir.Sequence {
+		t.Fatalf("expected Sequence, got %v", graph.Kind)
 	}
-	if len(g.Participants) != 2 {
-		t.Fatalf("expected 2 participants, got %d", len(g.Participants))
+	if len(graph.Participants) != 2 {
+		t.Fatalf("expected 2 participants, got %d", len(graph.Participants))
 	}
 
-	alice := g.Participants[0]
+	alice := graph.Participants[0]
 	if alice.ID != "A" {
 		t.Errorf("expected ID 'A', got %q", alice.ID)
 	}
@@ -34,7 +34,7 @@ func TestSequenceParticipants(t *testing.T) {
 		t.Errorf("expected ParticipantBox, got %v", alice.Kind)
 	}
 
-	bob := g.Participants[1]
+	bob := graph.Participants[1]
 	if bob.ID != "B" {
 		t.Errorf("expected ID 'B', got %q", bob.ID)
 	}
@@ -65,7 +65,7 @@ func TestSequenceAllMessageTypes(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
 	expectedKinds := []ir.SeqMessageKind{
 		ir.MsgSolid,
@@ -95,7 +95,7 @@ func TestSequenceAllMessageTypes(t *testing.T) {
 
 	// Count message events.
 	var msgEvents []*ir.SeqEvent
-	for _, ev := range g.Events {
+	for _, ev := range graph.Events {
 		if ev.Kind == ir.EvMessage {
 			msgEvents = append(msgEvents, ev)
 		}
@@ -105,18 +105,18 @@ func TestSequenceAllMessageTypes(t *testing.T) {
 		t.Fatalf("expected %d message events, got %d", len(expectedKinds), len(msgEvents))
 	}
 
-	for i, ev := range msgEvents {
-		if ev.Message.Kind != expectedKinds[i] {
-			t.Errorf("message %d: expected kind %v, got %v", i, expectedKinds[i], ev.Message.Kind)
+	for idx, ev := range msgEvents {
+		if ev.Message.Kind != expectedKinds[idx] {
+			t.Errorf("message %d: expected kind %v, got %v", idx, expectedKinds[idx], ev.Message.Kind)
 		}
-		if ev.Message.Text != expectedTexts[i] {
-			t.Errorf("message %d: expected text %q, got %q", i, expectedTexts[i], ev.Message.Text)
+		if ev.Message.Text != expectedTexts[idx] {
+			t.Errorf("message %d: expected text %q, got %q", idx, expectedTexts[idx], ev.Message.Text)
 		}
 		if ev.Message.From != "A" {
-			t.Errorf("message %d: expected From 'A', got %q", i, ev.Message.From)
+			t.Errorf("message %d: expected From 'A', got %q", idx, ev.Message.From)
 		}
 		if ev.Message.To != "B" {
-			t.Errorf("message %d: expected To 'B', got %q", i, ev.Message.To)
+			t.Errorf("message %d: expected To 'B', got %q", idx, ev.Message.To)
 		}
 	}
 }
@@ -132,43 +132,43 @@ func TestSequenceActivationShorthand(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
 	// Expect: EvMessage(Alice->Bob) + EvActivate(Bob) + EvMessage(Bob->Alice) + EvDeactivate(Bob)
-	if len(g.Events) != 4 {
-		t.Fatalf("expected 4 events, got %d", len(g.Events))
+	if len(graph.Events) != 4 {
+		t.Fatalf("expected 4 events, got %d", len(graph.Events))
 	}
 
 	// First event: message
-	if g.Events[0].Kind != ir.EvMessage {
-		t.Errorf("event 0: expected EvMessage, got %v", g.Events[0].Kind)
+	if graph.Events[0].Kind != ir.EvMessage {
+		t.Errorf("event 0: expected EvMessage, got %v", graph.Events[0].Kind)
 	}
-	if !g.Events[0].Message.ActivateTarget {
+	if !graph.Events[0].Message.ActivateTarget {
 		t.Error("event 0: expected ActivateTarget=true")
 	}
 
 	// Second event: activate Bob
-	if g.Events[1].Kind != ir.EvActivate {
-		t.Errorf("event 1: expected EvActivate, got %v", g.Events[1].Kind)
+	if graph.Events[1].Kind != ir.EvActivate {
+		t.Errorf("event 1: expected EvActivate, got %v", graph.Events[1].Kind)
 	}
-	if g.Events[1].Target != "Bob" {
-		t.Errorf("event 1: expected target 'Bob', got %q", g.Events[1].Target)
+	if graph.Events[1].Target != "Bob" {
+		t.Errorf("event 1: expected target 'Bob', got %q", graph.Events[1].Target)
 	}
 
 	// Third event: message
-	if g.Events[2].Kind != ir.EvMessage {
-		t.Errorf("event 2: expected EvMessage, got %v", g.Events[2].Kind)
+	if graph.Events[2].Kind != ir.EvMessage {
+		t.Errorf("event 2: expected EvMessage, got %v", graph.Events[2].Kind)
 	}
-	if !g.Events[2].Message.DeactivateSource {
+	if !graph.Events[2].Message.DeactivateSource {
 		t.Error("event 2: expected DeactivateSource=true")
 	}
 
 	// Fourth event: deactivate Bob
-	if g.Events[3].Kind != ir.EvDeactivate {
-		t.Errorf("event 3: expected EvDeactivate, got %v", g.Events[3].Kind)
+	if graph.Events[3].Kind != ir.EvDeactivate {
+		t.Errorf("event 3: expected EvDeactivate, got %v", graph.Events[3].Kind)
 	}
-	if g.Events[3].Target != "Bob" {
-		t.Errorf("event 3: expected target 'Bob', got %q", g.Events[3].Target)
+	if graph.Events[3].Target != "Bob" {
+		t.Errorf("event 3: expected target 'Bob', got %q", graph.Events[3].Target)
 	}
 }
 
@@ -184,10 +184,10 @@ func TestSequenceNotes(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
 	var noteEvents []*ir.SeqEvent
-	for _, ev := range g.Events {
+	for _, ev := range graph.Events {
 		if ev.Kind == ir.EvNote {
 			noteEvents = append(noteEvents, ev)
 		}
@@ -248,7 +248,7 @@ func TestSequenceFrames(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
 	// Expected events:
 	// 1. EvFrameStart(loop, "Every minute")
@@ -259,45 +259,45 @@ func TestSequenceFrames(t *testing.T) {
 	// 6. EvFrameMiddle(else, "Failure")
 	// 7. EvMessage
 	// 8. EvFrameEnd
-	if len(g.Events) != 8 {
-		t.Fatalf("expected 8 events, got %d", len(g.Events))
+	if len(graph.Events) != 8 {
+		t.Fatalf("expected 8 events, got %d", len(graph.Events))
 	}
 
 	// loop frame start
-	if g.Events[0].Kind != ir.EvFrameStart {
-		t.Errorf("event 0: expected EvFrameStart, got %v", g.Events[0].Kind)
+	if graph.Events[0].Kind != ir.EvFrameStart {
+		t.Errorf("event 0: expected EvFrameStart, got %v", graph.Events[0].Kind)
 	}
-	if g.Events[0].Frame.Kind != ir.FrameLoop {
-		t.Errorf("event 0: expected FrameLoop, got %v", g.Events[0].Frame.Kind)
+	if graph.Events[0].Frame.Kind != ir.FrameLoop {
+		t.Errorf("event 0: expected FrameLoop, got %v", graph.Events[0].Frame.Kind)
 	}
-	if g.Events[0].Frame.Label != "Every minute" {
-		t.Errorf("event 0: expected label 'Every minute', got %q", g.Events[0].Frame.Label)
+	if graph.Events[0].Frame.Label != "Every minute" {
+		t.Errorf("event 0: expected label 'Every minute', got %q", graph.Events[0].Frame.Label)
 	}
 
 	// loop end
-	if g.Events[2].Kind != ir.EvFrameEnd {
-		t.Errorf("event 2: expected EvFrameEnd, got %v", g.Events[2].Kind)
+	if graph.Events[2].Kind != ir.EvFrameEnd {
+		t.Errorf("event 2: expected EvFrameEnd, got %v", graph.Events[2].Kind)
 	}
 
 	// alt frame start
-	if g.Events[3].Kind != ir.EvFrameStart {
-		t.Errorf("event 3: expected EvFrameStart, got %v", g.Events[3].Kind)
+	if graph.Events[3].Kind != ir.EvFrameStart {
+		t.Errorf("event 3: expected EvFrameStart, got %v", graph.Events[3].Kind)
 	}
-	if g.Events[3].Frame.Kind != ir.FrameAlt {
-		t.Errorf("event 3: expected FrameAlt, got %v", g.Events[3].Frame.Kind)
+	if graph.Events[3].Frame.Kind != ir.FrameAlt {
+		t.Errorf("event 3: expected FrameAlt, got %v", graph.Events[3].Frame.Kind)
 	}
 
 	// else middle
-	if g.Events[5].Kind != ir.EvFrameMiddle {
-		t.Errorf("event 5: expected EvFrameMiddle, got %v", g.Events[5].Kind)
+	if graph.Events[5].Kind != ir.EvFrameMiddle {
+		t.Errorf("event 5: expected EvFrameMiddle, got %v", graph.Events[5].Kind)
 	}
-	if g.Events[5].Frame.Label != "Failure" {
-		t.Errorf("event 5: expected label 'Failure', got %q", g.Events[5].Frame.Label)
+	if graph.Events[5].Frame.Label != "Failure" {
+		t.Errorf("event 5: expected label 'Failure', got %q", graph.Events[5].Frame.Label)
 	}
 
 	// alt end
-	if g.Events[7].Kind != ir.EvFrameEnd {
-		t.Errorf("event 7: expected EvFrameEnd, got %v", g.Events[7].Kind)
+	if graph.Events[7].Kind != ir.EvFrameEnd {
+		t.Errorf("event 7: expected EvFrameEnd, got %v", graph.Events[7].Kind)
 	}
 }
 
@@ -312,13 +312,13 @@ func TestSequenceBoxes(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
-	if len(g.Boxes) != 1 {
-		t.Fatalf("expected 1 box, got %d", len(g.Boxes))
+	if len(graph.Boxes) != 1 {
+		t.Fatalf("expected 1 box, got %d", len(graph.Boxes))
 	}
 
-	box := g.Boxes[0]
+	box := graph.Boxes[0]
 	if box.Label != "Team A" {
 		t.Errorf("expected label 'Team A', got %q", box.Label)
 	}
@@ -357,21 +357,21 @@ func TestSequenceImplicitParticipants(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
-	if len(g.Participants) != 2 {
-		t.Fatalf("expected 2 implicit participants, got %d", len(g.Participants))
+	if len(graph.Participants) != 2 {
+		t.Fatalf("expected 2 implicit participants, got %d", len(graph.Participants))
 	}
-	if g.Participants[0].ID != "Alice" {
-		t.Errorf("expected first participant 'Alice', got %q", g.Participants[0].ID)
+	if graph.Participants[0].ID != "Alice" {
+		t.Errorf("expected first participant 'Alice', got %q", graph.Participants[0].ID)
 	}
-	if g.Participants[1].ID != "Bob" {
-		t.Errorf("expected second participant 'Bob', got %q", g.Participants[1].ID)
+	if graph.Participants[1].ID != "Bob" {
+		t.Errorf("expected second participant 'Bob', got %q", graph.Participants[1].ID)
 	}
 
 	// Implicit participants should have no alias.
-	if g.Participants[0].Alias != "" {
-		t.Errorf("expected empty alias for Alice, got %q", g.Participants[0].Alias)
+	if graph.Participants[0].Alias != "" {
+		t.Errorf("expected empty alias for Alice, got %q", graph.Participants[0].Alias)
 	}
 }
 
@@ -386,11 +386,11 @@ func TestSequenceCreateDestroy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
 	// Find Carl.
 	var carl *ir.SeqParticipant
-	for _, p := range g.Participants {
+	for _, p := range graph.Participants {
 		if p.ID == "Carl" {
 			carl = p
 			break
@@ -408,7 +408,7 @@ func TestSequenceCreateDestroy(t *testing.T) {
 
 	// Verify EvCreate and EvDestroy events exist.
 	var hasCreate, hasDestroy bool
-	for _, ev := range g.Events {
+	for _, ev := range graph.Events {
 		if ev.Kind == ir.EvCreate && ev.Target == "Carl" {
 			hasCreate = true
 		}
@@ -433,12 +433,12 @@ func TestSequenceLinks(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
-	if len(g.Participants) != 1 {
-		t.Fatalf("expected 1 participant, got %d", len(g.Participants))
+	if len(graph.Participants) != 1 {
+		t.Fatalf("expected 1 participant, got %d", len(graph.Participants))
 	}
-	alice := g.Participants[0]
+	alice := graph.Participants[0]
 	if len(alice.Links) != 1 {
 		t.Fatalf("expected 1 link, got %d", len(alice.Links))
 	}
@@ -461,11 +461,11 @@ func TestSequenceLineBreaks(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	g := out.Graph
+	graph := out.Graph
 
 	var msgEvents []*ir.SeqEvent
 	var noteEvents []*ir.SeqEvent
-	for _, ev := range g.Events {
+	for _, ev := range graph.Events {
 		if ev.Kind == ir.EvMessage {
 			msgEvents = append(msgEvents, ev)
 		}

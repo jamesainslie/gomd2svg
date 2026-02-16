@@ -11,20 +11,20 @@ import (
 )
 
 func TestRenderJourney(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Journey
-	g.JourneyTitle = "My Day"
-	g.JourneySections = []*ir.JourneySection{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Journey
+	graph.JourneyTitle = "My Day"
+	graph.JourneySections = []*ir.JourneySection{
 		{Name: "Morning", Tasks: []int{0, 1}},
 	}
-	g.JourneyTasks = []*ir.JourneyTask{
+	graph.JourneyTasks = []*ir.JourneyTask{
 		{Name: "Wake up", Score: 3, Actors: []string{"Me"}, Section: "Morning"},
 		{Name: "Coffee", Score: 5, Actors: []string{"Me"}, Section: "Morning"},
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "<svg") {
@@ -42,12 +42,12 @@ func TestRenderJourney(t *testing.T) {
 }
 
 func TestRenderJourneyEmpty(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Journey
+	graph := ir.NewGraph()
+	graph.Kind = ir.Journey
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "<svg") {

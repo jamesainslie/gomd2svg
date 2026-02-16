@@ -48,8 +48,8 @@ func stripTrailingComment(line string) string {
 	var quote rune
 	var out strings.Builder
 	runes := []rune(line)
-	for i := 0; i < len(runes); i++ {
-		ch := runes[i]
+	for idx := range runes {
+		ch := runes[idx]
 		if quote != 0 {
 			if ch == quote {
 				quote = 0
@@ -62,7 +62,7 @@ func stripTrailingComment(line string) string {
 			out.WriteRune(ch)
 			continue
 		}
-		if ch == '%' && i+1 < len(runes) && runes[i+1] == '%' {
+		if ch == '%' && idx+1 < len(runes) && runes[idx+1] == '%' {
 			break
 		}
 		out.WriteRune(ch)
@@ -145,48 +145,48 @@ func maskBracketContent(line string) string {
 	inSingleQuote := false
 	var prevChar rune
 
-	for i, ch := range runes {
+	for idx, ch := range runes {
 		inBracket := depthSquare > 0 || depthParen > 0 || depthCurly > 0
 		inQuote := inDoubleQuote || inSingleQuote
 
 		switch {
 		case ch == '[' && !inQuote:
 			depthSquare++
-			result[i] = ch
+			result[idx] = ch
 		case ch == ']' && !inQuote && depthSquare > 0:
 			depthSquare--
-			result[i] = ch
+			result[idx] = ch
 		case ch == '(' && !inQuote && !inBracket:
 			depthParen++
-			result[i] = ch
+			result[idx] = ch
 		case ch == ')' && !inQuote && depthParen > 0:
 			depthParen--
-			result[i] = ch
+			result[idx] = ch
 		case ch == '{' && !inQuote && !inBracket:
 			depthCurly++
-			result[i] = ch
+			result[idx] = ch
 		case ch == '}' && !inQuote && depthCurly > 0:
 			depthCurly--
-			result[i] = ch
+			result[idx] = ch
 		case ch == '"' && prevChar != '\\':
 			inDoubleQuote = !inDoubleQuote
 			if inBracket || inQuote {
-				result[i] = ' '
+				result[idx] = ' '
 			} else {
-				result[i] = ch
+				result[idx] = ch
 			}
 		case ch == '\'' && prevChar != '\\':
 			inSingleQuote = !inSingleQuote
 			if inBracket || inQuote {
-				result[i] = ' '
+				result[idx] = ' '
 			} else {
-				result[i] = ch
+				result[idx] = ch
 			}
 		default:
 			if inBracket || inQuote {
-				result[i] = ' '
+				result[idx] = ' '
 			} else {
-				result[i] = ch
+				result[idx] = ch
 			}
 		}
 		prevChar = ch
@@ -228,16 +228,16 @@ func splitEdgeChain(line string) []string {
 	}
 
 	// Attach leading pipe labels to the preceding arrow.
-	for i := 1; i < len(nodes); i++ {
-		trimmed := strings.TrimLeft(nodes[i], " \t")
+	for nodeIdx := 1; nodeIdx < len(nodes); nodeIdx++ {
+		trimmed := strings.TrimLeft(nodes[nodeIdx], " \t")
 		if strings.HasPrefix(trimmed, "|") {
 			endIdx := strings.Index(trimmed[1:], "|")
 			if endIdx >= 0 {
 				labelLen := endIdx + 2
 				label := trimmed[:labelLen]
 				rest := strings.TrimLeft(trimmed[labelLen:], " \t")
-				arrows[i-1] += label
-				nodes[i] = rest
+				arrows[nodeIdx-1] += label
+				nodes[nodeIdx] = rest
 			}
 		}
 	}
@@ -249,7 +249,7 @@ func splitEdgeChain(line string) []string {
 	}
 
 	statements := make([]string, 0, len(arrows))
-	for i := 0; i < len(arrows); i++ {
+	for i := range arrows {
 		statements = append(statements, nodes[i]+" "+arrows[i]+" "+nodes[i+1])
 	}
 	return statements
@@ -257,6 +257,8 @@ func splitEdgeChain(line string) []string {
 
 // parseEdgeLine tries each regex pattern in priority order to parse an edge
 // line into (left, label, right, edgeMeta).
+//
+//nolint:gocognit,funlen,nonamedreturns,revive,maintidx // edge parsing: five regex pattern paths; named returns clarify multi-value return; 5 results needed.
 func parseEdgeLine(line string) (left string, label *string, right string, meta edgeMeta, ok bool) {
 	masked := maskBracketContent(line)
 
@@ -290,138 +292,138 @@ func parseEdgeLine(line string) (left string, label *string, right string, meta 
 	}
 
 	// 1. Pipe label: A -->|label| B
-	if idx := namedIdx(pipeLabelRe, masked); idx != nil {
-		leftRange := idx["left"]
-		rightRange := idx["right"]
-		labelRange := idx["label"]
-		arrowRange := idx["arrow"]
+	if positions := namedIdx(pipeLabelRe, masked); positions != nil {
+		leftRange := positions["left"]
+		rightRange := positions["right"]
+		labelRange := positions["label"]
+		arrowRange := positions["arrow"]
 
-		l := strings.TrimSpace(line[leftRange[0]:leftRange[1]])
-		r := strings.TrimSpace(line[rightRange[0]:rightRange[1]])
+		leftNode := strings.TrimSpace(line[leftRange[0]:leftRange[1]])
+		rightNode := strings.TrimSpace(line[rightRange[0]:rightRange[1]])
 		lbl := strings.TrimSpace(line[labelRange[0]:labelRange[1]])
 		arrow := strings.TrimSpace(line[arrowRange[0]:arrowRange[1]])
 
-		if lbl != "" && l != "" && r != "" {
+		if lbl != "" && leftNode != "" && rightNode != "" {
 			m := parseEdgeMeta(arrow)
-			return l, &lbl, r, m, true
+			return leftNode, &lbl, rightNode, m, true
 		}
 	}
 
 	// 2. Quoted label: A -- "label" --> B (match on original line)
 	if caps := namedSub(quotedLabelArrowRe, line); caps != nil {
-		l := strings.TrimSpace(caps["left"])
-		r := strings.TrimSpace(caps["right"])
+		leftNode := strings.TrimSpace(caps["left"])
+		rightNode := strings.TrimSpace(caps["right"])
 		lbl := strings.TrimSpace(caps["label"])
-		if lbl != "" && l != "" && r != "" {
+		if lbl != "" && leftNode != "" && rightNode != "" {
 			start := caps["start"]
 			dash1 := caps["dash1"]
 			dash2 := caps["dash2"]
 			end := caps["end"]
 			arrow := start + dash1 + dash2 + end
 			m := parseEdgeMeta(arrow)
-			return l, &lbl, r, m, true
+			return leftNode, &lbl, rightNode, m, true
 		}
 	}
 
 	// 3. Label arrow: A -- label --> B
-	if idx := namedIdx(labelArrowRe, masked); idx != nil {
-		leftRange := idx["left"]
-		rightRange := idx["right"]
-		labelRange := idx["label"]
+	if positions := namedIdx(labelArrowRe, masked); positions != nil {
+		leftRange := positions["left"]
+		rightRange := positions["right"]
+		labelRange := positions["label"]
 
-		l := strings.TrimSpace(line[leftRange[0]:leftRange[1]])
-		r := strings.TrimSpace(line[rightRange[0]:rightRange[1]])
+		leftNode := strings.TrimSpace(line[leftRange[0]:leftRange[1]])
+		rightNode := strings.TrimSpace(line[rightRange[0]:rightRange[1]])
 		lblRaw := strings.TrimSpace(line[labelRange[0]:labelRange[1]])
 		lbl := strings.Trim(lblRaw, "|")
 		lbl = strings.TrimSpace(lbl)
 
-		if lbl != "" && l != "" && r != "" {
+		if lbl != "" && leftNode != "" && rightNode != "" {
 			start := ""
 			dash1 := ""
 			dash2 := ""
 			end := ""
-			if rng, has := idx["start"]; has {
+			if rng, has := positions["start"]; has {
 				start = masked[rng[0]:rng[1]]
 			}
-			if rng, has := idx["dash1"]; has {
+			if rng, has := positions["dash1"]; has {
 				dash1 = masked[rng[0]:rng[1]]
 			}
-			if rng, has := idx["dash2"]; has {
+			if rng, has := positions["dash2"]; has {
 				dash2 = masked[rng[0]:rng[1]]
 			}
-			if rng, has := idx["end"]; has {
+			if rng, has := positions["end"]; has {
 				end = masked[rng[0]:rng[1]]
 			}
 			arrow := start + dash1 + dash2 + end
 			m := parseEdgeMeta(arrow)
-			return l, &lbl, r, m, true
+			return leftNode, &lbl, rightNode, m, true
 		}
 	}
 
 	// 4. Compact dotted label: A -.label.-> B
-	if idx := namedIdx(compactDottedLabelRe, masked); idx != nil {
-		leftRange := idx["left"]
-		rightRange := idx["right"]
-		labelRange := idx["label"]
+	if positions := namedIdx(compactDottedLabelRe, masked); positions != nil {
+		leftRange := positions["left"]
+		rightRange := positions["right"]
+		labelRange := positions["label"]
 
-		l := strings.TrimSpace(line[leftRange[0]:leftRange[1]])
-		r := strings.TrimSpace(line[rightRange[0]:rightRange[1]])
+		leftNode := strings.TrimSpace(line[leftRange[0]:leftRange[1]])
+		rightNode := strings.TrimSpace(line[rightRange[0]:rightRange[1]])
 		lbl := strings.Trim(strings.TrimSpace(line[labelRange[0]:labelRange[1]]), ".")
 
-		if lbl != "" && l != "" && r != "" {
+		if lbl != "" && leftNode != "" && rightNode != "" {
 			start := ""
 			dash1 := ""
 			dash2 := ""
 			end := ""
-			if rng, has := idx["start"]; has {
+			if rng, has := positions["start"]; has {
 				start = masked[rng[0]:rng[1]]
 			}
-			if rng, has := idx["dash1"]; has {
+			if rng, has := positions["dash1"]; has {
 				dash1 = masked[rng[0]:rng[1]]
 			}
-			if rng, has := idx["dash2"]; has {
+			if rng, has := positions["dash2"]; has {
 				dash2 = masked[rng[0]:rng[1]]
 			}
-			if rng, has := idx["end"]; has {
+			if rng, has := positions["end"]; has {
 				end = masked[rng[0]:rng[1]]
 			}
 			arrow := start + dash1 + "." + dash2 + end
 			m := parseEdgeMeta(arrow)
-			return l, &lbl, r, m, true
+			return leftNode, &lbl, rightNode, m, true
 		}
 	}
 
 	// 5. Simple arrow: A --> B
-	idx := namedIdx(arrowRe, masked)
-	if idx == nil {
+	positions := namedIdx(arrowRe, masked)
+	if positions == nil {
 		return "", nil, "", edgeMeta{}, false
 	}
 
-	leftRange := idx["left"]
-	rightRange := idx["right"]
-	arrowRange := idx["arrow"]
+	leftRange := positions["left"]
+	rightRange := positions["right"]
+	arrowRange := positions["arrow"]
 
-	l := strings.TrimSpace(line[leftRange[0]:leftRange[1]])
+	leftNode := strings.TrimSpace(line[leftRange[0]:leftRange[1]])
 	arrow := strings.TrimSpace(masked[arrowRange[0]:arrowRange[1]])
-	r := strings.TrimSpace(line[rightRange[0]:rightRange[1]])
+	rightNode := strings.TrimSpace(line[rightRange[0]:rightRange[1]])
 
 	// Check for leading decoration on right side (e.g., "o B" after arrow).
-	if dec, rest, found := extractLeadingDecoration(r); found {
+	if dec, rest, found := extractLeadingDecoration(rightNode); found {
 		arrow += string(dec)
-		r = rest
+		rightNode = rest
 	}
 
-	if l == "" || r == "" || arrow == "" {
+	if leftNode == "" || rightNode == "" || arrow == "" {
 		return "", nil, "", edgeMeta{}, false
 	}
 
 	// Check for trailing pipe label on the right side: |label| node
 	var lbl *string
-	rightToken := r
-	if strings.HasPrefix(r, "|") {
-		if endIdx := strings.Index(r[1:], "|"); endIdx >= 0 {
-			labelStr := strings.TrimSpace(r[1 : endIdx+1])
-			rest := strings.TrimSpace(r[endIdx+2:])
+	rightToken := rightNode
+	if strings.HasPrefix(rightNode, "|") {
+		if endIdx := strings.Index(rightNode[1:], "|"); endIdx >= 0 {
+			labelStr := strings.TrimSpace(rightNode[1 : endIdx+1])
+			rest := strings.TrimSpace(rightNode[endIdx+2:])
 			if rest != "" {
 				lbl = &labelStr
 				rightToken = rest
@@ -434,7 +436,7 @@ func parseEdgeLine(line string) (left string, label *string, right string, meta 
 	}
 
 	m := parseEdgeMeta(arrow)
-	return l, lbl, rightToken, m, true
+	return leftNode, lbl, rightToken, m, true
 }
 
 // extractLeadingDecoration checks if right starts with 'o' or 'x' followed by
@@ -493,11 +495,12 @@ func parseEdgeMeta(arrow string) edgeMeta {
 	arrowEnd := strings.HasSuffix(trimmed, ">")
 
 	var style ir.EdgeStyle
-	if strings.Contains(trimmed, "=") {
+	switch {
+	case strings.Contains(trimmed, "="):
 		style = ir.Thick
-	} else if strings.Contains(trimmed, ".") {
+	case strings.Contains(trimmed, "."):
 		style = ir.Dotted
-	} else {
+	default:
 		style = ir.Solid
 	}
 
@@ -514,7 +517,7 @@ func parseEdgeMeta(arrow string) edgeMeta {
 }
 
 // parseNodeToken parses a node token like "A[Start]" into its components.
-func parseNodeToken(token string) (id string, label *string, shape *ir.NodeShape, classes []string) {
+func parseNodeToken(token string) (id string, label *string, shape *ir.NodeShape, classes []string) { //nolint:nonamedreturns // named returns clarify the multi-value return.
 	base, classes := splitInlineClasses(token)
 	trimmed := strings.TrimSpace(base)
 
@@ -688,7 +691,7 @@ func stripQuotes(input string) string {
 }
 
 // parseSubgraphHeader parses the "subgraph rest..." part after the keyword.
-func parseSubgraphHeader(input string) (id *string, label string, classes []string) {
+func parseSubgraphHeader(input string) (id *string, label string, classes []string) { //nolint:nonamedreturns // named returns clarify the multi-value return.
 	base, classes := splitInlineClasses(input)
 	trimmed := strings.TrimSpace(base)
 
@@ -727,6 +730,8 @@ func parseDirectionLine(line string) (ir.Direction, bool) {
 
 // parseNodeOnly attempts to parse a line as a standalone node declaration.
 // Returns false if the line contains "--" (likely an edge).
+//
+//nolint:nonamedreturns,revive // named returns clarify multi-value return; 5 return values needed.
 func parseNodeOnly(line string) (id string, label *string, shape *ir.NodeShape, classes []string, ok bool) {
 	if strings.Contains(line, "--") {
 		return "", nil, nil, nil, false

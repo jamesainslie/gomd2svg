@@ -10,8 +10,8 @@ import (
 
 // renderBlock renders a block diagram: edges behind nodes, each node colored
 // by cycling through the theme's BlockColors palette.
-func renderBlock(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.Layout) {
-	_, ok := l.Diagram.(layout.BlockData)
+func renderBlock(builder *svgBuilder, lay *layout.Layout, th *theme.Theme, _ *config.Layout) {
+	_, ok := lay.Diagram.(layout.BlockData)
 	if !ok {
 		return
 	}
@@ -27,34 +27,34 @@ func renderBlock(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.L
 	}
 
 	// Render edges first so they appear behind nodes.
-	renderEdges(b, l, th)
+	renderEdges(builder, lay, th)
 
 	// Sort node IDs for deterministic output.
-	ids := make([]string, 0, len(l.Nodes))
-	for id := range l.Nodes {
+	ids := make([]string, 0, len(lay.Nodes))
+	for id := range lay.Nodes {
 		ids = append(ids, id)
 	}
 	sort.Strings(ids)
 
 	// Render each node using renderNodeShape with color cycling.
 	for i, id := range ids {
-		n := l.Nodes[id]
+		node := lay.Nodes[id]
 
 		fill := colors[i%len(colors)]
-		if n.Style.Fill != nil {
-			fill = *n.Style.Fill
+		if node.Style.Fill != nil {
+			fill = *node.Style.Fill
 		}
 
 		stroke := borderColor
-		if n.Style.Stroke != nil {
-			stroke = *n.Style.Stroke
+		if node.Style.Stroke != nil {
+			stroke = *node.Style.Stroke
 		}
 
 		textColor := th.PrimaryTextColor
-		if n.Style.TextColor != nil {
-			textColor = *n.Style.TextColor
+		if node.Style.TextColor != nil {
+			textColor = *node.Style.TextColor
 		}
 
-		renderNodeShape(b, n, fill, stroke, textColor)
+		renderNodeShape(builder, node, fill, stroke, textColor)
 	}
 }

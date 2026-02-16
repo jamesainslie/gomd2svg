@@ -11,45 +11,61 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
+// Gantt chart layout constants.
+const (
+	ganttHoursPerDay      = 24
+	ganttDaysPerWeek      = 7
+	ganttTitlePadding     = 10
+	ganttPixelsPerDay     = 20
+	ganttMinChartWidth    = 200
+	ganttMaxChartWidth    = 2000
+	ganttDailyTickLimit   = 14
+	ganttMonthlyTickLimit = 90
+	ganttMonthlyTickDays  = 30
+)
+
 var ganttDurationRe = regexp.MustCompile(`^(\d+)([dwmhDWMH])$`)
 
 // mermaidDateToGoLayout converts mermaid dateFormat tokens to Go time layout.
 func mermaidDateToGoLayout(format string) string {
-	r := strings.NewReplacer(
+	replacer := strings.NewReplacer(
 		"YYYY", "2006", "YY", "06",
 		"MM", "01", "DD", "02",
 		"HH", "15", "mm", "04", "ss", "05",
 	)
-	return r.Replace(format)
+	return replacer.Replace(format)
 }
 
 // parseMermaidDuration converts a mermaid duration string to time.Duration.
-func parseMermaidDuration(s string) time.Duration {
-	m := ganttDurationRe.FindStringSubmatch(s)
-	if m == nil {
+func parseMermaidDuration(durStr string) time.Duration {
+	match := ganttDurationRe.FindStringSubmatch(durStr)
+	if match == nil {
 		return 0
 	}
-	n, _ := strconv.Atoi(m[1]) // regex guarantees digits
-	switch strings.ToLower(m[2]) {
+	count, err := strconv.Atoi(match[1]) // regex guarantees digits
+	if err != nil {
+		return 0
+	}
+	switch strings.ToLower(match[2]) {
 	case "d":
-		return time.Duration(n) * 24 * time.Hour
+		return time.Duration(count) * ganttHoursPerDay * time.Hour
 	case "w":
-		return time.Duration(n) * 7 * 24 * time.Hour
+		return time.Duration(count) * ganttDaysPerWeek * ganttHoursPerDay * time.Hour
 	case "h":
-		return time.Duration(n) * time.Hour
+		return time.Duration(count) * time.Hour
 	case "m":
-		return time.Duration(n) * time.Minute
+		return time.Duration(count) * time.Minute
 	default:
 		return 0
 	}
 }
 
 // isExcluded checks if a date should be excluded based on the excludes list.
-func isExcluded(t time.Time, excludes []string, goLayout string) bool {
-	dayName := strings.ToLower(t.Weekday().String())
+func isExcluded(checkTime time.Time, excludes []string, goLayout string) bool {
+	dayName := strings.ToLower(checkTime.Weekday().String())
 	for _, ex := range excludes {
 		ex = strings.ToLower(strings.TrimSpace(ex))
-		if ex == "weekends" && (t.Weekday() == time.Saturday || t.Weekday() == time.Sunday) {
+		if ex == "weekends" && (checkTime.Weekday() == time.Saturday || checkTime.Weekday() == time.Sunday) {
 			return true
 		}
 		if ex == dayName {
@@ -57,7 +73,7 @@ func isExcluded(t time.Time, excludes []string, goLayout string) bool {
 		}
 		// Try parsing as a date.
 		if exDate, err := time.Parse(goLayout, ex); err == nil {
-			if t.Year() == exDate.Year() && t.YearDay() == exDate.YearDay() {
+			if checkTime.Year() == exDate.Year() && checkTime.YearDay() == exDate.YearDay() {
 				return true
 			}
 		}
@@ -68,17 +84,17 @@ func isExcluded(t time.Time, excludes []string, goLayout string) bool {
 // addWorkingDays adds n working days to start, skipping excluded days.
 func addWorkingDays(start time.Time, days int, excludes []string, goLayout string) time.Time {
 	if len(excludes) == 0 {
-		return start.Add(time.Duration(days) * 24 * time.Hour)
+		return start.Add(time.Duration(days) * ganttHoursPerDay * time.Hour)
 	}
-	t := start
+	current := start
 	added := 0
 	for added < days {
-		t = t.Add(24 * time.Hour)
-		if !isExcluded(t, excludes, goLayout) {
+		current = current.Add(ganttHoursPerDay * time.Hour)
+		if !isExcluded(current, excludes, goLayout) {
 			added++
 		}
 	}
-	return t
+	return current
 }
 
 type resolvedTask struct {
@@ -86,8 +102,8 @@ type resolvedTask struct {
 	End   time.Time
 }
 
-func computeGanttLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
-	goLayout := mermaidDateToGoLayout(g.GanttDateFormat)
+func computeGanttLayout(graph *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
+	goLayout := mermaidDateToGoLayout(graph.GanttDateFormat)
 	sidePad := cfg.Gantt.SidePadding
 	topPad := cfg.Gantt.TopPadding
 	barH := cfg.Gantt.BarHeight
@@ -95,13 +111,17 @@ func computeGanttLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layou
 
 	// Title height.
 	var titleHeight float32
-	if g.GanttTitle != "" {
-		titleHeight = th.FontSize + 10
+	if graph.GanttTitle != "" {
+		titleHeight = th.FontSize + ganttTitlePadding
 	}
 
 	// Collect all tasks in order for resolution.
-	var allTasks []*ir.GanttTask
-	for _, sec := range g.GanttSections {
+	totalTaskCount := 0
+	for _, sec := range graph.GanttSections {
+		totalTaskCount += len(sec.Tasks)
+	}
+	allTasks := make([]*ir.GanttTask, 0, totalTaskCount)
+	for _, sec := range graph.GanttSections {
 		allTasks = append(allTasks, sec.Tasks...)
 	}
 
@@ -110,7 +130,7 @@ func computeGanttLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layou
 	var prevEnd time.Time
 
 	for _, task := range allTasks {
-		start, end := resolveGanttTaskDates(task, resolved, &prevEnd, goLayout, g.GanttExcludes)
+		start, end := resolveGanttTaskDates(task, resolved, &prevEnd, goLayout, graph.GanttExcludes)
 		if task.ID != "" {
 			resolved[task.ID] = resolvedTask{Start: start, End: end}
 		}
@@ -118,54 +138,54 @@ func computeGanttLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layou
 	}
 
 	// Find global date range.
-	minDate, maxDate := ganttDateRange(allTasks, resolved, goLayout, g.GanttExcludes)
+	minDate, maxDate := ganttDateRange(allTasks, resolved, goLayout, graph.GanttExcludes)
 
-	totalDays := maxDate.Sub(minDate).Hours() / 24
+	totalDays := maxDate.Sub(minDate).Hours() / ganttHoursPerDay
 	if totalDays < 1 {
 		totalDays = 1
 	}
 
-	chartW := float32(totalDays) * 20 // 20px per day
-	if chartW < 200 {
-		chartW = 200
+	chartW := float32(totalDays) * ganttPixelsPerDay
+	if chartW < ganttMinChartWidth {
+		chartW = ganttMinChartWidth
 	}
-	if chartW > 2000 {
-		chartW = 2000
+	if chartW > ganttMaxChartWidth {
+		chartW = ganttMaxChartWidth
 	}
 
 	chartX := sidePad
 	chartY := titleHeight + topPad
 
 	// dateToX converts a date to an X pixel position.
-	dateToX := func(t time.Time) float32 {
-		days := t.Sub(minDate).Hours() / 24
+	dateToX := func(dateVal time.Time) float32 {
+		days := dateVal.Sub(minDate).Hours() / ganttHoursPerDay
 		return chartX + float32(days/totalDays)*chartW
 	}
 
 	// Build sections and tasks.
-	var sections []GanttSectionLayout
+	sections := make([]GanttSectionLayout, 0, len(graph.GanttSections))
 	curY := chartY
 	prevEnd = time.Time{}
 
-	for i, sec := range g.GanttSections {
-		var tasks []GanttTaskLayout
+	for secIdx, sec := range graph.GanttSections {
+		tasks := make([]GanttTaskLayout, 0, len(sec.Tasks))
 		secStartY := curY
 
 		for _, task := range sec.Tasks {
-			start, end := resolveGanttTaskDates(task, resolved, &prevEnd, goLayout, g.GanttExcludes)
+			start, end := resolveGanttTaskDates(task, resolved, &prevEnd, goLayout, graph.GanttExcludes)
 
-			x := dateToX(start)
-			w := dateToX(end) - x
-			if w < 1 {
-				w = 1
+			taskX := dateToX(start)
+			taskW := dateToX(end) - taskX
+			if taskW < 1 {
+				taskW = 1
 			}
 
 			tasks = append(tasks, GanttTaskLayout{
 				ID:          task.ID,
 				Label:       task.Label,
-				X:           x,
+				X:           taskX,
 				Y:           curY,
-				Width:       w,
+				Width:       taskW,
 				Height:      barH,
 				IsCrit:      hasTag(task.Tags, "crit"),
 				IsDone:      hasTag(task.Tags, "done"),
@@ -180,7 +200,7 @@ func computeGanttLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layou
 		secH := curY - secStartY
 		color := "#F0F4F8" // fallback
 		if len(th.GanttSectionColors) > 0 {
-			color = th.GanttSectionColors[i%len(th.GanttSectionColors)]
+			color = th.GanttSectionColors[secIdx%len(th.GanttSectionColors)]
 		}
 		sections = append(sections, GanttSectionLayout{
 			Title:  sec.Title,
@@ -193,22 +213,22 @@ func computeGanttLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layou
 
 	// Axis ticks.
 	var axisTicks []GanttAxisTick
-	tickDays := 7
-	if totalDays < 14 {
+	tickDays := ganttDaysPerWeek
+	if totalDays < ganttDailyTickLimit {
 		tickDays = 1
-	} else if totalDays > 90 {
-		tickDays = 30
+	} else if totalDays > ganttMonthlyTickLimit {
+		tickDays = ganttMonthlyTickDays
 	}
-	for d := minDate; !d.After(maxDate); d = d.AddDate(0, 0, tickDays) {
+	for dateVal := minDate; !dateVal.After(maxDate); dateVal = dateVal.AddDate(0, 0, tickDays) {
 		axisTicks = append(axisTicks, GanttAxisTick{
-			Label: d.Format("2006-01-02"),
-			X:     dateToX(d),
+			Label: dateVal.Format("2006-01-02"),
+			X:     dateToX(dateVal),
 		})
 	}
 
 	// Today marker.
 	today := time.Now()
-	showToday := g.GanttTodayMarker != "off" && !today.Before(minDate) && !today.After(maxDate)
+	showToday := graph.GanttTodayMarker != "off" && !today.Before(minDate) && !today.After(maxDate)
 	var todayX float32
 	if showToday {
 		todayX = dateToX(today)
@@ -218,13 +238,13 @@ func computeGanttLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layou
 	totalH := curY + topPad
 
 	return &Layout{
-		Kind:   g.Kind,
+		Kind:   graph.Kind,
 		Nodes:  map[string]*NodeLayout{},
 		Width:  totalW,
 		Height: totalH,
 		Diagram: GanttData{
 			Sections:        sections,
-			Title:           g.GanttTitle,
+			Title:           graph.GanttTitle,
 			AxisTicks:       axisTicks,
 			TodayMarkerX:    todayX,
 			ShowTodayMarker: showToday,
@@ -257,8 +277,8 @@ func resolveGanttTaskDates(task *ir.GanttTask, resolved map[string]resolvedTask,
 			}
 		}
 	} else if task.StartStr != "" && !strings.HasPrefix(strings.ToLower(task.StartStr), "after ") {
-		if t, err := time.Parse(goLayout, task.StartStr); err == nil {
-			start = t
+		if parsed, err := time.Parse(goLayout, task.StartStr); err == nil {
+			start = parsed
 		}
 	}
 
@@ -272,16 +292,16 @@ func resolveGanttTaskDates(task *ir.GanttTask, resolved map[string]resolvedTask,
 	// Resolve end.
 	dur := parseMermaidDuration(task.EndStr)
 	if dur > 0 {
-		days := int(dur.Hours() / 24)
+		days := int(dur.Hours() / ganttHoursPerDay)
 		if days > 0 {
 			end = addWorkingDays(start, days, excludes, goLayout)
 		} else {
 			end = start.Add(dur)
 		}
-	} else if t, err := time.Parse(goLayout, task.EndStr); err == nil {
-		end = t
+	} else if parsed, err := time.Parse(goLayout, task.EndStr); err == nil {
+		end = parsed
 	} else {
-		end = start.Add(24 * time.Hour)
+		end = start.Add(ganttHoursPerDay * time.Hour)
 	}
 
 	return start, end
@@ -309,14 +329,14 @@ func ganttDateRange(allTasks []*ir.GanttTask, resolved map[string]resolvedTask, 
 		minDate = time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	}
 	if maxDate.IsZero() || !maxDate.After(minDate) {
-		maxDate = minDate.Add(24 * time.Hour)
+		maxDate = minDate.Add(ganttHoursPerDay * time.Hour)
 	}
 	return minDate, maxDate
 }
 
 func hasTag(tags []string, tag string) bool {
-	for _, t := range tags {
-		if t == tag {
+	for _, tagVal := range tags {
+		if tagVal == tag {
 			return true
 		}
 	}

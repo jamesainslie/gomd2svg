@@ -9,11 +9,11 @@ import (
 )
 
 func TestGanttLayout(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Gantt
-	g.GanttDateFormat = "YYYY-MM-DD"
-	g.GanttTitle = "Project"
-	g.GanttSections = []*ir.GanttSection{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Gantt
+	graph.GanttDateFormat = "YYYY-MM-DD"
+	graph.GanttTitle = "Project"
+	graph.GanttSections = []*ir.GanttSection{
 		{
 			Title: "Dev",
 			Tasks: []*ir.GanttTask{
@@ -25,18 +25,18 @@ func TestGanttLayout(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	if l.Kind != ir.Gantt {
-		t.Errorf("Kind = %v, want Gantt", l.Kind)
+	if lay.Kind != ir.Gantt {
+		t.Errorf("Kind = %v, want Gantt", lay.Kind)
 	}
-	if l.Width <= 0 || l.Height <= 0 {
-		t.Errorf("dimensions = %f x %f", l.Width, l.Height)
+	if lay.Width <= 0 || lay.Height <= 0 {
+		t.Errorf("dimensions = %f x %f", lay.Width, lay.Height)
 	}
 
-	gd, ok := l.Diagram.(GanttData)
+	gd, ok := lay.Diagram.(GanttData)
 	if !ok {
-		t.Fatalf("Diagram type = %T, want GanttData", l.Diagram)
+		t.Fatalf("Diagram type = %T, want GanttData", lay.Diagram)
 	}
 	if len(gd.Sections) != 1 {
 		t.Fatalf("Sections = %d, want 1", len(gd.Sections))
@@ -55,10 +55,10 @@ func TestGanttLayout(t *testing.T) {
 }
 
 func TestGanttLayoutAfterDependency(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Gantt
-	g.GanttDateFormat = "YYYY-MM-DD"
-	g.GanttSections = []*ir.GanttSection{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Gantt
+	graph.GanttDateFormat = "YYYY-MM-DD"
+	graph.GanttSections = []*ir.GanttSection{
 		{
 			Tasks: []*ir.GanttTask{
 				{ID: "a", Label: "Task A", StartStr: "2024-01-01", EndStr: "5d"},
@@ -69,9 +69,12 @@ func TestGanttLayoutAfterDependency(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	gd := l.Diagram.(GanttData)
+	gd, ok := lay.Diagram.(GanttData)
+	if !ok {
+		t.Fatal("expected GanttData")
+	}
 	tasks := gd.Sections[0].Tasks
 	// Task B should start where Task A ends.
 	if tasks[1].X <= tasks[0].X+tasks[0].Width-1 {
@@ -80,10 +83,10 @@ func TestGanttLayoutAfterDependency(t *testing.T) {
 }
 
 func TestGanttLayoutMilestone(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Gantt
-	g.GanttDateFormat = "YYYY-MM-DD"
-	g.GanttSections = []*ir.GanttSection{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Gantt
+	graph.GanttDateFormat = "YYYY-MM-DD"
+	graph.GanttSections = []*ir.GanttSection{
 		{
 			Tasks: []*ir.GanttTask{
 				{Label: "Release", StartStr: "2024-02-01", EndStr: "0d", Tags: []string{"milestone"}},
@@ -93,9 +96,12 @@ func TestGanttLayoutMilestone(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	gd := l.Diagram.(GanttData)
+	gd, ok := lay.Diagram.(GanttData)
+	if !ok {
+		t.Fatal("expected GanttData")
+	}
 	task := gd.Sections[0].Tasks[0]
 	if !task.IsMilestone {
 		t.Error("expected milestone flag")
@@ -103,11 +109,11 @@ func TestGanttLayoutMilestone(t *testing.T) {
 }
 
 func TestGanttLayoutExcludesWeekends(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Gantt
-	g.GanttDateFormat = "YYYY-MM-DD"
-	g.GanttExcludes = []string{"weekends"}
-	g.GanttSections = []*ir.GanttSection{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Gantt
+	graph.GanttDateFormat = "YYYY-MM-DD"
+	graph.GanttExcludes = []string{"weekends"}
+	graph.GanttSections = []*ir.GanttSection{
 		{
 			Tasks: []*ir.GanttTask{
 				{ID: "t1", Label: "Work", StartStr: "2024-01-01", EndStr: "5d"},
@@ -117,10 +123,10 @@ func TestGanttLayoutExcludesWeekends(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
 	// Should succeed without panic.
-	if l.Width <= 0 {
-		t.Errorf("Width = %f", l.Width)
+	if lay.Width <= 0 {
+		t.Errorf("Width = %f", lay.Width)
 	}
 }

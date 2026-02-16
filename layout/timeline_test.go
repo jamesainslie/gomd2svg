@@ -9,10 +9,10 @@ import (
 )
 
 func TestTimelineLayout(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Timeline
-	g.TimelineTitle = "History"
-	g.TimelineSections = []*ir.TimelineSection{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Timeline
+	graph.TimelineTitle = "History"
+	graph.TimelineSections = []*ir.TimelineSection{
 		{
 			Title: "Early",
 			Periods: []*ir.TimelinePeriod{
@@ -24,18 +24,18 @@ func TestTimelineLayout(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	if l.Kind != ir.Timeline {
-		t.Errorf("Kind = %v, want Timeline", l.Kind)
+	if lay.Kind != ir.Timeline {
+		t.Errorf("Kind = %v, want Timeline", lay.Kind)
 	}
-	if l.Width <= 0 || l.Height <= 0 {
-		t.Errorf("dimensions = %f x %f", l.Width, l.Height)
+	if lay.Width <= 0 || lay.Height <= 0 {
+		t.Errorf("dimensions = %f x %f", lay.Width, lay.Height)
 	}
 
-	td, ok := l.Diagram.(TimelineData)
+	td, ok := lay.Diagram.(TimelineData)
 	if !ok {
-		t.Fatalf("Diagram type = %T, want TimelineData", l.Diagram)
+		t.Fatalf("Diagram type = %T, want TimelineData", lay.Diagram)
 	}
 	if len(td.Sections) != 1 {
 		t.Fatalf("Sections = %d, want 1", len(td.Sections))
@@ -52,9 +52,9 @@ func TestTimelineLayout(t *testing.T) {
 }
 
 func TestTimelineLayoutMultipleSections(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Timeline
-	g.TimelineSections = []*ir.TimelineSection{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Timeline
+	graph.TimelineSections = []*ir.TimelineSection{
 		{Title: "S1", Periods: []*ir.TimelinePeriod{
 			{Title: "P1", Events: []*ir.TimelineEvent{{Text: "E1"}}},
 		}},
@@ -65,9 +65,12 @@ func TestTimelineLayoutMultipleSections(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	td := l.Diagram.(TimelineData)
+	td, ok := lay.Diagram.(TimelineData)
+	if !ok {
+		t.Fatal("expected TimelineData")
+	}
 	if len(td.Sections) != 2 {
 		t.Fatalf("Sections = %d, want 2", len(td.Sections))
 	}

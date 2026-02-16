@@ -11,32 +11,32 @@ import (
 // at rank 0. When a cycle is detected (queue empties but unranked nodes
 // remain), the unranked node with the lowest nodeOrder is forced into the
 // queue to break the cycle.
-func computeRanks(nodes []string, edges []*ir.Edge, nodeOrder map[string]int) map[string]int {
+func computeRanks(nodes []string, edges []*ir.Edge, nodeOrder map[string]int) map[string]int { //nolint:gocognit // ranking algorithm requires sequential state tracking
 	// Build adjacency list and in-degree map.
 	adj := make(map[string][]string)
 	inDegree := make(map[string]int)
 	predecessors := make(map[string][]string)
 
 	nodeSet := make(map[string]bool, len(nodes))
-	for _, n := range nodes {
-		nodeSet[n] = true
-		inDegree[n] = 0
+	for _, nodeID := range nodes {
+		nodeSet[nodeID] = true
+		inDegree[nodeID] = 0
 	}
 
-	for _, e := range edges {
-		if !nodeSet[e.From] || !nodeSet[e.To] {
+	for _, edge := range edges {
+		if !nodeSet[edge.From] || !nodeSet[edge.To] {
 			continue
 		}
-		adj[e.From] = append(adj[e.From], e.To)
-		inDegree[e.To]++
-		predecessors[e.To] = append(predecessors[e.To], e.From)
+		adj[edge.From] = append(adj[edge.From], edge.To)
+		inDegree[edge.To]++
+		predecessors[edge.To] = append(predecessors[edge.To], edge.From)
 	}
 
 	// Initialize the queue with all nodes that have in-degree 0.
 	var queue []string
-	for _, n := range nodes {
-		if inDegree[n] == 0 {
-			queue = append(queue, n)
+	for _, nodeID := range nodes {
+		if inDegree[nodeID] == 0 {
+			queue = append(queue, nodeID)
 		}
 	}
 
@@ -47,30 +47,17 @@ func computeRanks(nodes []string, edges []*ir.Edge, nodeOrder map[string]int) ma
 		// If queue is empty but we have unprocessed nodes, we have a cycle.
 		// Break it by picking the unranked node with the lowest nodeOrder.
 		if len(queue) == 0 {
-			var best string
-			bestOrder := int(^uint(0) >> 1) // max int
-			for _, n := range nodes {
-				if _, ranked := ranks[n]; ranked {
-					continue
-				}
-				order, ok := nodeOrder[n]
-				if !ok {
-					order = 0
-				}
-				if best == "" || order < bestOrder {
-					best = n
-					bestOrder = order
-				}
-			}
+			best, bestOrder := computeRanksFindBestCycleBreak(nodes, ranks, nodeOrder)
 			if best == "" {
 				break // safety: should not happen
 			}
+			_ = bestOrder // used only for selection
 			queue = append(queue, best)
 			// The forced node gets rank 0 (or max of its already-ranked predecessors + 1).
 			rank := 0
 			for _, pred := range predecessors[best] {
-				if pr, ok := ranks[pred]; ok && pr+1 > rank {
-					rank = pr + 1
+				if predRank, ok := ranks[pred]; ok && predRank+1 > rank {
+					rank = predRank + 1
 				}
 			}
 			ranks[best] = rank
@@ -101,8 +88,8 @@ func computeRanks(nodes []string, edges []*ir.Edge, nodeOrder map[string]int) ma
 		// Rank = max(predecessor_rank) + 1, or 0 if no predecessors.
 		rank := 0
 		for _, pred := range predecessors[curr] {
-			if pr, ok := ranks[pred]; ok && pr+1 > rank {
-				rank = pr + 1
+			if predRank, ok := ranks[pred]; ok && predRank+1 > rank {
+				rank = predRank + 1
 			}
 		}
 		ranks[curr] = rank
@@ -122,19 +109,40 @@ func computeRanks(nodes []string, edges []*ir.Edge, nodeOrder map[string]int) ma
 	return ranks
 }
 
+// computeRanksFindBestCycleBreak finds the unranked node with the lowest
+// nodeOrder to break a cycle in the ranking algorithm.
+func computeRanksFindBestCycleBreak(nodes []string, ranks map[string]int, nodeOrder map[string]int) (string, int) {
+	var best string
+	bestOrder := int(^uint(0) >> 1) // max int
+	for _, nodeID := range nodes {
+		if _, ranked := ranks[nodeID]; ranked {
+			continue
+		}
+		order, ok := nodeOrder[nodeID]
+		if !ok {
+			order = 0
+		}
+		if best == "" || order < bestOrder {
+			best = nodeID
+			bestOrder = order
+		}
+	}
+	return best, bestOrder
+}
+
 // sortedNodeIDs returns the node IDs from a map, sorted by their nodeOrder.
 func sortedNodeIDs(nodes map[string]*ir.Node, nodeOrder map[string]int) []string {
 	ids := make([]string, 0, len(nodes))
 	for id := range nodes {
 		ids = append(ids, id)
 	}
-	sort.Slice(ids, func(i, j int) bool {
-		oi := nodeOrder[ids[i]]
-		oj := nodeOrder[ids[j]]
-		if oi != oj {
-			return oi < oj
+	sort.Slice(ids, func(idxA, idxB int) bool {
+		orderA := nodeOrder[ids[idxA]]
+		orderB := nodeOrder[ids[idxB]]
+		if orderA != orderB {
+			return orderA < orderB
 		}
-		return ids[i] < ids[j]
+		return ids[idxA] < ids[idxB]
 	})
 	return ids
 }

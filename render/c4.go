@@ -10,86 +10,105 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
+// C4 diagram rendering constants.
+const (
+	c4SmallFontScale      float32 = 0.85
+	c4BoundaryRadius      float32 = 4
+	c4BoundaryLabelOffset float32 = 8
+	c4BoundaryLabelY      float32 = 16
+	c4BoundaryTypeY       float32 = 30
+	c4BoundaryFontScale   float32 = 0.9
+	c4BoundaryTypeFScale  float32 = 0.8
+	c4NodeBorderRadius    float32 = 6
+	c4TextBaselineShift   float32 = 0.25
+	c4PersonTextOffsetY   float32 = 50
+	c4PersonNodeRadius    float32 = 6
+	c4PersonHeadRadius    float32 = 12
+	c4PersonHeadCenterY   float32 = 18
+	c4PersonBodyWidth     float32 = 20
+	c4PersonBodyArcHeight float32 = 24
+)
+
 // renderC4 renders all C4 diagram elements: boundaries, edges, and element nodes
 // with type-specific colors and person icons.
-func renderC4(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.Layout) {
-	cd, ok := l.Diagram.(layout.C4Data)
+func renderC4(builder *svgBuilder, lay *layout.Layout, th *theme.Theme, cfg *config.Layout) {
+	cd, ok := lay.Diagram.(layout.C4Data)
 	if !ok {
 		return
 	}
 
-	smallFontSize := th.FontSize * 0.85
+	smallFontSize := th.FontSize * c4SmallFontScale
 	lineH := th.FontSize * cfg.LabelLineHeight
 	smallLineH := smallFontSize * cfg.LabelLineHeight
 
 	// 1. Render boundaries first (behind everything).
 	for _, boundary := range cd.Boundaries {
 		// Dashed rectangle.
-		b.rect(boundary.X, boundary.Y, boundary.Width, boundary.Height, 4,
+		builder.rect(boundary.X, boundary.Y, boundary.Width, boundary.Height, c4BoundaryRadius,
 			"fill", "none",
 			"stroke", th.C4BoundaryColor,
 			"stroke-width", "1",
 			"stroke-dasharray", "5,5",
 		)
 		// Boundary label at top-left.
-		b.text(boundary.X+8, boundary.Y+16, boundary.Label,
+		builder.text(boundary.X+c4BoundaryLabelOffset, boundary.Y+c4BoundaryLabelY, boundary.Label,
 			"font-family", th.FontFamily,
-			"font-size", fmtFloat(th.FontSize*0.9),
+			"font-size", fmtFloat(th.FontSize*c4BoundaryFontScale),
 			"fill", th.C4BoundaryColor,
 			"font-weight", "bold",
 		)
 		// Type subtitle.
 		if boundary.Type != "" {
-			b.text(boundary.X+8, boundary.Y+30, "["+boundary.Type+"]",
+			builder.text(boundary.X+c4BoundaryLabelOffset, boundary.Y+c4BoundaryTypeY, "["+boundary.Type+"]",
 				"font-family", th.FontFamily,
-				"font-size", fmtFloat(th.FontSize*0.8),
+				"font-size", fmtFloat(th.FontSize*c4BoundaryTypeFScale),
 				"fill", th.C4BoundaryColor,
 			)
 		}
 	}
 
 	// 2. Render edges.
-	renderEdges(b, l, th)
+	renderEdges(builder, lay, th)
 
 	// 3. Render nodes (elements) sorted by ID for deterministic order.
-	ids := make([]string, 0, len(l.Nodes))
-	for id := range l.Nodes {
+	ids := make([]string, 0, len(lay.Nodes))
+	for id := range lay.Nodes {
 		ids = append(ids, id)
 	}
 	sort.Strings(ids)
 
 	for _, id := range ids {
-		n := l.Nodes[id]
+		node := lay.Nodes[id]
 		elem := cd.Elements[id]
 
 		color := c4ElementColor(elem, th)
 
 		// Top-left from center coordinates.
-		x := n.X - n.Width/2
-		y := n.Y - n.Height/2
+		posX := node.X - node.Width/2
+		posY := node.Y - node.Height/2
 
 		if elem != nil && elem.Type.IsPerson() {
-			renderC4Person(b, x, y, n.Width, n.Height, color, th)
+			renderC4Person(builder, posX, posY, node.Width, node.Height, color, th)
 		} else {
 			// Rounded rectangle for non-person elements.
-			b.rect(x, y, n.Width, n.Height, 6,
+			builder.rect(posX, posY, node.Width, node.Height, c4NodeBorderRadius,
 				"fill", color,
 				"stroke", "none",
 			)
 		}
 
 		// Render text inside the element.
-		cx := n.X
-		curY := y + n.Height/2 - lineH*0.25
+		cx := node.X
+		curY := posY + node.Height/2 - lineH*c4TextBaselineShift
 
 		// For person elements, shift text down to account for the icon.
 		if elem != nil && elem.Type.IsPerson() {
-			curY = y + 50
+			curY = posY + c4PersonTextOffsetY
 		}
 
 		// Label (bold, white).
-		if len(n.Label.Lines) > 0 {
-			b.text(cx, curY, n.Label.Lines[0],
+		if len(node.Label.Lines) > 0 {
+			builder.text(cx, curY, node.Label.Lines[0],
 				"text-anchor", "middle",
 				"font-family", th.FontFamily,
 				"font-size", fmtFloat(th.FontSize),
@@ -102,7 +121,7 @@ func renderC4(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.Layo
 		if elem != nil {
 			// Technology line in brackets.
 			if elem.Technology != "" {
-				b.text(cx, curY, fmt.Sprintf("[%s]", elem.Technology),
+				builder.text(cx, curY, fmt.Sprintf("[%s]", elem.Technology),
 					"text-anchor", "middle",
 					"font-family", th.FontFamily,
 					"font-size", fmtFloat(smallFontSize),
@@ -113,7 +132,7 @@ func renderC4(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.Layo
 
 			// Description line.
 			if elem.Description != "" {
-				b.text(cx, curY, elem.Description,
+				builder.text(cx, curY, elem.Description,
 					"text-anchor", "middle",
 					"font-family", th.FontFamily,
 					"font-size", fmtFloat(smallFontSize),
@@ -126,30 +145,28 @@ func renderC4(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.Layo
 
 // renderC4Person draws a C4 person shape: a filled rounded rectangle with a
 // person icon (circle head + arc body) centered at the top.
-func renderC4Person(b *svgBuilder, x, y, w, h float32, color string, th *theme.Theme) {
+func renderC4Person(builder *svgBuilder, posX, posY, width, height float32, color string, th *theme.Theme) {
 	// Body rectangle (rounded).
-	b.rect(x, y, w, h, 6,
+	builder.rect(posX, posY, width, height, c4PersonNodeRadius,
 		"fill", color,
 		"stroke", "none",
 	)
 
 	// Person icon: head circle.
-	cx := x + w/2
-	headR := float32(12)
-	headCY := y + 18
-	b.circle(cx, headCY, headR,
+	cx := posX + width/2
+	headCY := posY + c4PersonHeadCenterY
+	builder.circle(cx, headCY, c4PersonHeadRadius,
 		"fill", th.C4TextColor,
 	)
 
 	// Person icon: body arc (simple path).
-	bodyTop := headCY + headR + 2
-	bodyW := float32(20)
-	d := fmt.Sprintf("M %s,%s Q %s,%s %s,%s",
-		fmtFloat(cx-bodyW), fmtFloat(bodyTop),
-		fmtFloat(cx), fmtFloat(bodyTop+24),
-		fmtFloat(cx+bodyW), fmtFloat(bodyTop),
+	bodyTop := headCY + c4PersonHeadRadius + 2
+	pathData := fmt.Sprintf("M %s,%s Q %s,%s %s,%s",
+		fmtFloat(cx-c4PersonBodyWidth), fmtFloat(bodyTop),
+		fmtFloat(cx), fmtFloat(bodyTop+c4PersonBodyArcHeight),
+		fmtFloat(cx+c4PersonBodyWidth), fmtFloat(bodyTop),
 	)
-	b.path(d,
+	builder.path(pathData,
 		"fill", "none",
 		"stroke", th.C4TextColor,
 		"stroke-width", "2",

@@ -16,9 +16,9 @@ func (p KanbanPriority) String() string {
 	case PriorityVeryLow:
 		return "Very Low"
 	case PriorityLow:
-		return "Low"
+		return labelLow
 	case PriorityHigh:
-		return "High"
+		return labelHigh
 	case PriorityVeryHigh:
 		return "Very High"
 	default:

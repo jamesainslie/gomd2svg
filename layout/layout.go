@@ -9,31 +9,31 @@ import (
 
 // ComputeLayout dispatches to the appropriate layout algorithm based on
 // the diagram kind and sets the diagram title on the result.
-func ComputeLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
-	l := computeLayout(g, th, cfg)
-	l.Title = diagramTitle(g)
-	return l
+func ComputeLayout(graph *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
+	lay := computeLayout(graph, th, cfg)
+	lay.Title = diagramTitle(graph)
+	return lay
 }
 
 // diagramTitle extracts the title from diagram-kind-specific fields on the graph.
-func diagramTitle(g *ir.Graph) string {
-	switch g.Kind {
+func diagramTitle(graph *ir.Graph) string {
+	switch graph.Kind {
 	case ir.Pie:
-		return g.PieTitle
+		return graph.PieTitle
 	case ir.Quadrant:
-		return g.QuadrantTitle
+		return graph.QuadrantTitle
 	case ir.Timeline:
-		return g.TimelineTitle
+		return graph.TimelineTitle
 	case ir.Gantt:
-		return g.GanttTitle
+		return graph.GanttTitle
 	case ir.XYChart:
-		return g.XYTitle
+		return graph.XYTitle
 	case ir.Radar:
-		return g.RadarTitle
+		return graph.RadarTitle
 	case ir.Treemap:
-		return g.TreemapTitle
+		return graph.TreemapTitle
 	case ir.Journey:
-		return g.JourneyTitle
+		return graph.JourneyTitle
 	default:
 		return ""
 	}
@@ -41,57 +41,57 @@ func diagramTitle(g *ir.Graph) string {
 
 // computeLayout dispatches to the appropriate layout algorithm based on
 // the diagram kind.
-func computeLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
-	switch g.Kind {
+func computeLayout(graph *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
+	switch graph.Kind {
 	case ir.Flowchart:
-		return computeGraphLayout(g, th, cfg)
+		return computeGraphLayout(graph, th, cfg)
 	case ir.Class:
-		return computeClassLayout(g, th, cfg)
+		return computeClassLayout(graph, th, cfg)
 	case ir.Er:
-		return computeERLayout(g, th, cfg)
+		return computeERLayout(graph, th, cfg)
 	case ir.State:
-		return computeStateLayout(g, th, cfg)
+		return computeStateLayout(graph, th, cfg)
 	case ir.Sequence:
-		return computeSequenceLayout(g, th, cfg)
+		return computeSequenceLayout(graph, th, cfg)
 	case ir.Kanban:
-		return computeKanbanLayout(g, th, cfg)
+		return computeKanbanLayout(graph, th, cfg)
 	case ir.Packet:
-		return computePacketLayout(g, th, cfg)
+		return computePacketLayout(graph, th, cfg)
 	case ir.Pie:
-		return computePieLayout(g, th, cfg)
+		return computePieLayout(graph, th, cfg)
 	case ir.Quadrant:
-		return computeQuadrantLayout(g, th, cfg)
+		return computeQuadrantLayout(graph, th, cfg)
 	case ir.Timeline:
-		return computeTimelineLayout(g, th, cfg)
+		return computeTimelineLayout(graph, th, cfg)
 	case ir.Gantt:
-		return computeGanttLayout(g, th, cfg)
+		return computeGanttLayout(graph, th, cfg)
 	case ir.GitGraph:
-		return computeGitGraphLayout(g, th, cfg)
+		return computeGitGraphLayout(graph, th, cfg)
 	case ir.XYChart:
-		return computeXYChartLayout(g, th, cfg)
+		return computeXYChartLayout(graph, th, cfg)
 	case ir.Radar:
-		return computeRadarLayout(g, th, cfg)
+		return computeRadarLayout(graph, th, cfg)
 	case ir.Mindmap:
-		return computeMindmapLayout(g, th, cfg)
+		return computeMindmapLayout(graph, th, cfg)
 	case ir.Sankey:
-		return computeSankeyLayout(g, th, cfg)
+		return computeSankeyLayout(graph, th, cfg)
 	case ir.Treemap:
-		return computeTreemapLayout(g, th, cfg)
+		return computeTreemapLayout(graph, th, cfg)
 	case ir.Requirement:
-		return computeRequirementLayout(g, th, cfg)
+		return computeRequirementLayout(graph, th, cfg)
 	case ir.Block:
-		return computeBlockLayout(g, th, cfg)
+		return computeBlockLayout(graph, th, cfg)
 	case ir.C4:
-		return computeC4Layout(g, th, cfg)
+		return computeC4Layout(graph, th, cfg)
 	case ir.Journey:
-		return computeJourneyLayout(g, th, cfg)
+		return computeJourneyLayout(graph, th, cfg)
 	case ir.Architecture:
-		return computeArchitectureLayout(g, th, cfg)
+		return computeArchitectureLayout(graph, th, cfg)
 	case ir.ZenUML:
-		return computeSequenceLayout(g, th, cfg)
+		return computeSequenceLayout(graph, th, cfg)
 	default:
 		// For unsupported diagram kinds, return a minimal layout.
-		return computeGraphLayout(g, th, cfg)
+		return computeGraphLayout(graph, th, cfg)
 	}
 }
 
@@ -104,34 +104,34 @@ type sugiyamaResult struct {
 
 // runSugiyama runs the shared ranking, ordering, positioning, routing, and
 // bounding box pipeline steps.
-func runSugiyama(g *ir.Graph, nodes map[string]*NodeLayout, cfg *config.Layout) sugiyamaResult {
-	nodeIDs := sortedNodeIDs(g.Nodes, g.NodeOrder)
-	ranks := computeRanks(nodeIDs, g.Edges, g.NodeOrder)
-	layers := orderRankNodes(ranks, g.Edges, cfg.Flowchart.OrderPasses)
-	positionNodes(layers, nodes, g.Direction, cfg)
-	edges := routeEdges(g.Edges, nodes, g.Direction)
+func runSugiyama(graph *ir.Graph, nodes map[string]*NodeLayout, cfg *config.Layout) sugiyamaResult {
+	nodeIDs := sortedNodeIDs(graph.Nodes, graph.NodeOrder)
+	ranks := computeRanks(nodeIDs, graph.Edges, graph.NodeOrder)
+	layers := orderRankNodes(ranks, graph.Edges, cfg.Flowchart.OrderPasses)
+	positionNodes(layers, nodes, graph.Direction, cfg)
+	edges := routeEdges(graph.Edges, nodes, graph.Direction)
 	width, height := normalizeCoordinates(nodes, edges)
 	return sugiyamaResult{Edges: edges, Width: width, Height: height}
 }
 
 // computeGraphLayout runs the full Sugiyama-style layout pipeline:
-// 1. Size nodes based on text metrics
-// 2. Run Sugiyama ranking, ordering, positioning, routing, and bounding box
-func computeGraphLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
+// 1. Size nodes based on text metrics.
+// 2. Run Sugiyama ranking, ordering, positioning, routing, and bounding box.
+func computeGraphLayout(graph *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
 	measurer := textmetrics.New()
 
 	// Step 1: Size all nodes.
-	nodes := sizeNodes(g.Nodes, measurer, th, cfg)
+	nodes := sizeNodes(graph.Nodes, measurer, th, cfg)
 
 	// Step 2: Run Sugiyama pipeline.
-	r := runSugiyama(g, nodes, cfg)
+	result := runSugiyama(graph, nodes, cfg)
 
 	return &Layout{
-		Kind:    g.Kind,
+		Kind:    graph.Kind,
 		Nodes:   nodes,
-		Edges:   r.Edges,
-		Width:   r.Width,
-		Height:  r.Height,
+		Edges:   result.Edges,
+		Width:   result.Width,
+		Height:  result.Height,
 		Diagram: GraphData{},
 	}
 }
@@ -169,12 +169,12 @@ func normalizeCoordinates(nodes map[string]*NodeLayout, edges []*EdgeLayout) (fl
 		}
 	}
 
-	for _, n := range nodes {
-		expandBounds(n.X-n.Width/2, n.Y-n.Height/2, n.X+n.Width/2, n.Y+n.Height/2)
+	for _, node := range nodes {
+		expandBounds(node.X-node.Width/2, node.Y-node.Height/2, node.X+node.Width/2, node.Y+node.Height/2)
 	}
 
-	for _, e := range edges {
-		for _, pt := range e.Points {
+	for _, edge := range edges {
+		for _, pt := range edge.Points {
 			expandBounds(pt[0], pt[1], pt[0], pt[1])
 		}
 	}
@@ -184,19 +184,19 @@ func normalizeCoordinates(nodes map[string]*NodeLayout, edges []*EdgeLayout) (fl
 	dy := layoutBoundaryPad - minY
 
 	// Translate all nodes.
-	for _, n := range nodes {
-		n.X += dx
-		n.Y += dy
+	for _, node := range nodes {
+		node.X += dx
+		node.Y += dy
 	}
 
 	// Translate all edge points and label anchors.
-	for _, e := range edges {
-		for i := range e.Points {
-			e.Points[i][0] += dx
-			e.Points[i][1] += dy
+	for _, edge := range edges {
+		for idx := range edge.Points {
+			edge.Points[idx][0] += dx
+			edge.Points[idx][1] += dy
 		}
-		e.LabelAnchor[0] += dx
-		e.LabelAnchor[1] += dy
+		edge.LabelAnchor[0] += dx
+		edge.LabelAnchor[1] += dy
 	}
 
 	width := (maxX - minX) + 2*layoutBoundaryPad

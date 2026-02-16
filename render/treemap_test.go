@@ -11,10 +11,10 @@ import (
 )
 
 func TestRenderTreemap(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Treemap
-	g.TreemapTitle = "Budget"
-	g.TreemapRoot = &ir.TreemapNode{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Treemap
+	graph.TreemapTitle = "Budget"
+	graph.TreemapRoot = &ir.TreemapNode{
 		Label: "Root",
 		Children: []*ir.TreemapNode{
 			{Label: "Salaries", Value: 70},
@@ -24,7 +24,7 @@ func TestRenderTreemap(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "<svg") {
@@ -42,12 +42,12 @@ func TestRenderTreemap(t *testing.T) {
 }
 
 func TestRenderTreemapEmpty(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Treemap
+	graph := ir.NewGraph()
+	graph.Kind = ir.Treemap
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := layout.ComputeLayout(g, th, cfg)
+	l := layout.ComputeLayout(graph, th, cfg)
 	svg := RenderSVG(l, th, cfg)
 
 	if !strings.Contains(svg, "<svg") {

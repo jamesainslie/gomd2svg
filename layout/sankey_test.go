@@ -9,9 +9,9 @@ import (
 )
 
 func TestSankeyLayout(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Sankey
-	g.SankeyLinks = []*ir.SankeyLink{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Sankey
+	graph.SankeyLinks = []*ir.SankeyLink{
 		{Source: "A", Target: "X", Value: 100},
 		{Source: "A", Target: "Y", Value: 200},
 		{Source: "B", Target: "X", Value: 150},
@@ -19,13 +19,13 @@ func TestSankeyLayout(t *testing.T) {
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	if l.Width <= 0 || l.Height <= 0 {
-		t.Errorf("invalid dimensions: %v x %v", l.Width, l.Height)
+	if lay.Width <= 0 || lay.Height <= 0 {
+		t.Errorf("invalid dimensions: %v x %v", lay.Width, lay.Height)
 	}
 
-	sd, ok := l.Diagram.(SankeyData)
+	sd, ok := lay.Diagram.(SankeyData)
 	if !ok {
 		t.Fatal("Diagram is not SankeyData")
 	}
@@ -43,15 +43,15 @@ func TestSankeyLayout(t *testing.T) {
 }
 
 func TestSankeyLayoutEmpty(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Sankey
+	graph := ir.NewGraph()
+	graph.Kind = ir.Sankey
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := ComputeLayout(g, th, cfg)
+	lay := ComputeLayout(graph, th, cfg)
 
-	if l.Width <= 0 || l.Height <= 0 {
-		t.Errorf("invalid dimensions: %v x %v", l.Width, l.Height)
+	if lay.Width <= 0 || lay.Height <= 0 {
+		t.Errorf("invalid dimensions: %v x %v", lay.Width, lay.Height)
 	}
 }
 
@@ -128,18 +128,21 @@ func TestSankeyComputeFlow(t *testing.T) {
 }
 
 func TestSankeyLinkPositions(t *testing.T) {
-	g := ir.NewGraph()
-	g.Kind = ir.Sankey
-	g.SankeyLinks = []*ir.SankeyLink{
+	graph := ir.NewGraph()
+	graph.Kind = ir.Sankey
+	graph.SankeyLinks = []*ir.SankeyLink{
 		{Source: "A", Target: "X", Value: 100},
 		{Source: "A", Target: "Y", Value: 200},
 	}
 
 	th := theme.Modern()
 	cfg := config.DefaultLayout()
-	l := computeSankeyLayout(g, th, cfg)
+	lay := computeSankeyLayout(graph, th, cfg)
 
-	sd := l.Diagram.(SankeyData)
+	sd, ok := lay.Diagram.(SankeyData)
+	if !ok {
+		t.Fatal("expected SankeyData")
+	}
 
 	// Links from A should stack: second link's SourceY > first link's SourceY.
 	if sd.Links[1].SourceY <= sd.Links[0].SourceY {

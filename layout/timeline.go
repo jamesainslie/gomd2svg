@@ -6,7 +6,7 @@ import (
 	"github.com/jamesainslie/gomd2svg/theme"
 )
 
-func computeTimelineLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
+func computeTimelineLayout(graph *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
 	padX := cfg.Timeline.PaddingX
 	padY := cfg.Timeline.PaddingY
 	periodW := cfg.Timeline.PeriodWidth
@@ -15,13 +15,13 @@ func computeTimelineLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *La
 
 	// Title height.
 	var titleHeight float32
-	if g.TimelineTitle != "" {
+	if graph.TimelineTitle != "" {
 		titleHeight = th.FontSize + padY
 	}
 
 	// Count max periods across all sections for width.
 	var maxPeriods int
-	for _, sec := range g.TimelineSections {
+	for _, sec := range graph.TimelineSections {
 		if len(sec.Periods) > maxPeriods {
 			maxPeriods = len(sec.Periods)
 		}
@@ -29,7 +29,7 @@ func computeTimelineLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *La
 
 	// Section label width.
 	var sectionLabelWidth float32
-	for _, sec := range g.TimelineSections {
+	for _, sec := range graph.TimelineSections {
 		if sec.Title != "" {
 			sectionLabelWidth = padX * 3 // fixed width for labels
 			break
@@ -37,15 +37,15 @@ func computeTimelineLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *La
 	}
 
 	// Compute layout per section.
-	var sections []TimelineSectionLayout
+	sections := make([]TimelineSectionLayout, 0, len(graph.TimelineSections))
 	curY := titleHeight + padY
 
-	for i, sec := range g.TimelineSections {
+	for secIdx, sec := range graph.TimelineSections {
 		// Find max events in any period of this section.
 		var maxEvents int
-		for _, p := range sec.Periods {
-			if len(p.Events) > maxEvents {
-				maxEvents = len(p.Events)
+		for _, period := range sec.Periods {
+			if len(period.Events) > maxEvents {
+				maxEvents = len(period.Events)
 			}
 		}
 		if maxEvents == 0 {
@@ -57,26 +57,26 @@ func computeTimelineLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *La
 		// Color cycling.
 		color := "#F0F4F8" // fallback
 		if len(th.TimelineSectionColors) > 0 {
-			color = th.TimelineSectionColors[i%len(th.TimelineSectionColors)]
+			color = th.TimelineSectionColors[secIdx%len(th.TimelineSectionColors)]
 		}
 
-		var periods []TimelinePeriodLayout
-		for j, p := range sec.Periods {
-			px := padX + sectionLabelWidth + float32(j)*periodW
+		periods := make([]TimelinePeriodLayout, 0, len(sec.Periods))
+		for periodIdx, period := range sec.Periods {
+			px := padX + sectionLabelWidth + float32(periodIdx)*periodW
 
-			var events []TimelineEventLayout
-			for k, e := range p.Events {
+			events := make([]TimelineEventLayout, 0, len(period.Events))
+			for evIdx, ev := range period.Events {
 				events = append(events, TimelineEventLayout{
-					Text:   e.Text,
+					Text:   ev.Text,
 					X:      px + secPad,
-					Y:      curY + secPad + float32(k)*eventH,
+					Y:      curY + secPad + float32(evIdx)*eventH,
 					Width:  periodW - secPad*2,
 					Height: eventH,
 				})
 			}
 
 			periods = append(periods, TimelinePeriodLayout{
-				Title:  p.Title,
+				Title:  period.Title,
 				X:      px,
 				Y:      curY,
 				Width:  periodW,
@@ -102,13 +102,13 @@ func computeTimelineLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *La
 	totalH := curY + padY
 
 	return &Layout{
-		Kind:   g.Kind,
+		Kind:   graph.Kind,
 		Nodes:  map[string]*NodeLayout{},
 		Width:  totalW,
 		Height: totalH,
 		Diagram: TimelineData{
 			Sections: sections,
-			Title:    g.TimelineTitle,
+			Title:    graph.TimelineTitle,
 		},
 	}
 }

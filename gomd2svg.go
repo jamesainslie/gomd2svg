@@ -4,6 +4,7 @@
 package gomd2svg
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -21,7 +22,7 @@ func Render(input string) (string, error) {
 // RenderWithOptions parses a Mermaid diagram string and returns SVG output using the given options.
 func RenderWithOptions(input string, opts Options) (string, error) {
 	if strings.TrimSpace(input) == "" {
-		return "", fmt.Errorf("mermaid: empty input")
+		return "", errors.New("mermaid: empty input")
 	}
 
 	cfg := opts.layoutOrDefault()
@@ -40,7 +41,7 @@ func RenderWithOptions(input string, opts Options) (string, error) {
 // RenderWithTiming parses and renders a Mermaid diagram with per-stage timing.
 func RenderWithTiming(input string, opts Options) (*Result, error) {
 	if strings.TrimSpace(input) == "" {
-		return nil, fmt.Errorf("mermaid: empty input")
+		return nil, errors.New("mermaid: empty input")
 	}
 
 	cfg := opts.layoutOrDefault()

@@ -27,14 +27,14 @@ test_entity - satisfies -> test_req`
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
-	g := out.Graph
-	if g.Kind != ir.Requirement {
-		t.Fatalf("Kind = %v, want Requirement", g.Kind)
+	graph := out.Graph
+	if graph.Kind != ir.Requirement {
+		t.Fatalf("Kind = %v, want Requirement", graph.Kind)
 	}
-	if len(g.Requirements) != 1 {
-		t.Fatalf("Requirements = %d, want 1", len(g.Requirements))
+	if len(graph.Requirements) != 1 {
+		t.Fatalf("Requirements = %d, want 1", len(graph.Requirements))
 	}
-	req := g.Requirements[0]
+	req := graph.Requirements[0]
 	if req.Name != "test_req" {
 		t.Errorf("req name = %q", req.Name)
 	}
@@ -47,18 +47,18 @@ test_entity - satisfies -> test_req`
 	if req.VerifyMethod != ir.VerifyTest {
 		t.Errorf("req verify = %v", req.VerifyMethod)
 	}
-	if len(g.ReqElements) != 1 {
-		t.Fatalf("Elements = %d, want 1", len(g.ReqElements))
+	if len(graph.ReqElements) != 1 {
+		t.Fatalf("Elements = %d, want 1", len(graph.ReqElements))
 	}
-	elem := g.ReqElements[0]
+	elem := graph.ReqElements[0]
 	if elem.Type != "simulation" {
 		t.Errorf("elem type = %q", elem.Type)
 	}
-	if len(g.ReqRelationships) != 1 {
-		t.Fatalf("Rels = %d, want 1", len(g.ReqRelationships))
+	if len(graph.ReqRelationships) != 1 {
+		t.Fatalf("Rels = %d, want 1", len(graph.ReqRelationships))
 	}
-	if g.ReqRelationships[0].Type != ir.ReqRelSatisfies {
-		t.Errorf("rel type = %v", g.ReqRelationships[0].Type)
+	if graph.ReqRelationships[0].Type != ir.ReqRelSatisfies {
+		t.Errorf("rel type = %v", graph.ReqRelationships[0].Type)
 	}
 }
 

@@ -18,30 +18,30 @@ func TestParseKanbanBasic(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse: %v", err)
 	}
-	g := out.Graph
-	if g.Kind != ir.Kanban {
-		t.Fatalf("Kind = %v, want Kanban", g.Kind)
+	graph := out.Graph
+	if graph.Kind != ir.Kanban {
+		t.Fatalf("Kind = %v, want Kanban", graph.Kind)
 	}
-	if len(g.Columns) != 2 {
-		t.Fatalf("len(Columns) = %d, want 2", len(g.Columns))
+	if len(graph.Columns) != 2 {
+		t.Fatalf("len(Columns) = %d, want 2", len(graph.Columns))
 	}
-	if g.Columns[0].Label != "Todo" {
-		t.Errorf("Columns[0].Label = %q, want \"Todo\"", g.Columns[0].Label)
+	if graph.Columns[0].Label != "Todo" {
+		t.Errorf("Columns[0].Label = %q, want \"Todo\"", graph.Columns[0].Label)
 	}
-	if len(g.Columns[0].Cards) != 2 {
-		t.Errorf("len(Columns[0].Cards) = %d, want 2", len(g.Columns[0].Cards))
+	if len(graph.Columns[0].Cards) != 2 {
+		t.Errorf("len(Columns[0].Cards) = %d, want 2", len(graph.Columns[0].Cards))
 	}
-	if g.Columns[0].Cards[0].ID != "task1" {
-		t.Errorf("Cards[0].ID = %q, want \"task1\"", g.Columns[0].Cards[0].ID)
+	if graph.Columns[0].Cards[0].ID != "task1" {
+		t.Errorf("Cards[0].ID = %q, want \"task1\"", graph.Columns[0].Cards[0].ID)
 	}
-	if g.Columns[0].Cards[0].Label != "Create tests" {
-		t.Errorf("Cards[0].Label = %q, want \"Create tests\"", g.Columns[0].Cards[0].Label)
+	if graph.Columns[0].Cards[0].Label != "Create tests" {
+		t.Errorf("Cards[0].Label = %q, want \"Create tests\"", graph.Columns[0].Cards[0].Label)
 	}
-	if g.Columns[1].Label != "Done" {
-		t.Errorf("Columns[1].Label = %q, want \"Done\"", g.Columns[1].Label)
+	if graph.Columns[1].Label != "Done" {
+		t.Errorf("Columns[1].Label = %q, want \"Done\"", graph.Columns[1].Label)
 	}
-	if len(g.Columns[1].Cards) != 1 {
-		t.Errorf("len(Columns[1].Cards) = %d, want 1", len(g.Columns[1].Cards))
+	if len(graph.Columns[1].Cards) != 1 {
+		t.Errorf("len(Columns[1].Cards) = %d, want 1", len(graph.Columns[1].Cards))
 	}
 }
 
@@ -54,11 +54,11 @@ func TestParseKanbanMetadata(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse: %v", err)
 	}
-	g := out.Graph
-	if len(g.Columns) != 1 {
-		t.Fatalf("len(Columns) = %d, want 1", len(g.Columns))
+	graph := out.Graph
+	if len(graph.Columns) != 1 {
+		t.Fatalf("len(Columns) = %d, want 1", len(graph.Columns))
 	}
-	card := g.Columns[0].Cards[0]
+	card := graph.Columns[0].Cards[0]
 	if card.Assigned != "alice" {
 		t.Errorf("Assigned = %q, want \"alice\"", card.Assigned)
 	}

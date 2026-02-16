@@ -13,17 +13,17 @@ CUSTOMER ||--o{ ORDER : places`
 	if err != nil {
 		t.Fatalf("parseER() error: %v", err)
 	}
-	g := out.Graph
-	if g.Kind != ir.Er {
-		t.Errorf("Kind = %v, want Er", g.Kind)
+	graph := out.Graph
+	if graph.Kind != ir.Er {
+		t.Errorf("Kind = %v, want Er", graph.Kind)
 	}
-	if len(g.Edges) != 1 {
-		t.Errorf("Edges = %d, want 1", len(g.Edges))
+	if len(graph.Edges) != 1 {
+		t.Errorf("Edges = %d, want 1", len(graph.Edges))
 	}
-	if _, ok := g.Nodes["CUSTOMER"]; !ok {
+	if _, ok := graph.Nodes["CUSTOMER"]; !ok {
 		t.Error("expected node CUSTOMER")
 	}
-	if _, ok := g.Nodes["ORDER"]; !ok {
+	if _, ok := graph.Nodes["ORDER"]; !ok {
 		t.Error("expected node ORDER")
 	}
 }
@@ -39,8 +39,8 @@ PRODUCT {
 	if err != nil {
 		t.Fatalf("parseER() error: %v", err)
 	}
-	g := out.Graph
-	ent, ok := g.Entities["PRODUCT"]
+	graph := out.Graph
+	ent, ok := graph.Entities["PRODUCT"]
 	if !ok {
 		t.Fatalf("Entities missing PRODUCT")
 	}
@@ -81,18 +81,18 @@ func TestParseERCardinality(t *testing.T) {
 			if len(out.Graph.Edges) != 1 {
 				t.Fatalf("Edges = %d, want 1", len(out.Graph.Edges))
 			}
-			e := out.Graph.Edges[0]
-			if e.StartDecoration == nil {
+			edge := out.Graph.Edges[0]
+			if edge.StartDecoration == nil {
 				t.Fatal("StartDecoration is nil")
 			}
-			if *e.StartDecoration != tt.wantLeft {
-				t.Errorf("StartDecoration = %v, want %v", *e.StartDecoration, tt.wantLeft)
+			if *edge.StartDecoration != tt.wantLeft {
+				t.Errorf("StartDecoration = %v, want %v", *edge.StartDecoration, tt.wantLeft)
 			}
-			if e.EndDecoration == nil {
+			if edge.EndDecoration == nil {
 				t.Fatal("EndDecoration is nil")
 			}
-			if *e.EndDecoration != tt.wantRight {
-				t.Errorf("EndDecoration = %v, want %v", *e.EndDecoration, tt.wantRight)
+			if *edge.EndDecoration != tt.wantRight {
+				t.Errorf("EndDecoration = %v, want %v", *edge.EndDecoration, tt.wantRight)
 			}
 		})
 	}
