@@ -852,3 +852,65 @@ func TestRenderArchitectureGroupsFixture(t *testing.T) {
 		t.Error("missing service label")
 	}
 }
+
+func TestRenderZenUMLBasicFixture(t *testing.T) {
+	input := readFixture(t, "zenuml-basic.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if !strings.Contains(svg, "<svg") {
+		t.Error("missing <svg tag")
+	}
+	// Verify participants appear in SVG.
+	for _, name := range []string{"Client", "API", "DB"} {
+		if !strings.Contains(svg, name) {
+			t.Errorf("missing participant %q in SVG", name)
+		}
+	}
+	// Verify activation bars exist.
+	if !strings.Contains(svg, "rect") {
+		t.Error("missing activation rectangles")
+	}
+}
+
+func TestRenderZenUMLControlFlowFixture(t *testing.T) {
+	input := readFixture(t, "zenuml-controlflow.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	// Verify frame labels appear (if/else → alt fragment).
+	if !strings.Contains(svg, "alt") {
+		t.Error("missing alt frame label")
+	}
+	for _, name := range []string{"User", "Auth", "UserDB"} {
+		if !strings.Contains(svg, name) {
+			t.Errorf("missing participant %q", name)
+		}
+	}
+}
+
+func TestRenderZenUMLTryCatchFixture(t *testing.T) {
+	input := readFixture(t, "zenuml-trycatch.mmd")
+	svg, err := Render(input)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	// Frame renders as "alt" kind tab with "try" label text.
+	if !strings.Contains(svg, "alt") {
+		t.Error("missing alt frame kind label")
+	}
+	if !strings.Contains(svg, "try") {
+		t.Error("missing try frame label")
+	}
+	for _, name := range []string{"Client", "JobTask", "Action", "Logger"} {
+		if !strings.Contains(svg, name) {
+			t.Errorf("missing participant %q", name)
+		}
+	}
+	// Verify divider lines exist (dashed lines for catch/finally).
+	if !strings.Contains(svg, "stroke-dasharray") {
+		t.Error("missing divider dashed lines for catch/finally")
+	}
+}

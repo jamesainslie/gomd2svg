@@ -55,6 +55,8 @@ func ComputeLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
 		return computeJourneyLayout(g, th, cfg)
 	case ir.Architecture:
 		return computeArchitectureLayout(g, th, cfg)
+	case ir.ZenUML:
+		return computeSequenceLayout(g, th, cfg)
 	default:
 		// For unsupported diagram kinds, return a minimal layout.
 		return computeGraphLayout(g, th, cfg)

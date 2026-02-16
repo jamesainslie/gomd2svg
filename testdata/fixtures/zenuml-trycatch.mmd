@@ -1,0 +1,17 @@
+zenuml
+@Actor Client
+@Control JobTask
+@Entity Action
+@Database Logger
+
+@Starter(Client)
+
+JobTask.Run() {
+  try {
+    Action.Execute()
+  } catch {
+    Logger.Error()
+  } finally {
+    JobTask.Cleanup()
+  }
+}

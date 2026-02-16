@@ -1,0 +1,11 @@
+zenuml
+@Actor Client
+@Boundary API
+@Database DB
+
+@Starter(Client)
+
+API.createOrder(payload) {
+  DB.save(order)
+  return orderId
+}

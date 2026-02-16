@@ -1,0 +1,16 @@
+zenuml
+@Actor User
+@Boundary Auth
+@Database UserDB
+
+@Starter(User)
+
+Auth.login(credentials) {
+  if(valid) {
+    session = new Session()
+    UserDB.recordLogin()
+    return session
+  } else {
+    return error
+  }
+}

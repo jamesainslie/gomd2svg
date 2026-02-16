@@ -60,6 +60,8 @@ func Parse(input string) (*ParseOutput, error) {
 		return parseC4(input)
 	case ir.Architecture:
 		return parseArchitecture(input)
+	case ir.ZenUML:
+		return parseZenUML(input)
 	default:
 		return parseFlowchart(input)
 	}
