@@ -315,6 +315,44 @@ func TestBuildGridEmpty(t *testing.T) {
 	}
 }
 
+func TestGridOverlappingNodePadding(t *testing.T) {
+	// Two nodes close enough that their padding regions overlap.
+	// A cell in the overlap must allow edges from either node to pass through.
+	nodes := map[string]*NodeLayout{
+		"A": {ID: "A", X: 50, Y: 50, Width: 40, Height: 30},
+		"B": {ID: "B", X: 80, Y: 50, Width: 40, Height: 30}, // 10px gap, but 4px padding each side means overlap
+	}
+
+	g := buildGrid(nodes, 8, 4)
+
+	// Find a cell in the overlap zone (between X=66 and X=64: A's right pad edge and B's left pad edge).
+	// A right edge + pad = 50+20+4 = 74, B left edge - pad = 80-20-4 = 56
+	// So cells between X=56 and X=74 could be in the overlap.
+	overlapX := float32(65) // should be in both A and B's padded region
+	overlapY := float32(50)
+	r, c := g.worldToCell(overlapX, overlapY)
+
+	// Cell should be blocked.
+	if !g.isBlocked(r, c) {
+		t.Fatal("overlap cell should be blocked")
+	}
+
+	// Cell should be passable when excluding A (edge from A goes through).
+	if g.isBlockedExcluding(r, c, "A", "X") {
+		t.Error("overlap cell should be passable when excluding A")
+	}
+
+	// Cell should be passable when excluding B (edge from B goes through).
+	if g.isBlockedExcluding(r, c, "X", "B") {
+		t.Error("overlap cell should be passable when excluding B")
+	}
+
+	// Cell should be blocked when excluding neither A nor B.
+	if !g.isBlockedExcluding(r, c, "X", "Y") {
+		t.Error("overlap cell should be blocked when excluding unrelated nodes")
+	}
+}
+
 func TestAStarFallbackToLShape(t *testing.T) {
 	// Target node completely surrounded by obstacles. A* should fail and
 	// routeEdges should fall back to L-shaped routing.

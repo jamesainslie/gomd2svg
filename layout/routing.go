@@ -111,7 +111,7 @@ func edgeEndpoints(src, dst *NodeLayout, direction ir.Direction) (startX, startY
 // grid represents a 2D obstacle grid for A* pathfinding.
 type grid struct {
 	blocked  [][]bool
-	nodeIDs  [][]string // which node ID blocks each cell (empty if free)
+	nodeIDs  [][][]string // which node IDs block each cell (empty if free)
 	originX  float32
 	originY  float32
 	cellSize float32
@@ -168,10 +168,10 @@ func buildGrid(nodes map[string]*NodeLayout, cellSize, nodePad float32) *grid {
 	}
 
 	blocked := make([][]bool, rows)
-	nodeIDGrid := make([][]string, rows)
+	nodeIDGrid := make([][][]string, rows)
 	for r := range blocked {
 		blocked[r] = make([]bool, cols)
-		nodeIDGrid[r] = make([]string, cols)
+		nodeIDGrid[r] = make([][]string, cols)
 	}
 
 	g := &grid{
@@ -198,7 +198,7 @@ func buildGrid(nodes map[string]*NodeLayout, cellSize, nodePad float32) *grid {
 			for c := cMin; c <= cMax; c++ {
 				if r >= 0 && r < rows && c >= 0 && c < cols {
 					g.blocked[r][c] = true
-					g.nodeIDs[r][c] = n.ID
+					g.nodeIDs[r][c] = append(g.nodeIDs[r][c], n.ID)
 				}
 			}
 		}
@@ -231,6 +231,9 @@ func (g *grid) isBlocked(row, col int) bool {
 
 // isBlockedExcluding returns true if the cell is blocked by a node other than
 // the specified excluded IDs (used to allow paths through source/target nodes).
+// A cell is passable if any of its occupying node IDs match an excluded ID,
+// because the edge is allowed to traverse its own source/target nodes' cells
+// even when other nodes' padding overlaps.
 func (g *grid) isBlockedExcluding(row, col int, excludeA, excludeB string) bool {
 	if row < 0 || row >= g.rows || col < 0 || col >= g.cols {
 		return true
@@ -238,8 +241,12 @@ func (g *grid) isBlockedExcluding(row, col int, excludeA, excludeB string) bool 
 	if !g.blocked[row][col] {
 		return false
 	}
-	id := g.nodeIDs[row][col]
-	return id != excludeA && id != excludeB
+	for _, id := range g.nodeIDs[row][col] {
+		if id == excludeA || id == excludeB {
+			return false // passable: source or target node occupies this cell
+		}
+	}
+	return true
 }
 
 // findPath runs A* from (startX, startY) to (endX, endY), treating cells
