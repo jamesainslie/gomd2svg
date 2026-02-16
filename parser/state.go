@@ -240,9 +240,10 @@ func collectBraceBlock(lines []string, startIdx int) ([]string, int) {
 
 		// Count braces
 		for _, ch := range trimmed {
-			if ch == '{' {
+			switch ch {
+			case '{':
 				depth++
-			} else if ch == '}' {
+			case '}':
 				depth--
 				if depth == 0 {
 					// If there's content before the }, include it

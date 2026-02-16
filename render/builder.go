@@ -1,7 +1,6 @@
 package render
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -180,7 +179,3 @@ func fmtFloat(f float32) string {
 	return strconv.FormatFloat(float64(f), 'f', -1, 32)
 }
 
-// fmtFloat2 formats a float32 to 2 decimal places.
-func fmtFloat2(f float32) string {
-	return fmt.Sprintf("%.2f", f)
-}
