@@ -32,7 +32,7 @@ func parseRadar(input string) (*ParseOutput, error) {
 
 		switch {
 		case strings.HasPrefix(lower, "title"):
-			g.RadarTitle = radarExtractQuotedText(trimmed[5:])
+			g.RadarTitle = extractQuotedText(trimmed[5:])
 
 		case strings.HasPrefix(lower, "showlegend"):
 			g.RadarShowLegend = true
@@ -89,7 +89,7 @@ func parseRadar(input string) (*ParseOutput, error) {
 					}
 				} else {
 					// Positional values.
-					parts := radarSplitAndTrim(valStr)
+					parts := splitAndTrimCommas(valStr)
 					for _, p := range parts {
 						v, err := strconv.ParseFloat(p, 64)
 						if err == nil {
@@ -103,27 +103,4 @@ func parseRadar(input string) (*ParseOutput, error) {
 	}
 
 	return &ParseOutput{Graph: g}, nil
-}
-
-func radarExtractQuotedText(s string) string {
-	s = strings.TrimSpace(s)
-	if len(s) >= 2 && s[0] == '"' {
-		if end := strings.Index(s[1:], "\""); end >= 0 {
-			return s[1 : end+1]
-		}
-	}
-	return ""
-}
-
-func radarSplitAndTrim(s string) []string {
-	parts := strings.Split(s, ",")
-	result := make([]string, 0, len(parts))
-	for _, p := range parts {
-		p = strings.TrimSpace(p)
-		p = strings.Trim(p, "\"")
-		if p != "" {
-			result = append(result, p)
-		}
-	}
-	return result
 }

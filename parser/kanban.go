@@ -7,8 +7,8 @@ import (
 	"github.com/jamesainslie/mermaid-go/ir"
 )
 
-// kanbanLine holds a preprocessed line with its indentation level.
-type kanbanLine struct {
+// indentedLine holds a preprocessed line with its indentation level.
+type indentedLine struct {
 	text   string
 	indent int
 }
@@ -66,9 +66,9 @@ func parseKanban(input string) (*ParseOutput, error) {
 
 // preprocessKanbanInput splits the input into lines, strips comments and blank
 // lines, but preserves leading whitespace so indentation can be measured.
-// Each returned kanbanLine has the cleaned text and the number of leading spaces.
-func preprocessKanbanInput(input string) []kanbanLine {
-	var result []kanbanLine
+// Each returned indentedLine has the cleaned text and the number of leading spaces.
+func preprocessKanbanInput(input string) []indentedLine {
+	var result []indentedLine
 	for _, rawLine := range strings.Split(input, "\n") {
 		// Count leading whitespace (tabs count as 1 indent unit each,
 		// spaces count as 1 each — consistent with mermaid.js behavior).
@@ -99,7 +99,7 @@ func preprocessKanbanInput(input string) []kanbanLine {
 			continue
 		}
 
-		result = append(result, kanbanLine{
+		result = append(result, indentedLine{
 			text:   without,
 			indent: indent,
 		})

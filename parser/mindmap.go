@@ -133,9 +133,9 @@ func parseMindmapShape(text string) (ir.MindmapShape, string) {
 }
 
 // preprocessMindmapInput preserves indentation for hierarchy detection.
-// Reuses the kanbanLine type from parser/kanban.go.
-func preprocessMindmapInput(input string) []kanbanLine {
-	var result []kanbanLine
+// Uses shared indentedLine type.
+func preprocessMindmapInput(input string) []indentedLine {
+	var result []indentedLine
 	for _, rawLine := range strings.Split(input, "\n") {
 		indent := 0
 		for _, ch := range rawLine {
@@ -160,7 +160,7 @@ func preprocessMindmapInput(input string) []kanbanLine {
 		if without == "" {
 			continue
 		}
-		result = append(result, kanbanLine{text: without, indent: indent})
+		result = append(result, indentedLine{text: without, indent: indent})
 	}
 	return result
 }

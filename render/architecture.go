@@ -5,13 +5,14 @@ import (
 	"sort"
 
 	"github.com/jamesainslie/mermaid-go/config"
+	"github.com/jamesainslie/mermaid-go/ir"
 	"github.com/jamesainslie/mermaid-go/layout"
 	"github.com/jamesainslie/mermaid-go/theme"
 )
 
 // renderArchitecture renders all architecture diagram elements: groups,
 // edges, service nodes, and junctions.
-func renderArchitecture(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.Layout) {
+func renderArchitecture(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *config.Layout) {
 	data, ok := l.Diagram.(layout.ArchitectureData)
 	if !ok {
 		return
@@ -45,8 +46,52 @@ func renderArchitecture(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *c
 		}
 	}
 
-	// 2. Render edges.
-	renderEdges(b, l, th)
+	// 2. Render edges using architecture-specific edge color.
+	for i, edge := range l.Edges {
+		if len(edge.Points) < 2 {
+			continue
+		}
+
+		d := pointsToPath(edge.Points)
+		edgeID := fmt.Sprintf("edge-%d", i)
+
+		strokeColor := th.ArchEdgeColor
+		strokeWidth := "1.5"
+
+		attrs := []string{
+			"id", edgeID,
+			"class", "edgePath",
+			"d", d,
+			"fill", "none",
+			"stroke", strokeColor,
+			"stroke-width", strokeWidth,
+			"stroke-linecap", "round",
+			"stroke-linejoin", "round",
+		}
+
+		// Edge style: dotted or thick.
+		switch edge.Style {
+		case ir.Dotted:
+			attrs = append(attrs, "stroke-dasharray", "5,5")
+		case ir.Thick:
+			attrs = append(attrs, "stroke-width", "3")
+		}
+
+		// Arrow marker references.
+		if edge.ArrowEnd {
+			attrs = append(attrs, "marker-end", "url(#arrowhead)")
+		}
+		if edge.ArrowStart {
+			attrs = append(attrs, "marker-start", "url(#arrowhead-start)")
+		}
+
+		b.selfClose("path", attrs...)
+
+		// Render edge label if present.
+		if edge.Label != nil && len(edge.Label.Lines) > 0 {
+			renderEdgeLabel(b, edge, th)
+		}
+	}
 
 	// 3. Render service nodes sorted by ID for deterministic output.
 	junctionSet := make(map[string]bool, len(data.Junctions))

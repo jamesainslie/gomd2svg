@@ -24,8 +24,8 @@ func TestC4ElementType(t *testing.T) {
 	if C4Person.String() != "Person" {
 		t.Errorf("C4Person = %q", C4Person.String())
 	}
-	if C4Container_.String() != "Container" {
-		t.Errorf("C4Container_ = %q", C4Container_.String())
+	if C4ContainerPlain.String() != "Container" {
+		t.Errorf("C4ContainerPlain = %q", C4ContainerPlain.String())
 	}
 	if C4ExternalSystem.String() != "System_Ext" {
 		t.Errorf("C4ExternalSystem = %q", C4ExternalSystem.String())

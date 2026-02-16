@@ -90,7 +90,11 @@ func renderRadar(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.L
 	}
 
 	// Curve polygons.
-	curveOpacity := fmt.Sprintf("%.2f", cfg.Radar.CurveOpacity)
+	opacity := th.RadarCurveOpacity
+	if opacity <= 0 {
+		opacity = cfg.Radar.CurveOpacity
+	}
+	curveOpacity := fmt.Sprintf("%.2f", opacity)
 	for _, curve := range rd.Curves {
 		color := "#4C78A8" // fallback
 		if len(th.RadarCurveColors) > 0 {

@@ -55,7 +55,7 @@ func TestC4LayoutWithBoundary(t *testing.T) {
 	g.EnsureNode("db", &dbLabel, nil)
 
 	g.C4Elements = append(g.C4Elements,
-		&ir.C4Element{ID: "api", Label: "API", Type: ir.C4Container_, BoundaryID: "sys"},
+		&ir.C4Element{ID: "api", Label: "API", Type: ir.C4ContainerPlain, BoundaryID: "sys"},
 		&ir.C4Element{ID: "db", Label: "DB", Type: ir.C4ContainerDb, BoundaryID: "sys"},
 	)
 	g.C4Boundaries = append(g.C4Boundaries, &ir.C4Boundary{

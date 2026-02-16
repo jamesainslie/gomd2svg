@@ -737,3 +737,29 @@ func parseNodeOnly(line string) (id string, label *string, shape *ir.NodeShape, 
 	}
 	return id, label, shape, classes, true
 }
+
+// extractQuotedText extracts the text between the first pair of double quotes.
+// Returns empty string if no quoted text is found.
+func extractQuotedText(s string) string {
+	s = strings.TrimSpace(s)
+	if len(s) >= 2 && s[0] == '"' {
+		if end := strings.Index(s[1:], "\""); end >= 0 {
+			return s[1 : end+1]
+		}
+	}
+	return ""
+}
+
+// splitAndTrimCommas splits a string by commas, trims whitespace and quotes.
+func splitAndTrimCommas(s string) []string {
+	parts := strings.Split(s, ",")
+	result := make([]string, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		p = strings.Trim(p, "\"")
+		if p != "" {
+			result = append(result, p)
+		}
+	}
+	return result
+}

@@ -4,7 +4,8 @@ package ir
 type ArchSide int
 
 const (
-	ArchLeft ArchSide = iota
+	ArchSideNone ArchSide = iota
+	ArchLeft
 	ArchRight
 	ArchTop
 	ArchBottom
@@ -12,6 +13,10 @@ const (
 
 func (s ArchSide) String() string {
 	switch s {
+	case ArchSideNone:
+		return "?"
+	case ArchLeft:
+		return "L"
 	case ArchRight:
 		return "R"
 	case ArchTop:
@@ -19,7 +24,7 @@ func (s ArchSide) String() string {
 	case ArchBottom:
 		return "B"
 	default:
-		return "L"
+		return "?"
 	}
 }
 

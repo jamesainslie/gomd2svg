@@ -35,7 +35,7 @@ func parseXYChart(input string) (*ParseOutput, error) {
 
 		switch {
 		case strings.HasPrefix(lower, "title"):
-			g.XYTitle = extractXYQuotedText(trimmed[5:])
+			g.XYTitle = extractQuotedText(trimmed[5:])
 
 		case strings.HasPrefix(lower, "x-axis"):
 			g.XYXAxis = parseXYAxis(strings.TrimSpace(trimmed[6:]))
@@ -74,11 +74,11 @@ func parseXYAxis(s string) *ir.XYAxis {
 	}
 	// Try band/categorical: "Title" [a, b, c]  or  [a, b, c]
 	if m := xyBandAxisRe.FindStringSubmatch(s); m != nil {
-		cats := splitXYCommas(m[2])
+		cats := splitAndTrimCommas(m[2])
 		return &ir.XYAxis{Mode: ir.XYAxisBand, Title: m[1], Categories: cats}
 	}
 	// Title only (auto-range).
-	title := extractXYQuotedText(s)
+	title := extractQuotedText(s)
 	if title == "" {
 		title = strings.TrimSpace(s)
 	}
@@ -90,7 +90,7 @@ func parseXYValues(line string) []float64 {
 	if m == nil {
 		return nil
 	}
-	parts := splitXYCommas(m[1])
+	parts := splitAndTrimCommas(m[1])
 	vals := make([]float64, 0, len(parts))
 	for _, p := range parts {
 		v, err := strconv.ParseFloat(p, 64)
@@ -99,27 +99,4 @@ func parseXYValues(line string) []float64 {
 		}
 	}
 	return vals
-}
-
-func extractXYQuotedText(s string) string {
-	s = strings.TrimSpace(s)
-	if len(s) >= 2 && s[0] == '"' {
-		if end := strings.Index(s[1:], "\""); end >= 0 {
-			return s[1 : end+1]
-		}
-	}
-	return ""
-}
-
-func splitXYCommas(s string) []string {
-	parts := strings.Split(s, ",")
-	result := make([]string, 0, len(parts))
-	for _, p := range parts {
-		p = strings.TrimSpace(p)
-		p = strings.Trim(p, "\"")
-		if p != "" {
-			result = append(result, p)
-		}
-	}
-	return result
 }

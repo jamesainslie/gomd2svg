@@ -186,7 +186,6 @@ type SankeyConfig struct {
 	NodePadding float32
 	PaddingX    float32
 	PaddingY    float32
-	Iterations  int // link relaxation iterations
 }
 
 // TreemapConfig holds Treemap diagram layout options.
@@ -381,7 +380,6 @@ func DefaultLayout() *Layout {
 			NodePadding: 10,
 			PaddingX:    40,
 			PaddingY:    20,
-			Iterations:  32,
 		},
 		Treemap: TreemapConfig{
 			ChartWidth:    600,

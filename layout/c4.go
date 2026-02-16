@@ -110,6 +110,8 @@ func sizeC4Nodes(g *ir.Graph, measurer *textmetrics.Measurer, th *theme.Theme, c
 }
 
 func computeC4BoundaryRect(b *ir.C4Boundary, nodes map[string]*NodeLayout, cfg *config.Layout) *C4BoundaryLayout {
+	const boundaryLabelHeight float32 = 20
+
 	if len(b.Children) == 0 {
 		return nil
 	}
@@ -153,8 +155,8 @@ func computeC4BoundaryRect(b *ir.C4Boundary, nodes map[string]*NodeLayout, cfg *
 		Label:  b.Label,
 		Type:   b.Type,
 		X:      minX - pad,
-		Y:      minY - pad - 20,
+		Y:      minY - pad - boundaryLabelHeight,
 		Width:  (maxX - minX) + 2*pad,
-		Height: (maxY - minY) + 2*pad + 20,
+		Height: (maxY - minY) + 2*pad + boundaryLabelHeight,
 	}
 }

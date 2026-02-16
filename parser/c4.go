@@ -157,7 +157,7 @@ func parseC4ElementType(s string) ir.C4ElementType {
 	case "SystemQueue_Ext":
 		return ir.C4ExternalSystemQueue
 	case "Container":
-		return ir.C4Container_
+		return ir.C4ContainerPlain
 	case "Container_Ext":
 		return ir.C4ExternalContainer
 	case "ContainerDb":
@@ -169,7 +169,7 @@ func parseC4ElementType(s string) ir.C4ElementType {
 	case "ContainerQueue_Ext":
 		return ir.C4ExternalContainerQueue
 	case "Component":
-		return ir.C4Component_
+		return ir.C4ComponentPlain
 	case "Component_Ext":
 		return ir.C4ExternalComponent
 	default:

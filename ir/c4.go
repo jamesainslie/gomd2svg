@@ -34,10 +34,10 @@ const (
 	C4System
 	C4SystemDb
 	C4SystemQueue
-	C4Container_
+	C4ContainerPlain
 	C4ContainerDb
 	C4ContainerQueue
-	C4Component_
+	C4ComponentPlain
 	C4ExternalPerson
 	C4ExternalSystem
 	C4ExternalSystemDb
@@ -58,13 +58,13 @@ func (e C4ElementType) String() string {
 		return "SystemDb"
 	case C4SystemQueue:
 		return "SystemQueue"
-	case C4Container_:
+	case C4ContainerPlain:
 		return "Container"
 	case C4ContainerDb:
 		return "ContainerDb"
 	case C4ContainerQueue:
 		return "ContainerQueue"
-	case C4Component_:
+	case C4ComponentPlain:
 		return "Component"
 	case C4ExternalPerson:
 		return "Person_Ext"

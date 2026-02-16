@@ -4,12 +4,15 @@ package ir
 type RadarGraticule int
 
 const (
-	RadarGraticuleCircle RadarGraticule = iota
+	RadarGraticuleNone RadarGraticule = iota
+	RadarGraticuleCircle
 	RadarGraticulePolygon
 )
 
 func (g RadarGraticule) String() string {
 	switch g {
+	case RadarGraticuleNone:
+		return "none"
 	case RadarGraticuleCircle:
 		return "circle"
 	case RadarGraticulePolygon:

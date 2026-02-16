@@ -75,6 +75,17 @@ func parseQuadrant(input string) (*ParseOutput, error) {
 		if m := quadrantPointRe.FindStringSubmatch(line); m != nil {
 			x, _ := strconv.ParseFloat(m[2], 64) // regex guarantees digits
 			y, _ := strconv.ParseFloat(m[3], 64) // regex guarantees digits
+			// Clamp to valid [0, 1] range.
+			if x < 0 {
+				x = 0
+			} else if x > 1 {
+				x = 1
+			}
+			if y < 0 {
+				y = 0
+			} else if y > 1 {
+				y = 1
+			}
 			g.QuadrantPoints = append(g.QuadrantPoints, &ir.QuadrantPoint{
 				Label: strings.TrimSpace(m[1]),
 				X:     x,

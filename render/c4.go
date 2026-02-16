@@ -88,14 +88,16 @@ func renderC4(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.Layo
 		}
 
 		// Label (bold, white).
-		b.text(cx, curY, n.Label.Lines[0],
-			"text-anchor", "middle",
-			"font-family", th.FontFamily,
-			"font-size", fmtFloat(th.FontSize),
-			"font-weight", "bold",
-			"fill", th.C4TextColor,
-		)
-		curY += lineH
+		if len(n.Label.Lines) > 0 {
+			b.text(cx, curY, n.Label.Lines[0],
+				"text-anchor", "middle",
+				"font-family", th.FontFamily,
+				"font-size", fmtFloat(th.FontSize),
+				"font-weight", "bold",
+				"fill", th.C4TextColor,
+			)
+			curY += lineH
+		}
 
 		if elem != nil {
 			// Technology line in brackets.
@@ -167,9 +169,9 @@ func c4ElementColor(elem *ir.C4Element, th *theme.Theme) string {
 		return th.C4PersonColor
 	}
 	switch elem.Type {
-	case ir.C4Container_, ir.C4ContainerDb, ir.C4ContainerQueue:
+	case ir.C4ContainerPlain, ir.C4ContainerDb, ir.C4ContainerQueue:
 		return th.C4ContainerColor
-	case ir.C4Component_:
+	case ir.C4ComponentPlain:
 		return th.C4ComponentColor
 	default:
 		return th.C4SystemColor

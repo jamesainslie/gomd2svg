@@ -4,12 +4,15 @@ package ir
 type XYSeriesType int
 
 const (
-	XYSeriesBar XYSeriesType = iota
+	XYSeriesNone XYSeriesType = iota
+	XYSeriesBar
 	XYSeriesLine
 )
 
 func (t XYSeriesType) String() string {
 	switch t {
+	case XYSeriesNone:
+		return "none"
 	case XYSeriesBar:
 		return "bar"
 	case XYSeriesLine:
@@ -23,12 +26,15 @@ func (t XYSeriesType) String() string {
 type XYAxisMode int
 
 const (
-	XYAxisBand XYAxisMode = iota
+	XYAxisNone XYAxisMode = iota
+	XYAxisBand
 	XYAxisNumeric
 )
 
 func (m XYAxisMode) String() string {
 	switch m {
+	case XYAxisNone:
+		return "none"
 	case XYAxisBand:
 		return "band"
 	case XYAxisNumeric:
