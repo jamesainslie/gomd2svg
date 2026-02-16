@@ -1,0 +1,58 @@
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: gomd2svg
+    main: ./cmd/gomd2svg
+    binary: gomd2svg
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X main.version={{ .Version }}
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - id: default
+    ids:
+      - gomd2svg
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+
+brews:
+  - name: gomd2svg
+    repository:
+      owner: jamesainslie
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    commit_author:
+      name: James Ainslie
+      email: james@ainslies.us
+    homepage: https://github.com/jamesainslie/gomd2svg
+    description: Pure Go mermaid diagram renderer — converts .mmd files to SVG.
+    license: MIT
+    install: |
+      bin.install "gomd2svg"
+    test: |
+      system "#{bin}/gomd2svg version"
+
+checksum:
+  name_template: checksums.txt
+
+snapshot:
+  version_template: "{{ .Tag }}-dev"
+
+release:
+  draft: false
+  github:
+    owner: jamesainslie
+    name: gomd2svg
