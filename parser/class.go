@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 // Class diagram relationship regex patterns compiled at package level.

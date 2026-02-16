@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 // zenBlockKind identifies what opened a curly-brace block.

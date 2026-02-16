@@ -3,7 +3,7 @@ package parser
 import (
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 func TestParseC4Context(t *testing.T) {

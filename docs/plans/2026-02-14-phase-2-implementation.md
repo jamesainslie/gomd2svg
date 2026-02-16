@@ -645,7 +645,7 @@ package parser
 import (
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 func TestParseClassSimple(t *testing.T) {
@@ -937,7 +937,7 @@ package parser
 import (
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 func TestParseStateSimple(t *testing.T) {
@@ -1176,7 +1176,7 @@ package parser
 import (
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 func TestParseERSimple(t *testing.T) {
@@ -1401,9 +1401,9 @@ package layout
 import (
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func TestComputeClassLayout(t *testing.T) {
@@ -1535,9 +1535,9 @@ package layout
 import (
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func TestComputeERLayout(t *testing.T) {
@@ -1648,9 +1648,9 @@ package layout
 import (
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func TestComputeStateLayoutSimple(t *testing.T) {
@@ -1892,10 +1892,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/layout"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/layout"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func TestRenderClassCompartments(t *testing.T) {
@@ -2022,10 +2022,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/layout"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/layout"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func TestRenderStateSimple(t *testing.T) {
@@ -2145,10 +2145,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/layout"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/layout"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func TestRenderEREntities(t *testing.T) {

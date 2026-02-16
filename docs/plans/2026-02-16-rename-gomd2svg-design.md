@@ -1,18 +1,18 @@
-# Rename mermaid-go to gomd2svg
+# Rename gomd2svg to gomd2svg
 
 ## Goal
 
-Rename the project from `mermaid-go` to `gomd2svg` across all code, docs, and infrastructure.
+Rename the project from `gomd2svg` to `gomd2svg` across all code, docs, and infrastructure.
 
 ## Scope
 
 | Component | Before | After |
 |-----------|--------|-------|
-| GitHub repo | `jamesainslie/mermaid-go` | `jamesainslie/gomd2svg` |
-| Go module | `github.com/jamesainslie/mermaid-go` | `github.com/jamesainslie/gomd2svg` |
+| GitHub repo | `jamesainslie/gomd2svg` | `jamesainslie/gomd2svg` |
+| Go module | `github.com/jamesainslie/gomd2svg` | `github.com/jamesainslie/gomd2svg` |
 | Root package | `package mermaid` | `package gomd2svg` |
-| CLI binary | `cmd/mermaid-go/` | `cmd/gomd2svg/` |
-| CLI command | `mermaid-go render ...` | `gomd2svg render ...` |
+| CLI binary | `cmd/gomd2svg/` | `cmd/gomd2svg/` |
+| CLI command | `gomd2svg render ...` | `gomd2svg render ...` |
 | Public API | `mermaid.Render()` | `gomd2svg.Render()` |
 
 ## Unchanged
@@ -28,7 +28,7 @@ Rename the project from `mermaid-go` to `gomd2svg` across all code, docs, and in
 2. Update `go.mod` module path
 3. Find-and-replace all import paths
 4. Rename root package and update callers
-5. Rename `cmd/mermaid-go/` directory and update CLI text
+5. Rename `cmd/gomd2svg/` directory and update CLI text
 6. Update documentation
 7. Verify build and tests
 8. Update Claude memory

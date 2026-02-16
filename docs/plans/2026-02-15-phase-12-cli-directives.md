@@ -2,9 +2,9 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Make mermaid-go usable as a standalone command-line tool and support inline `%%{init: ...}%%` directives for per-diagram theme/config overrides.
+**Goal:** Make gomd2svg usable as a standalone command-line tool and support inline `%%{init: ...}%%` directives for per-diagram theme/config overrides.
 
-**Architecture:** CLI binary at `cmd/mermaid-go/` using stdlib `flag` package (no external deps). Directive parsing in `parser/` extracts `%%{init:}%%` before diagram detection. CLI flags override directives which override defaults.
+**Architecture:** CLI binary at `cmd/gomd2svg/` using stdlib `flag` package (no external deps). Directive parsing in `parser/` extracts `%%{init:}%%` before diagram detection. CLI flags override directives which override defaults.
 
 **Tech Stack:** Go stdlib (`flag`, `encoding/json`, `os`, `io`, `path/filepath`)
 
@@ -276,12 +276,12 @@ git commit -m "feat: apply %%{init:}%% directives in render pipeline"
 ### Task 3: CLI binary — core render command
 
 **Files:**
-- Create: `cmd/mermaid-go/main.go`
+- Create: `cmd/gomd2svg/main.go`
 
 **Step 1: Implement CLI**
 
 ```go
-// cmd/mermaid-go/main.go
+// cmd/gomd2svg/main.go
 package main
 
 import (
@@ -292,8 +292,8 @@ import (
     "path/filepath"
     "strings"
 
-    mermaid "github.com/jamesainslie/mermaid-go"
-    "github.com/jamesainslie/mermaid-go/theme"
+    mermaid "github.com/jamesainslie/gomd2svg"
+    "github.com/jamesainslie/gomd2svg/theme"
 )
 
 var version = "dev"
@@ -316,7 +316,7 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) error {
     case "themes":
         return runThemes(stdout)
     case "version":
-        fmt.Fprintf(stdout, "mermaid-go %s\n", version)
+        fmt.Fprintf(stdout, "gomd2svg %s\n", version)
         return nil
     case "help", "-h", "--help":
         return usage(stderr)
@@ -396,7 +396,7 @@ func runThemes(w io.Writer) error {
 }
 
 func usage(w io.Writer) error {
-    fmt.Fprintln(w, `Usage: mermaid-go <command> [options]
+    fmt.Fprintln(w, `Usage: gomd2svg <command> [options]
 
 Commands:
   render [file]   Render a .mmd file to SVG
@@ -409,10 +409,10 @@ Render options:
   -timing         Print timing info to stderr
 
 Examples:
-  mermaid-go render diagram.mmd -o diagram.svg
-  mermaid-go render -theme dark diagram.mmd > out.svg
-  cat diagram.mmd | mermaid-go render > out.svg
-  mermaid-go render -theme forest -timing diagram.mmd -o out.svg`)
+  gomd2svg render diagram.mmd -o diagram.svg
+  gomd2svg render -theme dark diagram.mmd > out.svg
+  cat diagram.mmd | gomd2svg render > out.svg
+  gomd2svg render -theme forest -timing diagram.mmd -o out.svg`)
     return nil
 }
 ```
@@ -420,18 +420,18 @@ Examples:
 **Step 2: Build and test manually**
 
 ```bash
-go build -o /tmp/mermaid-go ./cmd/mermaid-go/
-/tmp/mermaid-go version
-/tmp/mermaid-go themes
-/tmp/mermaid-go render testdata/fixtures/flowchart-simple.mmd -o /tmp/test.svg
-cat testdata/fixtures/pie-basic.mmd | /tmp/mermaid-go render --theme dark > /tmp/pie-dark.svg
+go build -o /tmp/gomd2svg ./cmd/gomd2svg/
+/tmp/gomd2svg version
+/tmp/gomd2svg themes
+/tmp/gomd2svg render testdata/fixtures/flowchart-simple.mmd -o /tmp/test.svg
+cat testdata/fixtures/pie-basic.mmd | /tmp/gomd2svg render --theme dark > /tmp/pie-dark.svg
 ```
 
 **Step 3: Commit**
 
 ```bash
-git add cmd/mermaid-go/
-git commit -m "feat: add mermaid-go CLI tool"
+git add cmd/gomd2svg/
+git commit -m "feat: add gomd2svg CLI tool"
 ```
 
 ---
@@ -439,12 +439,12 @@ git commit -m "feat: add mermaid-go CLI tool"
 ### Task 4: CLI tests
 
 **Files:**
-- Create: `cmd/mermaid-go/main_test.go`
+- Create: `cmd/gomd2svg/main_test.go`
 
 **Step 1: Write tests**
 
 ```go
-// cmd/mermaid-go/main_test.go
+// cmd/gomd2svg/main_test.go
 func TestRenderFile(t *testing.T) {
     // render a fixture file to stdout
     var stdout, stderr bytes.Buffer
@@ -509,7 +509,7 @@ func TestVersion(t *testing.T) {
     var stdout, stderr bytes.Buffer
     err := run([]string{"version"}, nil, &stdout, &stderr)
     if err != nil { t.Fatal(err) }
-    if !strings.Contains(stdout.String(), "mermaid-go") {
+    if !strings.Contains(stdout.String(), "gomd2svg") {
         t.Error("expected version output")
     }
 }
@@ -534,13 +534,13 @@ func TestUnknownCommand(t *testing.T) {
 
 **Step 2: Run tests**
 
-Run: `go test ./cmd/mermaid-go/ -v`
+Run: `go test ./cmd/gomd2svg/ -v`
 Expected: All pass
 
 **Step 3: Commit**
 
 ```bash
-git add cmd/mermaid-go/main_test.go
+git add cmd/gomd2svg/main_test.go
 git commit -m "test: add CLI test suite"
 ```
 
@@ -685,9 +685,9 @@ gofmt -l .
 **Step 2: Build CLI and test all fixtures**
 
 ```bash
-go build -o /tmp/mermaid-go ./cmd/mermaid-go/
+go build -o /tmp/gomd2svg ./cmd/gomd2svg/
 for f in testdata/fixtures/*.mmd; do
-    /tmp/mermaid-go render "$f" > /dev/null && echo "PASS $f" || echo "FAIL $f"
+    /tmp/gomd2svg render "$f" > /dev/null && echo "PASS $f" || echo "FAIL $f"
 done
 ```
 

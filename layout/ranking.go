@@ -3,7 +3,7 @@ package layout
 import (
 	"sort"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 // computeRanks assigns an integer rank to each node using a modified Kahn's

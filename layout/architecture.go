@@ -1,10 +1,10 @@
 package layout
 
 import (
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/textmetrics"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/textmetrics"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func computeArchitectureLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {

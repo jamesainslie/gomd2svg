@@ -1,8 +1,8 @@
 package layout
 
 import (
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 // positionNodes assigns X, Y coordinates to each node based on its rank,

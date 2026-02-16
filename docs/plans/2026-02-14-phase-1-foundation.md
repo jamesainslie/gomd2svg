@@ -102,7 +102,7 @@ func TestEnsureNodeOrder(t *testing.T) {
 
 **Step 2: Run test to verify it fails**
 
-Run: `cd /Volumes/Development/mermaid-go && go test ./ir/ -v`
+Run: `cd /Volumes/Development/gomd2svg && go test ./ir/ -v`
 Expected: FAIL — packages/types don't exist yet
 
 **Step 3: Write minimal implementation**
@@ -339,13 +339,13 @@ func (g *Graph) EnsureNode(id string, label *string, shape *NodeShape) {
 
 **Step 4: Run test to verify it passes**
 
-Run: `cd /Volumes/Development/mermaid-go && go test ./ir/ -v`
+Run: `cd /Volumes/Development/gomd2svg && go test ./ir/ -v`
 Expected: PASS
 
 **Step 5: Commit**
 
 ```bash
-cd /Volumes/Development/mermaid-go && git add ir/ && git commit -m "feat(ir): add intermediate representation types"
+cd /Volumes/Development/gomd2svg && git add ir/ && git commit -m "feat(ir): add intermediate representation types"
 ```
 
 ---
@@ -460,7 +460,7 @@ func TestMermaidDefault(t *testing.T) {
 
 **Step 2: Run test to verify it fails**
 
-Run: `cd /Volumes/Development/mermaid-go && go test ./theme/ -v`
+Run: `cd /Volumes/Development/gomd2svg && go test ./theme/ -v`
 Expected: FAIL
 
 **Step 3: Write minimal implementation**
@@ -471,13 +471,13 @@ Port `theme/theme.go` from Rust `src/theme.rs` lines 36-178 (Theme struct with a
 
 **Step 4: Run test to verify it passes**
 
-Run: `cd /Volumes/Development/mermaid-go && go test ./theme/ -v`
+Run: `cd /Volumes/Development/gomd2svg && go test ./theme/ -v`
 Expected: PASS
 
 **Step 5: Commit**
 
 ```bash
-cd /Volumes/Development/mermaid-go && git add theme/ && git commit -m "feat(theme): add theme types and color utilities"
+cd /Volumes/Development/gomd2svg && git add theme/ && git commit -m "feat(theme): add theme types and color utilities"
 ```
 
 ---
@@ -512,7 +512,7 @@ func TestDefaultLayout(t *testing.T) {
 
 **Step 2: Run test to verify it fails**
 
-Run: `cd /Volumes/Development/mermaid-go && go test ./config/ -v`
+Run: `cd /Volumes/Development/gomd2svg && go test ./config/ -v`
 
 **Step 3: Write minimal implementation**
 
@@ -520,12 +520,12 @@ Run: `cd /Volumes/Development/mermaid-go && go test ./config/ -v`
 
 **Step 4: Run test to verify it passes**
 
-Run: `cd /Volumes/Development/mermaid-go && go test ./config/ -v`
+Run: `cd /Volumes/Development/gomd2svg && go test ./config/ -v`
 
 **Step 5: Commit**
 
 ```bash
-cd /Volumes/Development/mermaid-go && git add config/ && git commit -m "feat(config): add layout configuration with defaults"
+cd /Volumes/Development/gomd2svg && git add config/ && git commit -m "feat(config): add layout configuration with defaults"
 ```
 
 ---
@@ -592,7 +592,7 @@ func TestAverageCharWidth(t *testing.T) {
 
 **Step 2: Run test to verify it fails**
 
-Run: `cd /Volumes/Development/mermaid-go && go test ./textmetrics/ -v`
+Run: `cd /Volumes/Development/gomd2svg && go test ./textmetrics/ -v`
 
 **Step 3: Write minimal implementation**
 
@@ -606,12 +606,12 @@ Need to add dependency: `go get golang.org/x/image`
 
 **Step 4: Run test to verify it passes**
 
-Run: `cd /Volumes/Development/mermaid-go && go test ./textmetrics/ -v`
+Run: `cd /Volumes/Development/gomd2svg && go test ./textmetrics/ -v`
 
 **Step 5: Commit**
 
 ```bash
-cd /Volumes/Development/mermaid-go && git add textmetrics/ go.mod go.sum && git commit -m "feat(textmetrics): add pure Go font measurement"
+cd /Volumes/Development/gomd2svg && git add textmetrics/ go.mod go.sum && git commit -m "feat(textmetrics): add pure Go font measurement"
 ```
 
 ---
@@ -634,7 +634,7 @@ package parser
 import (
     "testing"
 
-    "github.com/jamesainslie/mermaid-go/ir"
+    "github.com/jamesainslie/gomd2svg/ir"
 )
 
 func TestDetectDiagramKind(t *testing.T) {
@@ -671,7 +671,7 @@ package parser
 import (
     "testing"
 
-    "github.com/jamesainslie/mermaid-go/ir"
+    "github.com/jamesainslie/gomd2svg/ir"
 )
 
 func TestParseFlowchartSimpleChain(t *testing.T) {
@@ -804,7 +804,7 @@ func TestParseFlowchartShapes(t *testing.T) {
 
 **Step 2: Run tests to verify they fail**
 
-Run: `cd /Volumes/Development/mermaid-go && go test ./parser/ -v`
+Run: `cd /Volumes/Development/gomd2svg && go test ./parser/ -v`
 
 **Step 3: Write implementation**
 
@@ -818,12 +818,12 @@ Regex patterns compiled at package level with `regexp.MustCompile`.
 
 **Step 4: Run tests to verify they pass**
 
-Run: `cd /Volumes/Development/mermaid-go && go test ./parser/ -v`
+Run: `cd /Volumes/Development/gomd2svg && go test ./parser/ -v`
 
 **Step 5: Commit**
 
 ```bash
-cd /Volumes/Development/mermaid-go && git add parser/ && git commit -m "feat(parser): add flowchart parser with edge chain support"
+cd /Volumes/Development/gomd2svg && git add parser/ && git commit -m "feat(parser): add flowchart parser with edge chain support"
 ```
 
 ---
@@ -850,7 +850,7 @@ package layout
 import (
     "testing"
 
-    "github.com/jamesainslie/mermaid-go/ir"
+    "github.com/jamesainslie/gomd2svg/ir"
 )
 
 func edge(from, to string) *ir.Edge {
@@ -909,9 +909,9 @@ package layout
 import (
     "testing"
 
-    "github.com/jamesainslie/mermaid-go/config"
-    "github.com/jamesainslie/mermaid-go/ir"
-    "github.com/jamesainslie/mermaid-go/theme"
+    "github.com/jamesainslie/gomd2svg/config"
+    "github.com/jamesainslie/gomd2svg/ir"
+    "github.com/jamesainslie/gomd2svg/theme"
 )
 
 func TestComputeLayoutSimple(t *testing.T) {
@@ -955,7 +955,7 @@ func TestComputeLayoutSimple(t *testing.T) {
 
 **Step 2: Run tests to verify they fail**
 
-Run: `cd /Volumes/Development/mermaid-go && go test ./layout/ -v`
+Run: `cd /Volumes/Development/gomd2svg && go test ./layout/ -v`
 
 **Step 3: Write implementation**
 
@@ -971,12 +971,12 @@ Port from Rust `src/layout/`:
 
 **Step 4: Run tests to verify they pass**
 
-Run: `cd /Volumes/Development/mermaid-go && go test ./layout/ -v`
+Run: `cd /Volumes/Development/gomd2svg && go test ./layout/ -v`
 
 **Step 5: Commit**
 
 ```bash
-cd /Volumes/Development/mermaid-go && git add layout/ && git commit -m "feat(layout): add graph layout pipeline with ranking and positioning"
+cd /Volumes/Development/gomd2svg && git add layout/ && git commit -m "feat(layout): add graph layout pipeline with ranking and positioning"
 ```
 
 ---
@@ -1000,10 +1000,10 @@ import (
     "strings"
     "testing"
 
-    "github.com/jamesainslie/mermaid-go/config"
-    "github.com/jamesainslie/mermaid-go/ir"
-    "github.com/jamesainslie/mermaid-go/layout"
-    "github.com/jamesainslie/mermaid-go/theme"
+    "github.com/jamesainslie/gomd2svg/config"
+    "github.com/jamesainslie/gomd2svg/ir"
+    "github.com/jamesainslie/gomd2svg/layout"
+    "github.com/jamesainslie/gomd2svg/theme"
 )
 
 func simpleLayout() *layout.Layout {
@@ -1072,7 +1072,7 @@ func TestRenderSVGHasViewBox(t *testing.T) {
 
 **Step 2: Run tests to verify they fail**
 
-Run: `cd /Volumes/Development/mermaid-go && go test ./render/ -v`
+Run: `cd /Volumes/Development/gomd2svg && go test ./render/ -v`
 
 **Step 3: Write implementation**
 
@@ -1085,12 +1085,12 @@ Port from Rust `src/render.rs`:
 
 **Step 4: Run tests to verify they pass**
 
-Run: `cd /Volumes/Development/mermaid-go && go test ./render/ -v`
+Run: `cd /Volumes/Development/gomd2svg && go test ./render/ -v`
 
 **Step 5: Commit**
 
 ```bash
-cd /Volumes/Development/mermaid-go && git add render/ && git commit -m "feat(render): add SVG renderer for flowchart diagrams"
+cd /Volumes/Development/gomd2svg && git add render/ && git commit -m "feat(render): add SVG renderer for flowchart diagrams"
 ```
 
 ---
@@ -1173,7 +1173,7 @@ func TestRenderContainsNodeLabels(t *testing.T) {
 
 **Step 2: Run tests to verify they fail**
 
-Run: `cd /Volumes/Development/mermaid-go && go test -v`
+Run: `cd /Volumes/Development/gomd2svg && go test -v`
 
 **Step 3: Write implementation**
 
@@ -1185,11 +1185,11 @@ import (
     "fmt"
     "time"
 
-    "github.com/jamesainslie/mermaid-go/config"
-    "github.com/jamesainslie/mermaid-go/layout"
-    "github.com/jamesainslie/mermaid-go/parser"
-    "github.com/jamesainslie/mermaid-go/render"
-    "github.com/jamesainslie/mermaid-go/theme"
+    "github.com/jamesainslie/gomd2svg/config"
+    "github.com/jamesainslie/gomd2svg/layout"
+    "github.com/jamesainslie/gomd2svg/parser"
+    "github.com/jamesainslie/gomd2svg/render"
+    "github.com/jamesainslie/gomd2svg/theme"
 )
 
 func Render(input string) (string, error) {
@@ -1241,8 +1241,8 @@ func RenderWithTiming(input string, opts Options) (*Result, error) {
 package mermaid
 
 import (
-    "github.com/jamesainslie/mermaid-go/config"
-    "github.com/jamesainslie/mermaid-go/theme"
+    "github.com/jamesainslie/gomd2svg/config"
+    "github.com/jamesainslie/gomd2svg/theme"
 )
 
 type Options struct {
@@ -1282,12 +1282,12 @@ func (r *Result) TotalMs() float64 {
 
 **Step 4: Run tests to verify they pass**
 
-Run: `cd /Volumes/Development/mermaid-go && go test -v`
+Run: `cd /Volumes/Development/gomd2svg && go test -v`
 
 **Step 5: Commit**
 
 ```bash
-cd /Volumes/Development/mermaid-go && git add mermaid.go options.go mermaid_test.go && git commit -m "feat: wire up full Render pipeline"
+cd /Volumes/Development/gomd2svg && git add mermaid.go options.go mermaid_test.go && git commit -m "feat: wire up full Render pipeline"
 ```
 
 ---
@@ -1349,12 +1349,12 @@ func TestGoldenFlowchartSimple(t *testing.T) {
 
 **Step 3: Run test**
 
-Run: `cd /Volumes/Development/mermaid-go && go test -v -run TestGolden`
+Run: `cd /Volumes/Development/gomd2svg && go test -v -run TestGolden`
 
 **Step 4: Commit**
 
 ```bash
-cd /Volumes/Development/mermaid-go && git add testdata/ mermaid_test.go && git commit -m "test: add golden tests for flowchart SVG output"
+cd /Volumes/Development/gomd2svg && git add testdata/ mermaid_test.go && git commit -m "test: add golden tests for flowchart SVG output"
 ```
 
 ---
@@ -1404,14 +1404,14 @@ func BenchmarkRenderMedium(b *testing.B) {
 
 **Step 2: Run benchmarks**
 
-Run: `cd /Volumes/Development/mermaid-go && go test -bench=. -benchmem -count=3`
+Run: `cd /Volumes/Development/gomd2svg && go test -bench=. -benchmem -count=3`
 
 Record baseline numbers.
 
 **Step 3: Commit**
 
 ```bash
-cd /Volumes/Development/mermaid-go && git add mermaid_bench_test.go && git commit -m "bench: add baseline render benchmarks"
+cd /Volumes/Development/gomd2svg && git add mermaid_bench_test.go && git commit -m "bench: add baseline render benchmarks"
 ```
 
 ---

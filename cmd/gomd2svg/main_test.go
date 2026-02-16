@@ -88,7 +88,7 @@ func TestVersion(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(stdout.String(), "mermaid-go") {
+	if !strings.Contains(stdout.String(), "gomd2svg") {
 		t.Error("expected version output")
 	}
 }

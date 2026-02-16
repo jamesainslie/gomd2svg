@@ -4,7 +4,7 @@ import (
 	"container/heap"
 	"math"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 const (

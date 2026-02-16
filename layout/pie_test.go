@@ -4,9 +4,9 @@ import (
 	"math"
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func TestPieLayout(t *testing.T) {

@@ -2,7 +2,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Add Pie chart and Quadrant chart diagram support to mermaid-go with full structural parity to mermaid.js.
+**Goal:** Add Pie chart and Quadrant chart diagram support to gomd2svg with full structural parity to mermaid.js.
 
 **Architecture:** Both diagrams use positioned geometry — no Sugiyama, no grid. Pie computes arc angles from percentage data; Quadrant maps normalized [0,1] coordinates to pixel space. Each gets IR types, parser, config, layout, and renderer following the established per-diagram-type pattern.
 
@@ -428,7 +428,7 @@ package parser
 import (
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 func TestParsePieBasic(t *testing.T) {
@@ -529,7 +529,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 var pieDataRe = regexp.MustCompile(`^\s*"([^"]+)"\s*:\s*(\d+\.?\d*)\s*$`)
@@ -609,7 +609,7 @@ package parser
 import (
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 func TestParseQuadrantBasic(t *testing.T) {
@@ -706,7 +706,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 var quadrantPointRe = regexp.MustCompile(`^\s*(.+?):\s*\[([0-9.]+),\s*([0-9.]+)\]\s*$`)
@@ -828,9 +828,9 @@ import (
 	"math"
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func TestPieLayout(t *testing.T) {
@@ -939,9 +939,9 @@ package layout
 import (
 	"math"
 
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func computePieLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
@@ -1053,9 +1053,9 @@ package layout
 import (
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func TestQuadrantLayout(t *testing.T) {
@@ -1179,9 +1179,9 @@ Create `layout/quadrant.go`:
 package layout
 
 import (
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func computeQuadrantLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
@@ -1289,10 +1289,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/layout"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/layout"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func TestRenderPie(t *testing.T) {
@@ -1386,9 +1386,9 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/layout"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/layout"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func renderPie(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.Layout) {
@@ -1513,10 +1513,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/layout"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/layout"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func TestRenderQuadrant(t *testing.T) {
@@ -1602,9 +1602,9 @@ Create `render/quadrant.go`:
 package render
 
 import (
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/layout"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/layout"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func renderQuadrant(b *svgBuilder, l *layout.Layout, th *theme.Theme, cfg *config.Layout) {

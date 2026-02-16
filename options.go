@@ -1,9 +1,9 @@
-package mermaid
+package gomd2svg
 
 import (
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/parser"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/parser"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 // Options configures Mermaid rendering. Zero value uses Modern theme and default layout.

@@ -2,9 +2,9 @@
 package render
 
 import (
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/layout"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/layout"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 // RenderSVG produces an SVG string from a computed layout, theme, and config.

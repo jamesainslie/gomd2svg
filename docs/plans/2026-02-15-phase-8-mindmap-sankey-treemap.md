@@ -2,7 +2,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Add Mindmap (indentation-based tree), Sankey (flow diagram with CSV data), and Treemap (nested rectangles proportional to values) diagram support to the mermaid-go renderer.
+**Goal:** Add Mindmap (indentation-based tree), Sankey (flow diagram with CSV data), and Treemap (nested rectangles proportional to values) diagram support to the gomd2svg renderer.
 
 **Architecture:** Follow the established per-diagram pipeline: IR types → config/theme → parser → layout → renderer → integration tests. Mindmap uses a radial tree layout algorithm (place root at center, distribute children in arcs). Sankey uses a column-based flow layout (topological sort → column assignment → vertical positioning → curved link routing). Treemap uses the squarified treemap algorithm (Bruls-Huizing-van Wijk) to partition rectangles proportional to values.
 
@@ -681,7 +681,7 @@ package parser
 import (
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 func TestParseMindmapBasic(t *testing.T) {
@@ -791,7 +791,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 var (
@@ -978,7 +978,7 @@ package parser
 import (
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 func TestParseSankeyBasic(t *testing.T) {
@@ -1063,7 +1063,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 func parseSankey(input string) (*ParseOutput, error) {
@@ -1182,7 +1182,7 @@ package parser
 import (
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 func TestParseTreemapBasic(t *testing.T) {
@@ -1277,7 +1277,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 func parseTreemap(input string) (*ParseOutput, error) {
@@ -1415,9 +1415,9 @@ package layout
 import (
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func TestMindmapLayout(t *testing.T) {
@@ -1507,10 +1507,10 @@ package layout
 import (
 	"math"
 
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/textmetrics"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/textmetrics"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func computeMindmapLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
@@ -1710,9 +1710,9 @@ package layout
 import (
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func TestSankeyLayout(t *testing.T) {
@@ -1841,9 +1841,9 @@ package layout
 import (
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func TestTreemapLayout(t *testing.T) {
@@ -1986,10 +1986,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/layout"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/layout"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func TestRenderMindmap(t *testing.T) {
@@ -2042,10 +2042,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/layout"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/layout"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func TestRenderSankey(t *testing.T) {
@@ -2099,10 +2099,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/layout"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/layout"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func TestRenderTreemap(t *testing.T) {

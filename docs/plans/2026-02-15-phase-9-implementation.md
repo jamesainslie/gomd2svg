@@ -893,7 +893,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 var (
@@ -1072,7 +1072,7 @@ package parser
 import (
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 func TestParseRequirementBasic(t *testing.T) {
@@ -1215,7 +1215,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 var (
@@ -1325,7 +1325,7 @@ package parser
 import (
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 func TestParseBlockBasic(t *testing.T) {
@@ -1442,7 +1442,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 var (
@@ -1654,7 +1654,7 @@ package parser
 import (
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 func TestParseC4Context(t *testing.T) {
@@ -1814,10 +1814,10 @@ func (RequirementData) diagramData() {}
 package layout
 
 import (
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/textmetrics"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/textmetrics"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func computeRequirementLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
@@ -1976,9 +1976,9 @@ package layout
 import (
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func TestRequirementLayout(t *testing.T) {
@@ -2094,10 +2094,10 @@ Grid layout when columns > 0, Sugiyama fallback when connections exist without c
 package layout
 
 import (
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/textmetrics"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/textmetrics"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func computeBlockLayout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
@@ -2232,9 +2232,9 @@ package layout
 import (
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func TestBlockGridLayout(t *testing.T) {
@@ -2397,10 +2397,10 @@ type C4BoundaryLayout struct {
 package layout
 
 import (
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/textmetrics"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/textmetrics"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func computeC4Layout(g *ir.Graph, th *theme.Theme, cfg *config.Layout) *Layout {
@@ -2570,9 +2570,9 @@ package layout
 import (
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func TestC4Layout(t *testing.T) {

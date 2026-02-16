@@ -3,7 +3,7 @@ package parser
 import (
 	"strings"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 // ParseOutput holds the result of parsing a Mermaid diagram.

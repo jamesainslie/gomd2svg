@@ -5,7 +5,7 @@
 
 ## Goal
 
-Add Timeline, Gantt chart, and GitGraph diagram support to mermaid-go. Timeline uses horizontal period-based layout, Gantt uses date-mapped horizontal bars with full date arithmetic, and GitGraph uses swim-lane branch layout.
+Add Timeline, Gantt chart, and GitGraph diagram support to gomd2svg. Timeline uses horizontal period-based layout, Gantt uses date-mapped horizontal bars with full date arithmetic, and GitGraph uses swim-lane branch layout.
 
 ## IR Types
 

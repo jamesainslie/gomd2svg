@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	mermaid "github.com/jamesainslie/mermaid-go"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 var version = "dev"
@@ -32,7 +32,7 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) error {
 	case "themes":
 		return runThemes(stdout)
 	case "version":
-		fmt.Fprintf(stdout, "mermaid-go %s\n", version)
+		fmt.Fprintf(stdout, "gomd2svg %s\n", version)
 		return nil
 	case "help", "-h", "--help":
 		return usage(stderr)
@@ -69,13 +69,13 @@ func runRender(args []string, stdin io.Reader, stdout, stderr io.Writer) error {
 		return fmt.Errorf("empty input")
 	}
 
-	opts := mermaid.Options{}
+	opts := gomd2svg.Options{}
 	if *themeName != "" {
 		opts.ThemeName = *themeName
 	}
 
 	if *timing {
-		result, err := mermaid.RenderWithTiming(string(input), opts)
+		result, err := gomd2svg.RenderWithTiming(string(input), opts)
 		if err != nil {
 			return err
 		}
@@ -84,7 +84,7 @@ func runRender(args []string, stdin io.Reader, stdout, stderr io.Writer) error {
 		return writeOutput(*output, result.SVG, stdout)
 	}
 
-	svg, err := mermaid.RenderWithOptions(string(input), opts)
+	svg, err := gomd2svg.RenderWithOptions(string(input), opts)
 	if err != nil {
 		return err
 	}
@@ -113,7 +113,7 @@ func runThemes(w io.Writer) error {
 }
 
 func usage(w io.Writer) error {
-	fmt.Fprintln(w, `Usage: mermaid-go <command> [options]
+	fmt.Fprintln(w, `Usage: gomd2svg <command> [options]
 
 Commands:
   render [file]   Render a .mmd file to SVG
@@ -126,9 +126,9 @@ Render options:
   -timing         Print timing info to stderr
 
 Examples:
-  mermaid-go render diagram.mmd -o diagram.svg
-  mermaid-go render -theme dark diagram.mmd > out.svg
-  cat diagram.mmd | mermaid-go render > out.svg
-  mermaid-go render -theme forest -timing diagram.mmd -o out.svg`)
+  gomd2svg render diagram.mmd -o diagram.svg
+  gomd2svg render -theme dark diagram.mmd > out.svg
+  cat diagram.mmd | gomd2svg render > out.svg
+  gomd2svg render -theme forest -timing diagram.mmd -o out.svg`)
 	return nil
 }

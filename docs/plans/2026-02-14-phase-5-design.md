@@ -5,7 +5,7 @@
 
 ## Goal
 
-Add Pie chart and Quadrant chart diagram support to mermaid-go. Both use positioned geometry (no edges, no grid, no Sugiyama).
+Add Pie chart and Quadrant chart diagram support to gomd2svg. Both use positioned geometry (no edges, no grid, no Sugiyama).
 
 ## IR Types
 

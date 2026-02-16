@@ -1,4 +1,4 @@
-# Go Rewrite Design: mermaid-go
+# Go Rewrite Design: gomd2svg
 
 **Date:** 2026-02-14
 **Status:** Approved
@@ -15,7 +15,7 @@
 ## 1. Project Structure
 
 ```
-github.com/jamesainslie/mermaid-go/
+github.com/jamesainslie/gomd2svg/
 ├── cmd/mmdr/              # CLI binary
 │   └── main.go
 ├── mermaid.go             # Public API: Render(), Parse(), Layout(), RenderSVG()

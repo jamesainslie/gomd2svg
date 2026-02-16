@@ -2,7 +2,7 @@
 
 ## Goal
 
-Add Requirement, Block, and C4 diagram support to mermaid-go, completing the Sugiyama-reuse phase of the roadmap.
+Add Requirement, Block, and C4 diagram support to gomd2svg, completing the Sugiyama-reuse phase of the roadmap.
 
 ## Architecture
 

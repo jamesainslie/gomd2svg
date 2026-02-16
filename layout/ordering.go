@@ -3,7 +3,7 @@ package layout
 import (
 	"sort"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 // orderRankNodes organizes nodes into ranked layers and minimizes edge

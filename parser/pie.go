@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 var pieDataRe = regexp.MustCompile(`^\s*"([^"]+)"\s*:\s*(\d+\.?\d*)\s*$`)

@@ -4,7 +4,7 @@
 package layout
 
 import (
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 // Layout holds the fully computed positions and dimensions for a diagram.

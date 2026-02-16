@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/layout"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/layout"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func renderPie(b *svgBuilder, l *layout.Layout, th *theme.Theme, _ *config.Layout) {

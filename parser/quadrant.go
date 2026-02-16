@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 var quadrantPointRe = regexp.MustCompile(`^\s*(.+?):\s*\[([0-9.]+),\s*([0-9.]+)\]\s*$`)

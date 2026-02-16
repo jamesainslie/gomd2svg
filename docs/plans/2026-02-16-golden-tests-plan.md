@@ -29,7 +29,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 var updateGolden = flag.Bool("update", false, "update golden files")

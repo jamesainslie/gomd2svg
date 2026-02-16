@@ -2,7 +2,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Add Journey (user journey map) and Architecture (architecture-beta) diagram support to mermaid-go.
+**Goal:** Add Journey (user journey map) and Architecture (architecture-beta) diagram support to gomd2svg.
 
 **Architecture:** Both diagrams use custom positioning (not Sugiyama). Journey uses a horizontal score track; Architecture uses constraint-based grid placement from directional edge hints. Follow the established per-diagram pattern: IR types → config/theme → parser → layout → renderer → integration tests.
 

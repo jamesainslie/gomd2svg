@@ -3,7 +3,7 @@ package layout
 import (
 	"testing"
 
-	"github.com/jamesainslie/mermaid-go/ir"
+	"github.com/jamesainslie/gomd2svg/ir"
 )
 
 func edge(from, to string) *ir.Edge {

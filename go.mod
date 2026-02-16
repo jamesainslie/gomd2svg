@@ -1,4 +1,4 @@
-module github.com/jamesainslie/mermaid-go
+module github.com/jamesainslie/gomd2svg
 
 go 1.24.0
 

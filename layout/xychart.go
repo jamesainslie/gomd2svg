@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/jamesainslie/mermaid-go/config"
-	"github.com/jamesainslie/mermaid-go/ir"
-	"github.com/jamesainslie/mermaid-go/theme"
+	"github.com/jamesainslie/gomd2svg/config"
+	"github.com/jamesainslie/gomd2svg/ir"
+	"github.com/jamesainslie/gomd2svg/theme"
 )
 
 func computeXYChartLayout(g *ir.Graph, _ *theme.Theme, cfg *config.Layout) *Layout {

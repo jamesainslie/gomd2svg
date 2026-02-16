@@ -1,16 +1,16 @@
 // Package mermaid renders Mermaid diagram text to SVG.
 //
 // The public API wires the full pipeline: Parse -> Layout -> Render SVG.
-package mermaid
+package gomd2svg
 
 import (
 	"fmt"
 	"strings"
 	"time"
 
-	"github.com/jamesainslie/mermaid-go/layout"
-	"github.com/jamesainslie/mermaid-go/parser"
-	"github.com/jamesainslie/mermaid-go/render"
+	"github.com/jamesainslie/gomd2svg/layout"
+	"github.com/jamesainslie/gomd2svg/parser"
+	"github.com/jamesainslie/gomd2svg/render"
 )
 
 // Render parses a Mermaid diagram string and returns SVG output using default options.

@@ -1,8 +1,8 @@
-# Rename mermaid-go to gomd2svg — Implementation Plan
+# Rename gomd2svg to gomd2svg — Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Rename project from mermaid-go to gomd2svg across all code, docs, and infrastructure.
+**Goal:** Rename project from gomd2svg to gomd2svg across all code, docs, and infrastructure.
 
 **Architecture:** Mechanical find-and-replace in dependency order: module path first, then package names, then directory renames, then docs.
 
@@ -49,11 +49,11 @@ module github.com/jamesainslie/gomd2svg
 ### Task 3: Replace all import paths
 
 **Files:**
-- Modify: all 166 files containing `github.com/jamesainslie/mermaid-go`
+- Modify: all 166 files containing `github.com/jamesainslie/gomd2svg`
 
 **Step 1:** Bulk find-and-replace
 
-Replace `github.com/jamesainslie/mermaid-go` with `github.com/jamesainslie/gomd2svg` in all `.go` files.
+Replace `github.com/jamesainslie/gomd2svg` with `github.com/jamesainslie/gomd2svg` in all `.go` files.
 
 ---
 
@@ -87,26 +87,26 @@ git mv mermaid_golden_test.go gomd2svg_golden_test.go
 ### Task 6: Rename CLI binary directory and update text
 
 **Files:**
-- Rename: `cmd/mermaid-go/` -> `cmd/gomd2svg/`
+- Rename: `cmd/gomd2svg/` -> `cmd/gomd2svg/`
 - Modify: `cmd/gomd2svg/main.go` (version string, usage text)
 - Modify: `cmd/gomd2svg/main_test.go` (assertion string)
 
 **Step 1:** Rename directory
 
 ```bash
-git mv cmd/mermaid-go cmd/gomd2svg
+git mv cmd/gomd2svg cmd/gomd2svg
 ```
 
-**Step 2:** Update all `mermaid-go` strings in main.go and main_test.go to `gomd2svg`.
+**Step 2:** Update all `gomd2svg` strings in main.go and main_test.go to `gomd2svg`.
 
 ---
 
 ### Task 7: Update documentation
 
 **Files:**
-- Modify: all files in `docs/plans/` containing `mermaid-go`
+- Modify: all files in `docs/plans/` containing `gomd2svg`
 
-**Step 1:** Bulk find-and-replace `mermaid-go` with `gomd2svg` in docs.
+**Step 1:** Bulk find-and-replace `gomd2svg` with `gomd2svg` in docs.
 
 ---
 
@@ -137,9 +137,9 @@ Expected: all 250 subtests pass.
 ### Task 9: Update Claude memory
 
 **Files:**
-- Modify: `/Users/jamesainslie/.claude/projects/-Volumes-Development-mermaid-go/memory/MEMORY.md`
+- Modify: `/Users/jamesainslie/.claude/projects/-Volumes-Development-gomd2svg/memory/MEMORY.md`
 
-**Step 1:** Replace all `mermaid-go` references with `gomd2svg`.
+**Step 1:** Replace all `gomd2svg` references with `gomd2svg`.
 
 ---
 
@@ -149,6 +149,6 @@ Expected: all 250 subtests pass.
 
 ```bash
 git add -A
-git commit -m "rename: mermaid-go to gomd2svg"
+git commit -m "rename: gomd2svg to gomd2svg"
 git push
 ```

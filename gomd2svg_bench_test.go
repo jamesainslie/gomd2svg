@@ -1,4 +1,4 @@
-package mermaid
+package gomd2svg
 
 import (
 	"os"
