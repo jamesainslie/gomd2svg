@@ -20,12 +20,13 @@ func RenderSVG(l *layout.Layout, th *theme.Theme, cfg *config.Layout) string {
 		height = 1
 	}
 
-	// Open <svg> tag.
+	// Open <svg> tag. Set font-family so all <text> elements inherit it.
 	b.openTag("svg",
 		"xmlns", "http://www.w3.org/2000/svg",
 		"width", fmtFloat(width),
 		"height", fmtFloat(height),
 		"viewBox", "0 0 "+fmtFloat(width)+" "+fmtFloat(height),
+		"font-family", th.FontFamily,
 	)
 
 	// Arrow marker definitions.
