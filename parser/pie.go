@@ -19,10 +19,14 @@ func parsePie(input string) (*ParseOutput, error) {
 	for _, line := range lines {
 		lower := strings.ToLower(line)
 
-		// Skip the declaration line, extract showData flag.
+		// Skip the declaration line, extract showData flag and inline title.
 		if strings.HasPrefix(lower, "pie") {
 			if strings.Contains(lower, "showdata") {
 				g.PieShowData = true
+			}
+			// Extract inline title: "pie title My Title" or "pie showData title My Title"
+			if idx := strings.Index(lower, "title "); idx >= 0 {
+				g.PieTitle = strings.TrimSpace(line[idx+len("title "):])
 			}
 			continue
 		}

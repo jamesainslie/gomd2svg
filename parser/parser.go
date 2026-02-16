@@ -8,63 +8,71 @@ import (
 
 // ParseOutput holds the result of parsing a Mermaid diagram.
 type ParseOutput struct {
-	Graph      *ir.Graph
-	InitConfig map[string]interface{}
+	Graph     *ir.Graph
+	Directive Directive
 }
 
 // Parse detects the diagram kind and dispatches to the appropriate parser.
 func Parse(input string) (*ParseOutput, error) {
-	kind := detectDiagramKind(input)
+	dir, cleaned := extractDirective(input)
+	kind := detectDiagramKind(cleaned)
+	var po *ParseOutput
+	var err error
 	switch kind {
 	case ir.Flowchart:
-		return parseFlowchart(input)
+		po, err = parseFlowchart(cleaned)
 	case ir.Class:
-		return parseClass(input)
+		po, err = parseClass(cleaned)
 	case ir.State:
-		return parseState(input)
+		po, err = parseState(cleaned)
 	case ir.Er:
-		return parseER(input)
+		po, err = parseER(cleaned)
 	case ir.Sequence:
-		return parseSequence(input)
+		po, err = parseSequence(cleaned)
 	case ir.Kanban:
-		return parseKanban(input)
+		po, err = parseKanban(cleaned)
 	case ir.Packet:
-		return parsePacket(input)
+		po, err = parsePacket(cleaned)
 	case ir.Pie:
-		return parsePie(input)
+		po, err = parsePie(cleaned)
 	case ir.Quadrant:
-		return parseQuadrant(input)
+		po, err = parseQuadrant(cleaned)
 	case ir.Timeline:
-		return parseTimeline(input)
+		po, err = parseTimeline(cleaned)
 	case ir.Gantt:
-		return parseGantt(input)
+		po, err = parseGantt(cleaned)
 	case ir.Journey:
-		return parseJourney(input)
+		po, err = parseJourney(cleaned)
 	case ir.GitGraph:
-		return parseGitGraph(input)
+		po, err = parseGitGraph(cleaned)
 	case ir.XYChart:
-		return parseXYChart(input)
+		po, err = parseXYChart(cleaned)
 	case ir.Radar:
-		return parseRadar(input)
+		po, err = parseRadar(cleaned)
 	case ir.Mindmap:
-		return parseMindmap(input)
+		po, err = parseMindmap(cleaned)
 	case ir.Sankey:
-		return parseSankey(input)
+		po, err = parseSankey(cleaned)
 	case ir.Treemap:
-		return parseTreemap(input)
+		po, err = parseTreemap(cleaned)
 	case ir.Requirement:
-		return parseRequirement(input)
+		po, err = parseRequirement(cleaned)
 	case ir.Block:
-		return parseBlock(input)
+		po, err = parseBlock(cleaned)
 	case ir.C4:
-		return parseC4(input)
+		po, err = parseC4(cleaned)
 	case ir.Architecture:
-		return parseArchitecture(input)
+		po, err = parseArchitecture(cleaned)
 	case ir.ZenUML:
-		return parseZenUML(input)
+		po, err = parseZenUML(cleaned)
 	default:
-		return parseFlowchart(input)
+		po, err = parseFlowchart(cleaned)
 	}
+	if err != nil {
+		return nil, err
+	}
+	po.Directive = dir
+	return po, nil
 }
 
 // detectDiagramKind scans lines, skipping comments and empty lines,
